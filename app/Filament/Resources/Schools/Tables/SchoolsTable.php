@@ -2,10 +2,13 @@
 
 namespace App\Filament\Resources\Schools\Tables;
 
+use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
+use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
@@ -26,8 +29,10 @@ class SchoolsTable
                     ->searchable(),
                 TextColumn::make('domain_name')
                     ->searchable(),
-                TextColumn::make('logo')
-                    ->searchable(),
+                ImageColumn::make('logo')
+                    ->disk('public')
+                    ->visibility('public')
+                    ->square(),
                 TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
@@ -41,9 +46,13 @@ class SchoolsTable
                 //
             ])
             ->recordActions([
-                ViewAction::make(),
-                EditAction::make(),
+                ActionGroup::make([
+                    ViewAction::make(),
+                    EditAction::make(),
+                    DeleteAction::make(),
+                ]),
             ])
+            ->recordActionsColumnLabel('Actions')
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),

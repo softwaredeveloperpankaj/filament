@@ -14,11 +14,11 @@ class ViewUser extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
+            EditAction::make(),
             Action::make('back')
                 ->label('Back')
                 ->url($this->getResource()::getUrl('index'))
                 ->icon('heroicon-o-arrow-left'),
-            EditAction::make(),
         ];
     }
 }
