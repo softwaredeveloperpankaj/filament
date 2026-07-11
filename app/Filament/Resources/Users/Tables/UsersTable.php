@@ -19,11 +19,15 @@ class UsersTable
         return $table
             ->columns([
                 TextColumn::make('id')
+                    ->toggleable()
                     ->sortable(),
                 TextColumn::make('name')
+                    ->label('Full name')
+                    ->toggleable()
                     ->searchable(),
                 TextColumn::make('email')
                     ->label('Email')
+                    ->toggleable()
                     ->searchable(),
                 TextColumn::make('roles')
                     ->label('Role')
@@ -36,7 +40,7 @@ class UsersTable
                         default => 'secondary',
                     })
                     ->formatStateUsing(fn ($state) => str($state)->replace('_', ' ')->title())
-                    ->toggleable(isToggledHiddenByDefault: false),
+                    ->toggleable(),
                 // TextColumn::make('email_verified_at')
                 //     ->dateTime()
                 //     ->sortable(),

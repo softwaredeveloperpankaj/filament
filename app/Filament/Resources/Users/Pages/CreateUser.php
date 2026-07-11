@@ -9,6 +9,10 @@ use Filament\Resources\Pages\CreateRecord;
 class CreateUser extends CreateRecord
 {
     protected static string $resource = UserResource::class;
+    protected function getCancelFormAction(): Action
+    {
+        return parent::getCancelFormAction()->hidden(true);
+    }
 
     protected function getHeaderActions(): array
     {

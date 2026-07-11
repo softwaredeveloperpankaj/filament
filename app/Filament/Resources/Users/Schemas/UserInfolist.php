@@ -17,8 +17,8 @@ class UserInfolist
                 // TextEntry::make('email_verified_at')
                 //     ->dateTime()
                 //     ->placeholder('-'),
-                TextEntry::make('role')
-                    ->label('Role')
+                TextEntry::make('roles')
+                    ->label('Roles')
                     ->disabled()
                     ->getStateUsing(fn ($record) => $record->getRoleNames()->first() ?? 'User')
                     ->badge()
@@ -28,7 +28,8 @@ class UserInfolist
                         'teacher' => 'info',
                         default => 'secondary',
                     })
-                    ->formatStateUsing(fn ($state) => str($state)->replace('_', ' ')->title()),
+                    ->formatStateUsing(fn ($state) => str($state)->replace('_', ' ')->title())
+                    ->extraAttributes(['class' => 'uppercase']),
                 TextEntry::make('created_at')
                     ->dateTime()
                     ->placeholder('-'),

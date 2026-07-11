@@ -1,16 +1,16 @@
 <?php
 
-namespace App\Filament\Resources\Schools\Pages;
+namespace App\Filament\Resources\Sections\Pages;
 
-use App\Filament\Resources\Schools\SchoolResource;
-use Filament\Actions\Action;
-use Filament\Actions\DeleteAction;
+use App\Filament\Resources\Sections\SectionResource;
 use Filament\Actions\EditAction;
 use Filament\Resources\Pages\ViewRecord;
+use Filament\Actions\Action;
+use Filament\Actions\DeleteAction;
 
-class ViewSchool extends ViewRecord
+class ViewSection extends ViewRecord
 {
-    protected static string $resource = SchoolResource::class;
+    protected static string $resource = SectionResource::class;
 
     protected function getHeaderActions(): array
     {

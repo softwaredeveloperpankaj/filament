@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Resources\Schools\Tables;
+namespace App\Filament\Resources\Branches\Tables;
 
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
@@ -8,63 +8,69 @@ use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
-use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\Filter;
 use Filament\Tables\Table;
 
-class SchoolsTable
+class BranchesTable
 {
     public static function configure(Table $table): Table
     {
         return $table
             ->columns([
                 TextColumn::make('id')
-                    ->label('ID')
+                    ->numeric()
                     ->toggleable()
-                    ->sortable()
-                    ->searchable(),
+                    ->sortable(),
                 TextColumn::make('user.name')
                     ->label('User')
-                    ->toggleable(isToggledHiddenByDefault: true)
-                    ->searchable(),
+                    ->toggleable()
+                    ->sortable(),
+                TextColumn::make('school.name')
+                    ->label('School')
+                    ->toggleable()
+                    ->sortable(),
                 TextColumn::make('name')
-                    ->label('School Name')
+                    ->sortable()
+                    ->toggleable()
+                    ->searchable(),
+                TextColumn::make('code')
+                    ->sortable()
                     ->toggleable()
                     ->searchable(),
                 TextColumn::make('address')
-                    ->label('Address')
-                    ->toggleable(isToggledHiddenByDefault: true)
-                    ->searchable(),
+                    ->toggleable(),
                 TextColumn::make('phone')
-                    ->label('Phone')
-                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->sortable()
+                    ->toggleable()
                     ->searchable(),
                 TextColumn::make('email')
                     ->label('Email address')
+                    ->sortable()
                     ->toggleable()
                     ->searchable(),
-                TextColumn::make('domain_name')
-                    ->label('Domain Name')
+                TextColumn::make('is_main')
                     ->toggleable()
-                    ->searchable(),
-                ImageColumn::make('logo')
-                    ->disk('public')
-                    ->visibility('public')
+                    ->formatStateUsing(fn (bool $state): string => $state ? 'Yes' : 'No'),
+                TextColumn::make('is_active')
                     ->toggleable()
-                    ->square(),
+                    ->formatStateUsing(fn (bool $state): string => $state ? 'Yes' : 'No'),
                 TextColumn::make('created_at')
-                    ->label('Created At')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('updated_at')
-                    ->label('Updated At')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                //
+                Filter::make('is_main')
+                    ->query(fn ($query) => $query->where('is_main', true))
+                    ->label('Main Branch'),
+                Filter::make('is_active')
+                    ->query(fn ($query) => $query->where('is_active', true))
+                    ->label('Active Branch'),
             ])
             ->recordActions([
                 ActionGroup::make([

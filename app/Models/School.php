@@ -6,14 +6,23 @@ use Illuminate\Database\Eloquent\Model;
 
 class School extends Model
 {
-    protected $table = 'school';
-
     protected $fillable = [
-        'name', 
-        'address', 
-        'phone', 
-        'email', 
-        'domain_name', 
+        'user_id',
+        'name',
+        'address',
+        'phone',
+        'email',
+        'domain_name',
         'logo'
     ];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function branches()
+    {
+        return $this->hasMany(Branch::class);
+    }
 }

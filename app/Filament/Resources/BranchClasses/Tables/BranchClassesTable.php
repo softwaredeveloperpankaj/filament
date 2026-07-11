@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Resources\Schools\Tables;
+namespace App\Filament\Resources\BranchClasses\Tables;
 
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
@@ -8,11 +8,10 @@ use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
-use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
-class SchoolsTable
+class BranchClassesTable
 {
     public static function configure(Table $table): Table
     {
@@ -20,45 +19,26 @@ class SchoolsTable
             ->columns([
                 TextColumn::make('id')
                     ->label('ID')
+                    ->numeric()
                     ->toggleable()
-                    ->sortable()
-                    ->searchable(),
-                TextColumn::make('user.name')
-                    ->label('User')
-                    ->toggleable(isToggledHiddenByDefault: true)
-                    ->searchable(),
+                    ->sortable(),
+                TextColumn::make('branch.name')
+                    ->label('Branch')
+                    ->toggleable(),
                 TextColumn::make('name')
-                    ->label('School Name')
+                    ->label('Class Name')
                     ->toggleable()
                     ->searchable(),
-                TextColumn::make('address')
-                    ->label('Address')
-                    ->toggleable(isToggledHiddenByDefault: true)
-                    ->searchable(),
-                TextColumn::make('phone')
-                    ->label('Phone')
-                    ->toggleable(isToggledHiddenByDefault: true)
-                    ->searchable(),
-                TextColumn::make('email')
-                    ->label('Email address')
+                TextColumn::make('starting_roll_no')
+                    ->label('Roll No Prefix')
+                    ->numeric()
                     ->toggleable()
-                    ->searchable(),
-                TextColumn::make('domain_name')
-                    ->label('Domain Name')
-                    ->toggleable()
-                    ->searchable(),
-                ImageColumn::make('logo')
-                    ->disk('public')
-                    ->visibility('public')
-                    ->toggleable()
-                    ->square(),
+                    ->sortable(),
                 TextColumn::make('created_at')
-                    ->label('Created At')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('updated_at')
-                    ->label('Updated At')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),

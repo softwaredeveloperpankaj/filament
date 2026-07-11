@@ -3,6 +3,8 @@
 namespace App\Filament\Resources\Schools\Schemas;
 
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Schema;
 
@@ -12,13 +14,24 @@ class SchoolForm
     {
         return $schema
             ->components([
-                TextInput::make('name')
+                Select::make('user_id')
+                    ->label('User')
+                    ->relationship('user', 'name')
+                    ->searchable()
+                    ->preload()
+                    ->placeholder('Select a user')
                     ->required(),
-                TextInput::make('address'),
+                TextInput::make('name')
+                    ->label('School name')
+                    ->placeholder('School name')
+                    ->required(),
                 TextInput::make('phone')
+                    ->label('Phone')
+                    ->placeholder('9876543210')
                     ->tel(),
                 TextInput::make('email')
                     ->label('Email address')
+                    ->placeholder('Email address')
                     ->email(),
                 TextInput::make('domain_name')
                     ->label('Domain Name')
@@ -27,6 +40,10 @@ class SchoolForm
                     ->validationMessages([
                         'regex' => 'The :attribute field must be a valid domain name (e.g., example.com).',
                     ]),
+                Textarea::make('address')
+                    ->label('Address')
+                    ->placeholder('Address')
+                    ->columnSpanFull(),
                 FileUpload::make('logo')
                     ->label('School logo')
                     ->image()
@@ -39,7 +56,6 @@ class SchoolForm
             ->columns([
                 'sm' => 1,
                 'lg' => 2,
-                'xl' => 3,
             ]);
     }
 }

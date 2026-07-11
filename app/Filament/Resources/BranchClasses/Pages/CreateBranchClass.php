@@ -1,16 +1,14 @@
 <?php
 
-namespace App\Filament\Resources\Schools\Pages;
+namespace App\Filament\Resources\BranchClasses\Pages;
 
-use App\Filament\Resources\Schools\SchoolResource;
+use App\Filament\Resources\BranchClasses\BranchClassResource;
+use Filament\Resources\Pages\CreateRecord;
 use Filament\Actions\Action;
-use Filament\Actions\DeleteAction;
-use Filament\Actions\ViewAction;
-use Filament\Resources\Pages\EditRecord;
 
-class EditSchool extends EditRecord
+class CreateBranchClass extends CreateRecord
 {
-    protected static string $resource = SchoolResource::class;
+    protected static string $resource = BranchClassResource::class;
 
     protected function getCancelFormAction(): Action
     {
@@ -24,8 +22,6 @@ class EditSchool extends EditRecord
                 ->label('Back')
                 ->url($this->getResource()::getUrl('index'))
                 ->icon('heroicon-o-arrow-left'),
-            ViewAction::make(),
-            DeleteAction::make(),
         ];
-    }
+    }    
 }
