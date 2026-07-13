@@ -67,6 +67,12 @@ class UserInfolist
                                         ->iconColor('primary')
                                         ->placeholder('-'),
 
+                                    TextEntry::make('teacherProfile.branch.name')
+                                        ->label('Branch')
+                                        ->weight('bold')
+                                        ->color('primary')
+                                        ->placeholder('-'),
+
                                     TextEntry::make('teacherProfile.phone')
                                         ->label('Phone Number')
                                         ->icon('heroicon-m-phone')
