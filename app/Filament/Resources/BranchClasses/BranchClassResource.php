@@ -44,7 +44,8 @@ class BranchClassResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            RelationManagers\ClassSectionsRelationManager::class,
+            RelationManagers\SectionSubjectsRelationManager::class
         ];
     }
 
