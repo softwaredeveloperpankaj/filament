@@ -26,6 +26,9 @@ class BranchClassResource extends Resource
     protected static ?string $modelLabel = 'Class';
     protected static ?string $pluralModelLabel = 'Classes';
 
+    protected static string|\UnitEnum|null $navigationGroup = 'Academics';
+    protected static ?int $navigationSort = 1;
+    
     public static function form(Schema $schema): Schema
     {
         return BranchClassForm::configure($schema);
@@ -58,4 +61,9 @@ class BranchClassResource extends Resource
             'edit' => EditBranchClass::route('/{record}/edit'),
         ];
     }
+
+    public static function getNavigationBadge(): ?string
+    {
+        return static::getModel()::count();
+    }    
 }

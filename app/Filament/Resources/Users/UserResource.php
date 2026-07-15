@@ -20,8 +20,12 @@ class UserResource extends Resource
 {
     protected static ?string $model = User::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::UserCircle;
+    protected static ?string $navigationLabel = 'Users';
 
+    protected static string|\UnitEnum|null $navigationGroup = 'Security';
+    protected static ?int $navigationSort = 1;
+    
     public static function form(Schema $schema): Schema
     {
         return UserForm::configure($schema);
@@ -53,4 +57,9 @@ class UserResource extends Resource
             'edit' => EditUser::route('/{record}/edit'),
         ];
     }
+
+    public static function getNavigationBadge(): ?string
+    {
+        return static::getModel()::count();
+    }    
 }

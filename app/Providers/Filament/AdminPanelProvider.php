@@ -7,6 +7,7 @@ use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
+use Filament\Navigation\NavigationGroup;
 use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
@@ -58,6 +59,19 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->authMiddleware([
                 Authenticate::class,
-            ]);
+            ])
+            ->navigationGroups([
+                NavigationGroup::make()
+                    ->label('School Admin')
+                    ->collapsed(),
+                
+                NavigationGroup::make()
+                    ->label('Academics')
+                    ->collapsed(),
+
+                NavigationGroup::make()
+                    ->label('Security')
+                    ->collapsed()
+            ]);            
     }
 }

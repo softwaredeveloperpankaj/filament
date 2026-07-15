@@ -21,7 +21,9 @@ class SchoolResource extends Resource
 {
     protected static ?string $model = School::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::BuildingLibrary;
+    protected static string|\UnitEnum|null $navigationGroup = 'School Admin';
+    protected static ?int $navigationSort = 1;
 
     public static function form(Schema $schema): Schema
     {
@@ -54,4 +56,9 @@ class SchoolResource extends Resource
             'edit' => EditSchool::route('/{record}/edit'),
         ];
     }
+
+    public static function getNavigationBadge(): ?string
+    {
+        return static::getModel()::count();
+    }    
 }

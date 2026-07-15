@@ -21,6 +21,8 @@ class ClassSectionResource extends Resource
     protected static ?string $model = ClassSection::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|\UnitEnum|null $navigationGroup = 'Academics';
+    protected static ?int $navigationSort = 3;
 
     public static function form(Schema $schema): Schema
     {
@@ -53,4 +55,9 @@ class ClassSectionResource extends Resource
             'edit' => EditClassSection::route('/{record}/edit'),
         ];
     }
+
+    public static function getNavigationBadge(): ?string
+    {
+        return static::getModel()::count();
+    }    
 }

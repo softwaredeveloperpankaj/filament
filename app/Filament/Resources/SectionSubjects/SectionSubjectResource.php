@@ -22,6 +22,9 @@ class SectionSubjectResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
+    protected static string|\UnitEnum|null $navigationGroup = 'Academics';
+    protected static ?int $navigationSort = 5;
+
     public static function form(Schema $schema): Schema
     {
         return SectionSubjectForm::configure($schema);
@@ -53,4 +56,9 @@ class SectionSubjectResource extends Resource
             'edit' => EditSectionSubject::route('/{record}/edit'),
         ];
     }
+
+    public static function getNavigationBadge(): ?string
+    {
+        return static::getModel()::count();
+    }    
 }
