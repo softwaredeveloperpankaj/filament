@@ -13,6 +13,7 @@ class TeacherProfile extends Model
     protected $fillable = [
         'user_id',
         'branch_id',
+        'subject_id',
         'employee_id',
         'phone',
         'date_of_birth',
@@ -34,5 +35,10 @@ class TeacherProfile extends Model
     public function branch(): BelongsTo
     {
         return $this->belongsTo(Branch::class);
-    }    
+    }
+
+    public function subject(): BelongsTo
+    {
+        return $this->belongsTo(Subject::class);
+    }
 }

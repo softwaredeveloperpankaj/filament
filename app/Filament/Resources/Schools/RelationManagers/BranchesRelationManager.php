@@ -17,47 +17,32 @@ class BranchesRelationManager extends RelationManager
 {
     protected static string $relationship = 'branches';
 
-    protected static ?string $relatedResource = BranchClassResource::class;
+    // protected static ?string $relatedResource = BranchClassResource::class;
 
     public function table(Table $table): Table
     {
-        // return $table
-        //     ->headerActions([
-        //         CreateAction::make(),
-        //     ]);
-
         return $table
-            ->recordTitleAttribute('name')
-            ->columns([
-                TextColumn::make('name')
-                    ->label('Branch Name')
-                    ->sortable()
-                    ->searchable(),
-
-                TextColumn::make('user.name')
-                    ->label('Assigned Admin')
-                    ->sortable()
-                    ->searchable(),
-
-                TextColumn::make('code'),
-                
-                IconColumn::make('is_active')
-                    ->boolean(),
-            ])
-            ->filters([
-                //
-            ])
             ->headerActions([
                 CreateAction::make(),
-            ])
-            ->recordActions([
-                EditAction::make(),
-                DeleteAction::make(),
-            ])
-            ->toolbarActions([
-                    BulkActionGroup::make([
-                    DeleteBulkAction::make(),
-                ]),
-            ]);        
+            ]);
+
+        // return $table
+        //     ->recordTitleAttribute('name')
+        //     ->columns([
+        //         TextColumn::make('name')
+        //             ->label('Branch Name')
+        //             ->sortable()
+        //             ->searchable(),
+
+        //         TextColumn::make('user.name')
+        //             ->label('Assigned Admin')
+        //             ->sortable()
+        //             ->searchable(),
+
+        //         TextColumn::make('code'),
+                
+        //         IconColumn::make('is_active')
+        //             ->boolean(),
+        //     ]);        
     }
 }

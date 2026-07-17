@@ -29,6 +29,8 @@ class SchoolInfolist
                     ->imageHeight(100)
                     ->circular()
                     ->placeholder('-'),
+                TextEntry::make('user.name')
+                    ->label('Created By'),
                 TextEntry::make('created_at')
                     ->dateTime()
                     ->placeholder('-'),

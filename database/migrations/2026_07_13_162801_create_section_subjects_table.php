@@ -15,13 +15,10 @@ return new class extends Migration
             $table->id();
 
             $table->foreignId('branch_id')->constrained('branches')->cascadeOnDelete();
-
+            $table->foreignId('class_section_id')->nullable()->constrained('class_sections')->nullOnDelete();
             $table->foreignId('branch_class_id')->constrained('branch_classes')->cascadeOnDelete();
-
             $table->foreignId('section_id')->constrained('sections')->cascadeOnDelete();
-
             $table->foreignId('subject_id')->constrained('subjects')->cascadeOnDelete();
-
             $table->foreignId('teacher_profile_id')->nullable()->constrained('teacher_profiles')->nullOnDelete();
 
             // same subject can't be assigned twice to same section in same class

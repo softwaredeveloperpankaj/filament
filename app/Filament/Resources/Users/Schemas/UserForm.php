@@ -10,7 +10,9 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
+use Illuminate\Database\Eloquent\Builder;
 use Spatie\Permission\Models\Role;
 
 class UserForm
@@ -57,6 +59,31 @@ class UserForm
                         //         column: 'employee_id',
                         //         ignoreRecord: true
                         //     ),
+                        Select::make('teacherProfile.branch_id')
+                            ->label('Assigned Branch')
+                            ->relationship('teacherProfile.branch', 'name')
+                            ->searchable()
+                            ->preload()
+                            ->live()
+                            ->afterStateUpdated(fn (Set $set) => $set('teacherProfile.subject_id', null))
+                            ->required(),
+
+                        Select::make('teacherProfile.subject_id')
+                            ->label('Assigned Subject')
+                            ->relationship(
+                                name: 'teacherProfile.subject',
+                                titleAttribute: 'name',
+                                modifyQueryUsing: fn (Builder $query, Get $get) => $query
+                                    ->when(
+                                        $get('teacherProfile.branch_id'),
+                                        fn (Builder $query, $branchId) => $query->where('branch_id', $branchId),
+                                        fn (Builder $query) => $query->whereRaw('1 = 0')
+                                    )
+                            )
+                            ->searchable()
+                            ->preload()
+                            ->disabled(fn (Get $get) => blank($get('teacherProfile.branch_id')))
+                            ->required(),
 
                         TextInput::make('teacherProfile.phone')
                             ->label('Phone Number')
@@ -87,12 +114,6 @@ class UserForm
                             ->label('Subject Specialization')
                             ->placeholder('e.g. Mathematics')
                             ->required(fn (Get $get) => self::hasTeacherRole($get)),
-
-                        Select::make('teacherProfile.branch_id')
-                            ->label('Assigned Branch')
-                            ->relationship('teacherProfile.branch', 'name')
-                            ->searchable()
-                            ->preload(),
 
                         DatePicker::make('teacherProfile.joining_date')
                             ->label('Joining Date')

@@ -25,10 +25,8 @@ class ClassSection extends Model
         return $this->belongsTo(Section::class);
     }
 
-    // what subjects are taught in this class-section combo
     public function sectionSubjects(): HasMany
     {
-        return $this->hasMany(SectionSubject::class, 'section_id', 'section_id')
-                    ->where('branch_class_id', $this->branch_class_id);
+        return $this->hasMany(SectionSubject::class, 'class_section_id');
     }
 }

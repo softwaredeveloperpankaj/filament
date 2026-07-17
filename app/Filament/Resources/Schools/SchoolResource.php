@@ -43,7 +43,7 @@ class SchoolResource extends Resource
     public static function getRelations(): array
     {
         return [
-            BranchesRelationManager::class,
+            // BranchesRelationManager::class,
         ];
     }
 

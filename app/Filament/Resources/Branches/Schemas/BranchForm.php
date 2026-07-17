@@ -22,7 +22,11 @@ class BranchForm
                     ->placeholder('Select a school'),
                 Select::make('user_id')
                     ->label('User')
-                    ->relationship('user', 'name')
+                    ->relationship(
+                        name: 'user', 
+                        titleAttribute: 'name',
+                        modifyQueryUsing: fn ($query) => $query->whereHas('roles', fn ($q) => $q->where('name', 'admin'))
+                    )
                     ->searchable()
                     ->preload()
                     ->placeholder('Select a user')

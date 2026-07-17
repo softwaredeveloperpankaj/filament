@@ -73,7 +73,13 @@ class UserInfolist
                                         ->color('primary')
                                         ->placeholder('-'),
 
-                                    TextEntry::make('teacherProfile.phone')
+                                    TextEntry::make('teacherProfile.subject.name')
+                                        ->label('Subject')
+                                        ->weight('bold')
+                                        ->color('primary')
+                                        ->placeholder('-'),
+
+                                        TextEntry::make('teacherProfile.phone')
                                         ->label('Phone Number')
                                         ->icon('heroicon-m-phone')
                                         ->placeholder('-'),

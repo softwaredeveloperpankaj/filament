@@ -20,6 +20,9 @@ class SectionSubjectResource extends Resource
 {
     protected static ?string $model = SectionSubject::class;
 
+    protected static ?string $modelLabel = 'Section Subject Relation';
+    protected static ?string $pluralModelLabel = 'Section Subject Relation';
+
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
     protected static string|\UnitEnum|null $navigationGroup = 'Academics';

@@ -8,8 +8,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class SectionSubject extends Model
 {
     protected $fillable = [
-        'branch_id', 'branch_class_id',
-        'section_id', 'subject_id', 'teacher_profile_id'
+        'branch_id',
+        'class_section_id',
+        'branch_class_id',
+        'section_id',
+        'subject_id',
+        'teacher_profile_id'
     ];
 
     public function branch(): BelongsTo

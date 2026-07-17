@@ -50,7 +50,7 @@ class CreateUser extends CreateRecord
                 try {
                     $user->teacherProfile()->create($teacherProfileData);
                 } catch (\Throwable $th) {
-                    throw new \Exception('Something went wrong while creating the teacher profile.');
+                    throw new \Exception('Something went wrong while creating the teacher profile.'.$th->getMessage());
                 }
             }
 
