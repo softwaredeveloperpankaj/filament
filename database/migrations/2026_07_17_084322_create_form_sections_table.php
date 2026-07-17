@@ -11,17 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('form_template_versions', function (Blueprint $table) {
+        Schema::create('form_sections', function (Blueprint $table) {
             $table->id();
             $table->foreignId('form_template_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('user_id')->nullable()->constrained('users')->nullOnDelete();
-            $table->unsignedInteger('version');
-            $table->json('schema_json');
-            $table->boolean('is_active')->default(false);
-            $table->timestamp('published_at')->nullable();
+            $table->string('title');
+            $table->string('section_key');
+            $table->unsignedInteger('sort_order')->default(0);
+            $table->boolean('is_active')->default(true);
             $table->timestamps();
 
-            $table->unique(['form_template_id', 'version']);
+            $table->unique(['form_template_id', 'section_key']);
         });
     }
 
@@ -30,6 +29,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('form_template_versions');
+        Schema::dropIfExists('form_sections');
     }
 };

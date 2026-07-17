@@ -26,6 +26,15 @@ class FormTemplate extends Model
         return $this->belongsTo(Branch::class);
     }
 
+    public function sections()
+    {
+        return $this->hasMany(FormSection::class)->orderBy('sort_order');
+    }
+    public function versions()
+    {
+        return $this->hasMany(FormTemplateVersion::class);
+    }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

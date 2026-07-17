@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources\FormTemplates\Tables;
 
+use App\Filament\Pages\FormBuilder;
+use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
@@ -29,12 +31,15 @@ class FormTemplatesTable
                 // TextColumn::make('active_version_id')
                 //     ->numeric()
                 //     ->sortable(),
-                TextColumn::make('created_by')
+                TextColumn::make('user.name')
                     ->toggleable()
+                    ->badge()
                     ->sortable(),
                 TextColumn::make('registration_serial')
+                    ->toggleable()
                     ->searchable(),
                 TextColumn::make('name')
+                    ->toggleable()
                     ->searchable(),
                 TextColumn::make('slug')
                     ->toggleable()
@@ -69,6 +74,14 @@ class FormTemplatesTable
             ->recordActions([
                 ActionGroup::make([
                     ViewAction::make(),
+                    Action::make('builder')
+                        ->label('Open Builder')
+                        ->icon('heroicon-o-wrench-screwdriver')
+                        ->color('warning')
+                        ->url(fn ($record): string => FormBuilder::getUrl([
+                            'template' => $record->id,
+                        ])),
+
                     EditAction::make(),
                     DeleteAction::make(),
                 ]),

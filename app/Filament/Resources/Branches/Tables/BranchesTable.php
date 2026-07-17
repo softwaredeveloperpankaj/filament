@@ -24,6 +24,7 @@ class BranchesTable
                     ->sortable(),
                 TextColumn::make('user.name')
                     ->label('User')
+                    ->badge()
                     ->toggleable()
                     ->sortable(),
                 TextColumn::make('school.name')

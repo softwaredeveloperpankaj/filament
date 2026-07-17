@@ -2,9 +2,13 @@
 
 namespace App\Filament\Resources\FormTemplates\Schemas;
 
+use App\Models\Branch;
+use App\Models\User;
+use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
@@ -29,18 +33,24 @@ class FormTemplateForm
                 //     ->numeric(),
                 Select::make('user_id')
                     ->label('Select User')
-                    ->relationship(
-                        name: 'user',
-                        titleAttribute: 'name',
-                        modifyQueryUsing: fn (Builder $query, Get $get) => $query
-                            ->whereHas('teacherProfile', fn (Builder $q) => $q
-                                ->where('branch_id', $get('branch_id'))
-                            )
-                    )
+                    ->options(function (Get $get): array {
+                        $branchId = $get('branch_id');
+
+                        if (! $branchId) {
+                            return [];
+                        }
+
+                        return User::whereHas('branch', function ($query) use ($branchId) {
+                                $query->where('branches.id', $branchId);
+                            })
+                            ->pluck('name', 'id')
+                            ->toArray();
+                    })
                     ->searchable()
                     ->preload()
                     ->required()
                     ->placeholder('Select a user'),
+
                 TextInput::make('registration_serial')
                     ->required(),
                 TextInput::make('name')
