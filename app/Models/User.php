@@ -36,5 +36,10 @@ class User extends Authenticatable
     public function teacherProfile(): HasOne
     {
         return $this->hasOne(TeacherProfile::class);
-    }    
+    }
+
+    public function branch()
+    {
+        return $this->hasMany(Branch::class, 'user_id');
+    }
 }

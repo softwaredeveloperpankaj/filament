@@ -5,6 +5,7 @@ namespace App\Filament\Pages;
 use App\Models\FormTemplate;
 use App\Models\FormSection;
 use App\Models\FormField;
+use App\Models\FormFieldOption;
 use App\Models\FormTemplateVersion;
 use Filament\Pages\Page;
 use Filament\Actions\Action;
@@ -28,6 +29,12 @@ class FormBuilder extends Page
     // For "Edit Field" slide-over
     public ?int    $editingFieldId   = null;
     public array   $editingFieldData = [];
+
+    public ?int $fieldToDelete = null;
+
+    public ?int $editingOptionsFieldId = null;
+    public array $fieldOptions = [];
+    public string $newOption = '';
 
     public function mount(FormTemplate $template): void
     {
@@ -81,17 +88,34 @@ class FormBuilder extends Page
             'form_template_id'=>$section->form_template_id,
             'form_section_id' => $sectionId,
             'label'           => $label,
-            'field_key'       => strtolower(str_replace(' ', '_', $label)),
+            'field_key'       => strtolower(str_replace(' ', '_', $label)).'_'.time(),
             'type'            => $type,
             'sort_order'      => $section->fields()->count() + 1,
         ]);
         $this->loadTemplate();
     }
 
-    public function deleteField(int $fieldId): void
+    public function confirmDeleteField(int $id): void
     {
-        FormField::destroy($fieldId);
+        $this->fieldToDelete = $id;
+
+        $this->dispatch('open-modal', id: 'delete-field-modal');
+    }
+    
+    public function deleteField(): void
+    {
+        FormField::destroy($this->fieldToDelete);
+
+        $this->fieldToDelete = null;
+
+        $this->dispatch('close-modal', id: 'delete-field-modal');
+
         $this->loadTemplate();
+        
+        Notification::make()
+            ->success()
+            ->title('Field deleted')
+            ->send();
     }
 
     public function reorderFields(array $fields): void
@@ -108,23 +132,31 @@ class FormBuilder extends Page
     // Open Edit Modal
     public function openEditField(int $fieldId): void
     {
-        $field = FormField::findOrFail($fieldId);
-        $this->editingFieldId = $field->id;
-        $this->editingFieldData = [
-            'label'                    => $field->label,
-            'field_key'                => $field->field_key,
-            'is_required'              => $field->is_required,
-            'placeholder'              => $field->placeholder,
-            'help_text'                => $field->help_text,
-            'option_layout'            => $field->option_layout ?? 'horizontal',
-            'validation_rules_input'   => $field->validation_rules
-                                          ? implode('|', $field->validation_rules) : '',
-            'visibility_conditions_input' => $field->visibility_conditions
-                                          ? json_encode($field->visibility_conditions, JSON_PRETTY_PRINT) : '',
-            'settings_input'           => $field->settings
-                                          ? json_encode($field->settings, JSON_PRETTY_PRINT) : '',
-        ];
-        $this->dispatch('open-edit-field-modal');
+        try {
+            $field = FormField::findOrFail($fieldId);
+            $this->editingFieldId = $field->id;
+            $this->editingFieldData = [
+                'label'                    => $field->label,
+                'field_key'                => $field->field_key,
+                'is_required'              => $field->is_required,
+                'placeholder'              => $field->placeholder,
+                'help_text'                => $field->help_text,
+                'option_layout'            => $field->option_layout ?? 'horizontal',
+                'validation_rules_input'   => $field->validation_rules
+                                            ? implode('|', $field->validation_rules) : '',
+                'visibility_conditions_input' => $field->visibility_conditions
+                                            ? json_encode($field->visibility_conditions, JSON_PRETTY_PRINT) : '',
+                'settings_input'           => $field->settings
+                                            ? json_encode($field->settings, JSON_PRETTY_PRINT) : '',
+            ];
+        } catch (\Throwable $th) {
+            Notification::make()
+                ->title('Something went wrong')
+                ->body($th->getMessage())
+                ->danger()
+                ->send();            
+        }
+        $this->dispatch('open-modal', id: 'edit-field-modal');        
     }
 
     public function saveEditField(): void
@@ -162,7 +194,7 @@ class FormBuilder extends Page
 
         $this->editingFieldId = null;
         $this->editingFieldData = [];
-        $this->dispatch('close-edit-field-modal');
+        $this->dispatch('close-modal', id: 'edit-field-modal');
         $this->loadTemplate();
 
         Notification::make()->title('Field updated!')->success()->send();
@@ -213,4 +245,106 @@ class FormBuilder extends Page
                 ->action('publishVersion'),
         ];
     }
+
+    public function createSection(): void
+    {
+        $this->validate([
+            'newSectionTitle' => ['required', 'string', 'max:255'],
+        ]);
+
+        // Your existing section creation logic
+        $this->addSection();
+
+        $this->newSectionTitle = '';
+
+        $this->dispatch('close-modal', id: 'add-section-modal');
+    }
+
+    public function openOptionsModal(int $fieldId): void
+    {
+        $field = FormField::with('options')->findOrFail($fieldId);
+
+        $this->editingOptionsFieldId = $fieldId;
+
+        $this->fieldOptions = $field->options
+            ->sortBy('sort_order')
+            ->map(fn ($option) => [
+                'id'         => $option->id,
+                'label'      => $option->label,
+                'value'      => $option->value,
+                'is_default' => $option->is_default,
+            ])
+            ->values()
+            ->toArray();
+
+        if (empty($this->fieldOptions)) {
+            $this->fieldOptions[] = [
+                'id' => null,
+                'label' => '',
+                'value' => '',
+                'is_default' => false,
+            ];
+        }
+
+        $this->dispatch('open-modal', id: 'field-options-modal');
+    }
+    
+public function addOption(): void
+{
+    $this->fieldOptions[] = [
+        'id' => null,
+        'label' => '',
+        'value' => '',
+        'is_default' => false,
+    ];
+}
+
+public function removeOption(int $index): void
+{
+    unset($this->fieldOptions[$index]);
+
+    $this->fieldOptions = array_values($this->fieldOptions);
+}
+
+public function reorderOptions(array $items): void
+{
+    $ordered = [];
+
+    foreach ($items as $item) {
+        $ordered[] = $this->fieldOptions[$item['old']];
+    }
+
+    $this->fieldOptions = $ordered;
+}
+
+public function saveOptions(): void
+{
+    foreach ($this->fieldOptions as $index => $option) {
+
+        FormFieldOption::updateOrCreate(
+            [
+                'id' => $option['id'] ?? null,
+            ],
+            [
+                'form_field_id' => $this->editingOptionFieldId,
+                'label' => $option['label'],
+                'value' => $option['value'],
+                'sort_order' => $index + 1,
+                'is_default' => $option['is_default'],
+            ]
+        );
+    }
+
+    // delete removed options
+    FormFieldOption::where('form_field_id', $this->editingOptionFieldId)
+        ->whereNotIn(
+            'id',
+            collect($this->fieldOptions)
+                ->pluck('id')
+                ->filter()
+        )
+        ->delete();
+
+    $this->dispatch('close-modal', id: 'field-options-modal');
+}
 }
