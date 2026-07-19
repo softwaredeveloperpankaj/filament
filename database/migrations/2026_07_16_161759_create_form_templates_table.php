@@ -26,7 +26,7 @@ return new class extends Migration
             $table->enum('rollno_generation_scope', ['class', 'section'])->default('section');
             $table->timestamps();
 
-            $table->unique(['branch_id', 'type']);
+            $table->unique(['branch_id']);
         });
     }
 

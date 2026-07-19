@@ -97,31 +97,21 @@ class FormTemplatesTable
             ])
             ->recordActionsColumnLabel('Actions')
             ->toolbarActions([
-                // ── Native Filament Import (CSV upload with mapping UI) ──
                 ImportAction::make()
                     ->importer(FormTemplateImporter::class)
                     ->label('Import Templates'),
 
-                // ── Native Filament Export (all records → CSV) ────────────
                 ExportAction::make()
                     ->exporter(FormTemplateExporter::class)
                     ->label('Export All Templates'),
 
                 BulkActionGroup::make([
-                    // ── Bulk Export (selected rows only → CSV) ────────────
                     ExportBulkAction::make()
                         ->exporter(FormTemplateExporter::class)
                         ->label('Export Selected'),
 
                     DeleteBulkAction::make(),
                 ]),
-                // BulkActionGroup::make([
-                //     DeleteBulkAction::make(),
-                // ]),
-            ])
-            ->headerActions([
-                ImportAction::make()->importer(FormTemplateImporter::class),
-                ExportAction::make()->exporter(FormTemplateExporter::class)
             ]);
     }
 }

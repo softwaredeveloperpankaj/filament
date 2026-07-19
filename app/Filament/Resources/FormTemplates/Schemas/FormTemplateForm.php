@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\FormTemplates\Schemas;
 
 use App\Models\Branch;
+use App\Models\FormTemplate;
 use App\Models\User;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
@@ -13,6 +14,7 @@ use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Validation\Rule;
 
 class FormTemplateForm
 {
@@ -28,6 +30,17 @@ class FormTemplateForm
                     ->live()
                     ->afterStateUpdated(fn (Set $set) => $set('user_id', null))
                     ->required()
+                    ->rules([
+                        // On CREATE: branch_id must not already exist in form_templates
+                        fn (Get $get) => Rule::unique(FormTemplate::class, 'branch_id')
+                            ->ignore(
+                                // On EDIT: ignore the current record's own branch_id
+                                request()->route('record')
+                            ),
+                    ])
+                    ->validationMessages([
+                        'unique' => 'A form template already exists for this branch. Each branch can only have one template.',
+                    ])
                     ->placeholder('Select a branch'),
                 // TextInput::make('active_version_id')
                 //     ->numeric(),
