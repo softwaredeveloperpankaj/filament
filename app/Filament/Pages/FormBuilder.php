@@ -37,6 +37,9 @@ class FormBuilder extends Page
     public array $fieldOptions = [];
     public string $newOption = '';
 
+    // ── Versions ──────────────────────────────────────────────────
+    public array $templateVersions = [];
+
     public function mount(FormTemplate $template): void
     {
         $this->templateId = $template->id;
@@ -316,7 +319,7 @@ class FormBuilder extends Page
                 ->label('View Versions')
                 ->icon('heroicon-o-clock')
                 ->color('info')
-                ->url(fn() => '#'),
+                ->action('openVersionsModal'),
 
             Action::make('publish')
                 ->label('Publish Version')
@@ -441,4 +444,40 @@ class FormBuilder extends Page
             ->body("$count option(s) have been saved successfully.")
             ->send();
     }
+
+    public function openVersionsModal(): void
+    {
+        $this->templateVersions = FormTemplateVersion::where('form_template_id', $this->templateId)
+            ->orderBy('version', 'desc')
+            ->get()
+            ->map(fn($v) => [
+                'id'             => $v->id,
+                'version' => $v->version,
+                'is_active'      => (bool) $v->is_active,
+                'published_at'   => $v->created_at?->format('d M Y, h:i A'),
+            ])
+            ->toArray();
+
+        $this->dispatch('open-modal', id: 'versions-modal');
+    }
+
+    public function toggleVersionActive(int $versionId): void
+    {
+        $version = FormTemplateVersion::findOrFail($versionId);
+
+        // Only one version can be active at a time — deactivate all others first
+        FormTemplateVersion::where('form_template_id', $this->templateId)
+            ->where('id', '!=', $versionId)
+            ->update(['is_active' => false]);
+
+        $version->update(['is_active' => !$version->is_active]);
+
+        // Refresh local state
+        $this->openVersionsModal();
+
+        Notification::make()
+            ->success()
+            ->title('Version ' . $version->version_number . ' ' . ($version->fresh()->is_active ? 'activated' : 'deactivated'))
+            ->send();
+    }    
 }

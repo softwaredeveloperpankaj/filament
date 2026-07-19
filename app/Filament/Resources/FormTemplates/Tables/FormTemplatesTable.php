@@ -2,6 +2,10 @@
 
 namespace App\Filament\Resources\FormTemplates\Tables;
 
+use App\Filament\Actions\FormTemplateExportAction;
+use App\Filament\Actions\FormTemplateImportAction;
+use App\Filament\Exports\FormTemplateExporter;
+use App\Filament\Imports\FormTemplateImporter;
 use App\Filament\Pages\FormBuilder;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
@@ -9,6 +13,9 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Actions\ExportAction;
+use Filament\Actions\ExportBulkAction;
+use Filament\Actions\ImportAction;
 use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
@@ -84,13 +91,37 @@ class FormTemplatesTable
 
                     EditAction::make(),
                     DeleteAction::make(),
+                    FormTemplateExportAction::exportForm(),
+                    FormTemplateImportAction::importForm(),
                 ]),
             ])
             ->recordActionsColumnLabel('Actions')
             ->toolbarActions([
+                // ── Native Filament Import (CSV upload with mapping UI) ──
+                ImportAction::make()
+                    ->importer(FormTemplateImporter::class)
+                    ->label('Import Templates'),
+
+                // ── Native Filament Export (all records → CSV) ────────────
+                ExportAction::make()
+                    ->exporter(FormTemplateExporter::class)
+                    ->label('Export All Templates'),
+
                 BulkActionGroup::make([
+                    // ── Bulk Export (selected rows only → CSV) ────────────
+                    ExportBulkAction::make()
+                        ->exporter(FormTemplateExporter::class)
+                        ->label('Export Selected'),
+
                     DeleteBulkAction::make(),
                 ]),
+                // BulkActionGroup::make([
+                //     DeleteBulkAction::make(),
+                // ]),
+            ])
+            ->headerActions([
+                ImportAction::make()->importer(FormTemplateImporter::class),
+                ExportAction::make()->exporter(FormTemplateExporter::class)
             ]);
     }
 }

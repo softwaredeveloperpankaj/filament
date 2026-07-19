@@ -491,11 +491,192 @@
 
     </x-filament::modal>
 
+    {{-- Versions Modal --}}
+    <x-filament::modal id="versions-modal" width="4xl">
+
+        <x-slot name="heading">
+            Template Versions
+        </x-slot>
+
+        <x-slot name="description">
+            Only versions for <strong>{{ $this->template->name }}</strong> are shown.
+            Toggle <em>Active</em> to set which version is currently live.
+        </x-slot>
+
+        <div>
+            @if(count($templateVersions) === 0)
+                <div class="ver-empty">
+                    <x-filament::icon name="heroicon-o-clock" class="h-10 w-10 mx-auto mb-3 opacity-30" />
+                    <p class="text-sm text-gray-500">No versions published yet.</p>
+                    <p class="text-xs text-gray-400 mt-1">Click <strong>Publish Version</strong> in the header to create one.</p>
+                </div>
+            @else
+                {{-- Table header --}}
+                <div class="ver-table-head">
+                    <span>#</span>
+                    <span>Version</span>
+                    <span>Published At</span>
+                    <span class="text-center">Active</span>
+                </div>
+
+                {{-- Rows --}}
+                <div class="ver-table-body">
+                    @foreach($templateVersions as $i => $ver)
+                        <div class="ver-row {{ $ver['is_active'] ? 'ver-row-active' : '' }}">
+
+                            {{-- Row number --}}
+                            <span class="ver-cell-num">{{ $i + 1 }}</span>
+
+                            {{-- Version badge --}}
+                            <span>
+                                <x-filament::badge color="{{ $ver['is_active'] ? 'success' : 'gray' }}">
+                                    v{{ $ver['version'] }}
+                                </x-filament::badge>
+                            </span>
+
+                            {{-- Published date --}}
+                            <span class="ver-cell-date">
+                                {{ $ver['published_at'] }}
+                            </span>
+
+                            {{-- Toggle active --}}
+                            <div class="ver-cell-toggle">
+                                <button
+                                    type="button"
+                                    wire:click="toggleVersionActive({{ $ver['id'] }})"
+                                    wire:loading.attr="disabled"
+                                    class="ver-toggle {{ $ver['is_active'] ? 'ver-toggle-on' : 'ver-toggle-off' }}"
+                                    title="{{ $ver['is_active'] ? 'Deactivate' : 'Activate' }}"
+                                >
+                                    <span class="ver-toggle-knob"></span>
+                                </button>
+                            </div>
+
+                        </div>
+                    @endforeach
+                </div>
+            @endif
+        </div>
+
+        <x-slot name="footerActions">
+            <x-filament::button
+                color="gray"
+                x-on:click="$dispatch('close-modal', { id: 'versions-modal' })"
+            >
+                Close
+            </x-filament::button>
+        </x-slot>
+
+    </x-filament::modal>    
+
     @push('styles')
         <style>
             .sortable-ghost {
                 opacity: .45;
             }
+
+        /* ── Versions Modal ─────────────────────────────────────── */
+        .ver-empty {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: rgb(156 163 175);
+        }
+
+        .ver-table-head,
+        .ver-row {
+            display: grid;
+            grid-template-columns: 2.5rem 1fr 1fr 5rem;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.625rem 0.75rem;
+        }
+
+        .ver-table-head {
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: rgb(107 114 128);
+            border-bottom: 1px solid rgba(148,163,184,0.18);
+            padding-bottom: 0.5rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .ver-row {
+            border-radius: 0.75rem;
+            border: 1px solid rgba(148,163,184,0.16);
+            background: rgba(255,255,255,0.7);
+            margin-bottom: 0.375rem;
+            transition: border-color 0.15s, background 0.15s;
+        }
+
+        .dark .ver-row {
+            background: rgba(31,41,55,0.75);
+            border-color: rgba(75,85,99,0.30);
+        }
+
+        .ver-row-active {
+            border-color: rgba(34,197,94,0.40) !important;
+            background: rgba(34,197,94,0.04) !important;
+        }
+
+        .dark .ver-row-active {
+            background: rgba(34,197,94,0.06) !important;
+        }
+
+        .ver-cell-num {
+            font-size: 0.75rem;
+            color: rgb(156 163 175);
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .ver-cell-date {
+            font-size: 0.8125rem;
+            color: rgb(107 114 128);
+        }
+
+        .ver-cell-toggle {
+            display: flex;
+            justify-content: center;
+        }
+
+        /* Toggle switch */
+        .ver-toggle {
+            position: relative;
+            width: 2.75rem;
+            height: 1.5rem;
+            border-radius: 9999px;
+            border: none;
+            cursor: pointer;
+            transition: background 0.2s ease;
+            flex-shrink: 0;
+            display: inline-flex;
+            align-items: center;
+            padding: 0 0.25rem;
+        }
+
+        .ver-toggle-on  { background: rgb(34 197 94); }
+        .ver-toggle-off { background: rgb(209 213 219); }
+        .dark .ver-toggle-off { background: rgb(75 85 99); }
+
+        .ver-toggle-knob {
+            position: absolute;
+            width: 1.1rem;
+            height: 1.1rem;
+            border-radius: 9999px;
+            background: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.20);
+            transition: transform 0.2s ease;
+        }
+
+        .ver-toggle-on  .ver-toggle-knob { transform: translateX(1.2rem); }
+        .ver-toggle-off .ver-toggle-knob { transform: translateX(0); }
+
+        .ver-toggle:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }            
 
             /* ── Options Modal ─────────────────────────────────────── */
             .opt-header-row,
