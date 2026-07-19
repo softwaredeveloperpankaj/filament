@@ -10,6 +10,7 @@ use App\Models\FormTemplateVersion;
 use Filament\Pages\Page;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class FormBuilder extends Page
@@ -203,22 +204,103 @@ class FormBuilder extends Page
     // ── Publish ───────────────────────────────────────────────────
     public function publishVersion(): void
     {
-        $lastVersion = $this->template->versions()->max('version_number') ?? 0;
-        $snapshot = $this->template->sections->map(fn($s) => [
-            'title'  => $s->title,
-            'fields' => $s->fields->toArray(),
-        ])->toArray();
+        $lastVersion = 0;
+        DB::transaction(function () {
 
-        FormTemplateVersion::create([
-            'form_template_id' => $this->templateId,
-            'version_number'   => $lastVersion + 1,
-            'snapshot'         => $snapshot,
-        ]);
+            $lastVersion = $this->template->versions()->max('version') ?? 0;
 
-        $this->template->update(['status' => 'published']);
+            // $snapshot = $this->template->sections->map(function ($section) {
+            //     return [
+            //         'title'         => $section->title,
+            //         'section_key'   => $section->section_key,
+            //         'sort_order'    => $section->sort_order,
+            //         'fields'        => $section->fields->map(function ($field) {
+            //             return [
+            //                 'field_key'             => $field->field_key,
+            //                 'label'                 => $field->label,
+            //                 'type'                  => $field->type,
+            //                 'placeholder'           => $field->placeholder,
+            //                 'help_text'             => $field->help_text,
+            //                 'sort_order'            => $field->sort_order,        
+            //                 'is_required'           => $field->is_required,
+            //                 'option_layout'         => $field->option_layout,
+            //                 'is_active'             => $field->is_active,
+            //                 'validation_rules'      => $field->validation_rules,
+            //                 'settings'              => $field->settings,
+            //                 'visibility_conditions' => $field->visibility_conditions,
+            //                 'options'               => $field->options->map(fn ($option) => [
+            //                     'label'         => $option->label,
+            //                     'value'         => $option->value,
+            //                     'sort_order'    => $option->sort_order,
+            //                     'is_default'    => $option->is_default,
+            //                 ])->values(),
+            //             ];
+            //         })->values(),
+            //     ];
+            // })->toArray();
+
+            $snapshot = $this->template->sections->map(function ($section) {
+                return [
+                    'title'       => $section->title,
+                    'section_key' => $section->section_key,
+                    'sort_order'  => $section->sort_order,
+                    'fields'      => $section->fields->map(function ($field) {
+
+                        $fieldData = [
+                            'field_key'             => $field->field_key,
+                            'label'                 => $field->label,
+                            'type'                  => $field->type,
+                            'placeholder'           => $field->placeholder,
+                            'help_text'             => $field->help_text,
+                            'sort_order'            => $field->sort_order,
+                            'is_required'           => $field->is_required,
+                            'option_layout'         => $field->option_layout,
+                            'is_active'             => $field->is_active,
+                            'validation_rules'      => $field->validation_rules,
+                            'settings'              => $field->settings,
+                            'visibility_conditions' => $field->visibility_conditions,
+                        ];
+
+                        if (in_array($field->type, ['select', 'radio', 'checkbox'])) {
+                            $fieldData['options'] = $field->options->map(fn ($option) => [
+                                'label'      => $option->label,
+                                'value'      => $option->value,
+                                'sort_order' => $option->sort_order,
+                                'is_default' => $option->is_default,
+                            ])->values()->toArray();
+                        }
+
+                        return $fieldData;
+
+                    })->values()->toArray(),
+                ];
+            })->toArray();
+
+            // Deactivate previous versions
+            $this->template->versions()->update([
+                'is_active' => false,
+            ]);
+
+            FormTemplateVersion::create([
+                'form_template_id' => $this->template->id,
+                'user_id'          => $this->template->user_id,
+                'version'          => $lastVersion + 1,
+                'schema_json'      => $snapshot,
+                'is_active'        => true,
+                'published_at'     => now(),
+            ]);
+
+            $this->template->update([
+                'status' => 'published',
+            ]);
+        });
+
         $this->loadTemplate();
 
-        Notification::make()->title('Version ' . ($lastVersion + 1) . ' published!')->success()->send();
+        Notification::make()
+            ->success()
+            ->title('Version ' . ($lastVersion + 1) . ' published!')
+            ->send();
     }
 
     protected function getHeaderActions(): array
@@ -289,62 +371,74 @@ class FormBuilder extends Page
         $this->dispatch('open-modal', id: 'field-options-modal');
     }
     
-public function addOption(): void
-{
-    $this->fieldOptions[] = [
-        'id' => null,
-        'label' => '',
-        'value' => '',
-        'is_default' => false,
-    ];
-}
-
-public function removeOption(int $index): void
-{
-    unset($this->fieldOptions[$index]);
-
-    $this->fieldOptions = array_values($this->fieldOptions);
-}
-
-public function reorderOptions(array $items): void
-{
-    $ordered = [];
-
-    foreach ($items as $item) {
-        $ordered[] = $this->fieldOptions[$item['old']];
+    public function addOption(): void
+    {
+        $this->fieldOptions[] = [
+            'id' => null,
+            'label' => '',
+            'value' => '',
+            'is_default' => false,
+        ];
     }
 
-    $this->fieldOptions = $ordered;
-}
+    public function removeOption(int $index): void
+    {
+        unset($this->fieldOptions[$index]);
 
-public function saveOptions(): void
-{
-    foreach ($this->fieldOptions as $index => $option) {
-
-        FormFieldOption::updateOrCreate(
-            [
-                'id' => $option['id'] ?? null,
-            ],
-            [
-                'form_field_id' => $this->editingOptionFieldId,
-                'label' => $option['label'],
-                'value' => $option['value'],
-                'sort_order' => $index + 1,
-                'is_default' => $option['is_default'],
-            ]
-        );
+        $this->fieldOptions = array_values($this->fieldOptions);
     }
 
-    // delete removed options
-    FormFieldOption::where('form_field_id', $this->editingOptionFieldId)
-        ->whereNotIn(
-            'id',
-            collect($this->fieldOptions)
-                ->pluck('id')
-                ->filter()
-        )
-        ->delete();
+    // NEW — receives flat array of old indexes in new visual order
+    public function reorderOptions(array $orderedIndexes): void
+    {
+        $reordered = [];
+        foreach ($orderedIndexes as $i) {
+            if (isset($this->fieldOptions[$i])) {
+                $reordered[] = $this->fieldOptions[$i];
+            }
+        }
+        $this->fieldOptions = $reordered;
+    }
 
-    $this->dispatch('close-modal', id: 'field-options-modal');
-}
+    public function saveOptions(): void
+    {
+        $count = count($this->fieldOptions);
+        $keepIds = [];
+        try {
+            foreach ($this->fieldOptions as $index => $option) {
+                $data = [
+                    'form_field_id' => $this->editingOptionsFieldId, // ← typo fix
+                    'label'         => $option['label'],
+                    'value'         => $option['value'],
+                    'sort_order'    => $index + 1,
+                    'is_default'    => $option['is_default'],
+                ];
+
+                $result = FormFieldOption::updateOrCreate( ['id' => $option['id'] ?? null], $data);
+
+                $keepIds[] = $result->id;
+            }
+
+            // Delete options that were removed from the list
+            FormFieldOption::where('form_field_id', $this->editingOptionsFieldId)
+                ->whereNotIn(
+                    'id', $keepIds
+                )
+                ->delete();
+        } catch (\Throwable $th) {
+            Notification::make()
+                ->success()
+                ->title('Options saved')
+                ->body($th->getMessage())
+                ->send();
+        }
+
+        $this->dispatch('close-modal', id: 'field-options-modal');
+
+        Notification::make()
+            ->success()
+            ->title('Options saved')
+            ->body("$count option(s) have been saved successfully.")
+            ->send();
+    }
 }

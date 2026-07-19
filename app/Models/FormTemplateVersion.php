@@ -15,6 +15,12 @@ class FormTemplateVersion extends Model
         'published_at',
     ];
 
+    protected $casts = [
+        'schema_json' => 'array',
+        'is_active' => 'boolean',
+        'published_at' => 'datetime',
+    ];
+
     public function template()
     {
         return $this->belongsTo(FormTemplate::class);
