@@ -11,80 +11,49 @@ use Filament\Forms\Components\FileUpload;
 use Filament\Notifications\Notification;
 use Illuminate\Support\Str;
 
-class BulkImportAction
+class BulkImportFormAction
 {
-    /**
-     * Toolbar action — auto-detects file type and runs correct import.
-     * Handles both bulk_form_templates and bulk_form_builders exports.
-     */
     public static function make(): Action
     {
         return Action::make('bulkImport')
-            ->label('Bulk Import')
-            ->icon('heroicon-o-arrow-up-tray')
+            ->label('Import Forms')
+            ->icon('heroicon-o-arrow-down-tray')
             ->color('warning')
             ->form([
                 FileUpload::make('import_file')
-                    ->label('Bulk JSON File')
+                    ->label('Form Builder JSON File')
                     ->acceptedFileTypes(['application/json', 'text/plain'])
                     ->required()
-                    ->helperText(
-                        'Upload a file from "Export Templates" (bulk metadata) ' .
-                        'or "Export Forms" (bulk form builder). Type is detected automatically.'
-                    ),
+                    ->helperText('Upload a file exported from "Export Forms (Builder)".'),
             ])
             ->action(function (array $data) {
                 try {
                     $path = storage_path('app/public/' . $data['import_file']);
                     $json = json_decode(file_get_contents($path), true);
 
-                    $type = $json['_export_type'] ?? '';
+                    if (($json['_export_type'] ?? '') !== 'bulk_form_builders') {
+                        Notification::make()
+                            ->danger()
+                            ->title('Wrong file type')
+                            ->body('This file is not a Form Builder export. Please use a file exported from "Export Forms (Builder)".')
+                            ->send();
 
-                    match ($type) {
-                        'bulk_form_templates' => self::importBulkTemplates($json),
-                        'bulk_form_builders'  => self::importBulkForms($json),
-                        default               => Notification::make()->danger()
-                            ->title('Unrecognised file')
-                            ->body("Expected a bulk export file. Got type: \"{$type}\"")
-                            ->send(),
-                    };
+                        @unlink($path);
+                        return;
+                    }
+
+                    self::importBulkForms($json);
 
                     @unlink($path);
 
                 } catch (\Throwable $e) {
-                    Notification::make()->danger()
-                        ->title('Bulk import failed')
+                    Notification::make()
+                        ->danger()
+                        ->title('Import failed')
                         ->body($e->getMessage())
                         ->send();
                 }
             });
-    }
-
-    // ── Private helpers ────────────────────────────────────────────
-
-    private static function importBulkTemplates(array $json): void
-    {
-        $count = 0;
-
-        foreach ($json['templates'] ?? [] as $t) {
-            FormTemplate::create([
-                'name'                    => $t['name'] . ' (Imported)',
-                'slug'                    => Str::slug($t['name']) . '-' . now()->format('YmdHis') . '-' . $count,
-                'type'                    => $t['type'] ?? 'admission',
-                'status'                  => 'draft',
-                'form_layout'             => $t['form_layout'] ?? null,
-                'rollno_generation_scope' => $t['rollno_generation_scope'] ?? null,
-                'registration_serial'     => $t['registration_serial'] ?? null,
-                'is_active'               => false,
-                'settings'                => $t['settings'] ?? null,
-            ]);
-            $count++;
-        }
-
-        Notification::make()->success()
-            ->title('Bulk import complete')
-            ->body("{$count} template(s) imported as drafts.")
-            ->send();
     }
 
     private static function importBulkForms(array $json): void
@@ -94,12 +63,11 @@ class BulkImportAction
         $fieldCount    = 0;
 
         foreach ($json['forms'] ?? [] as $formData) {
-            // Create a new template for each form in the bulk file
             $template = FormTemplate::create([
-                'name'   => ($formData['template_name'] ?? 'Imported Form') . ' (Imported)',
-                'slug'   => Str::slug($formData['template_name'] ?? 'imported-form') . '-' . now()->format('YmdHis') . '-' . $templateCount,
-                'type'   => 'admission',
-                'status' => 'draft',
+                'name'      => ($formData['template_name'] ?? 'Imported Form') . ' (Imported)',
+                'slug'      => Str::slug($formData['template_name'] ?? 'imported-form') . '-' . now()->format('YmdHis') . '-' . $templateCount,
+                'type'      => 'admission',
+                'status'    => 'draft',
                 'is_active' => false,
             ]);
             $templateCount++;
@@ -144,9 +112,10 @@ class BulkImportAction
             }
         }
 
-        Notification::make()->success()
-            ->title('Bulk form import complete')
-            ->body("{$templateCount} template(s), {$sectionCount} section(s), {$fieldCount} field(s) imported.")
+        Notification::make()
+            ->success()
+            ->title('Import complete')
+            ->body("{$templateCount} template(s), {$sectionCount} section(s), {$fieldCount} field(s) imported as drafts.")
             ->send();
     }
 }

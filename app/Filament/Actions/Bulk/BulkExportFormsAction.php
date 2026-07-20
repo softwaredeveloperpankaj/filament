@@ -15,7 +15,7 @@ class BulkExportFormsAction
     {
         return BulkAction::make('bulkExportForms')
             ->label('Export Forms (Builder)')
-            ->icon('heroicon-o-document-arrow-down')
+            ->icon('heroicon-o-document-arrow-up')
             ->color('success')
             ->deselectRecordsAfterCompletion()
             ->action(function (Collection $records) {

@@ -72,6 +72,7 @@ class AdminPanelProvider extends PanelProvider
                 NavigationGroup::make()
                     ->label('Security')
                     ->collapsed()
-            ]);            
+            ])
+            ->databaseNotifications();            
     }
 }

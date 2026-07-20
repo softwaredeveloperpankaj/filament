@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources\FormTemplates\Tables;
 
+use App\Filament\Actions\Bulk\BulkExportFormsAction;
+use App\Filament\Actions\Bulk\BulkImportFormAction;
 use App\Filament\Actions\FormTemplateExportAction;
 use App\Filament\Actions\FormTemplateImportAction;
 use App\Filament\Exports\FormTemplateExporter;
@@ -104,11 +106,12 @@ class FormTemplatesTable
                 ExportAction::make()
                     ->exporter(FormTemplateExporter::class)
                     ->label('Export All Templates'),
-
+                BulkExportFormsAction::make(),
+                BulkImportFormAction::make(),
                 BulkActionGroup::make([
                     ExportBulkAction::make()
                         ->exporter(FormTemplateExporter::class)
-                        ->label('Export Selected'),
+                        ->label('Export Selected Templates'),
 
                     DeleteBulkAction::make(),
                 ]),
