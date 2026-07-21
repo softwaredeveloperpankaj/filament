@@ -28,6 +28,7 @@ class FormTemplatesTable
     public static function configure(Table $table): Table
     {
         return $table
+            ->persistColumnsInSession()
             ->columns([
                 TextColumn::make('id')
                     ->sortable()
