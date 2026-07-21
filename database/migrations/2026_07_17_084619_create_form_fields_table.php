@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('form_fields', function (Blueprint $table) {
             $table->id();
             $table->foreignId('form_template_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('form_section_id')->nullable()->constrained('form_sections')->nullOnDelete();
+            $table->foreignId('form_section_id')->constrained('form_sections')->cascadeOnDelete();
             $table->string('field_key');
             $table->string('label');
             $table->string('type'); // text, email, number, date, textarea, select, radio, checkbox, file

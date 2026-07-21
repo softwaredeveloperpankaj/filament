@@ -111,6 +111,7 @@
                 <div id="sections-wrapper" class="fb-sections">
                     @forelse ($this->template->sections as $section)
                         <div
+                            wire:key="section-{{ $section->id }}"
                             class="section-card fb-section"
                             data-section-id="{{ $section->id }}"
                             x-data="{ open: {{ $loop->first ? 'true' : 'false' }} }"
@@ -156,6 +157,7 @@
                                 >
                                     @forelse ($section->fields as $field)
                                         <div
+                                            wire:key="field-{{ $field->id }}"
                                             class="field-card fb-field"
                                             data-field-id="{{ $field->id }}"
                                         >
@@ -953,127 +955,215 @@
                     justify-content: flex-end;
                 }
             }
+
+            .fb-handle,
+            .fb-field-handle,
+            .option-handle {
+                cursor: grab;
+                touch-action: none;
+            }
+
+            .fb-handle:active,
+            .fb-field-handle:active,
+            .option-handle:active {
+                cursor: grabbing;
+            }
+
+            .fb-field,
+            .section-card,
+            .opt-row {
+                user-select: none;
+            }            
         </style>
     @endpush
 
     @push('scripts')
-        <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/Sortable.min.js"></script>
+        @assets
+            <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/Sortable.min.js" defer></script>
+        @endassets
+
+        @script
         <script>
-            function initFormBuilder() {
-                const palette = document.getElementById('field-palette');
+            let paletteSortable = null
+            let sectionsSortable = null
+            let dropzoneSortables = new Map()
 
-                if (palette && !palette.dataset.sortableLoaded) {
-                    new Sortable(palette, {
-                        group: { name: 'form-fields', pull: 'clone', put: false },
-                        sort: false,
-                        animation: 150,
-                        ghostClass: 'sortable-ghost',
-                    });
+            const initPalette = () => {
+                const palette = document.getElementById('field-palette')
 
-                    palette.dataset.sortableLoaded = 'true';
+                if (!palette) return
+
+                if (paletteSortable) {
+                    paletteSortable.destroy()
+                    paletteSortable = null
                 }
 
-                const sectionsWrapper = document.getElementById('sections-wrapper');
+                paletteSortable = new Sortable(palette, {
+                    group: { name: 'form-fields', pull: 'clone', put: false },
+                    sort: false,
+                    animation: 150,
+                    ghostClass: 'sortable-ghost',
+                    fallbackOnBody: true,
+                })
+            }
 
-                if (sectionsWrapper && !sectionsWrapper.dataset.sortableLoaded) {
-                    new Sortable(sectionsWrapper, {
-                        animation: 150,
-                        handle: '.handle',
-                        ghostClass: 'sortable-ghost',
-                        onEnd() {
-                            const sections = [...document.querySelectorAll('.section-card')].map((el, i) => ({
-                                id: el.dataset.sectionId,
-                                sort_order: i + 1,
-                            }));
+            const initSections = () => {
+                const sectionsWrapper = document.getElementById('sections-wrapper')
 
-                            @this.reorderSections(sections);
-                        },
-                    });
+                if (!sectionsWrapper) return
 
-                    sectionsWrapper.dataset.sortableLoaded = 'true';
+                if (sectionsSortable) {
+                    sectionsSortable.destroy()
+                    sectionsSortable = null
                 }
+
+                sectionsSortable = new Sortable(sectionsWrapper, {
+                    animation: 150,
+                    handle: '.fb-handle',
+                    draggable: '.section-card',
+                    ghostClass: 'sortable-ghost',
+                    fallbackOnBody: true,
+                    onEnd() {
+                        const sections = [...sectionsWrapper.querySelectorAll('.section-card')].map((el, i) => ({
+                            id: Number(el.dataset.sectionId),
+                            sort_order: i + 1,
+                        }))
+
+                        $wire.reorderSections(sections)
+                    },
+                })
+            }
+
+            const destroyDropzones = () => {
+                dropzoneSortables.forEach(instance => instance.destroy())
+                dropzoneSortables.clear()
+            }
+
+            const initDropzones = () => {
+                destroyDropzones()
 
                 document.querySelectorAll('.field-dropzone').forEach((zone) => {
-                    if (zone.dataset.sortableLoaded) return;
+                    const sectionId = Number(zone.dataset.sectionId)
 
-                    new Sortable(zone, {
-                        group: { name: 'form-fields', pull: true, put: true },
+                    const sortable = new Sortable(zone, {
+                        group: {
+                            name: 'form-fields',
+                            pull: true,
+                            put: true,
+                        },
                         animation: 150,
+                        draggable: '.field-card, .fb-palette-item',
                         handle: '.fb-field-handle',
                         ghostClass: 'sortable-ghost',
+                        fallbackOnBody: true,
+
                         onAdd(evt) {
-                            const type = evt.item.dataset.type;
-                            const label = evt.item.dataset.label || 'New Field';
-                            const sectionId = evt.to.dataset.sectionId;
+                            const isPaletteClone = evt.item.classList.contains('fb-palette-item')
+                            const targetSectionId = Number(evt.to.dataset.sectionId)
 
-                            if (!type) return;
+                            if (!targetSectionId) {
+                                evt.item.remove()
+                                return
+                            }
 
-                            @this.call('addField', parseInt(sectionId), type, label);
-                            evt.item.remove();
-                        },
-                        onEnd() {
-                            const fields = [];
+                            if (isPaletteClone) {
+                                const type = evt.item.dataset.type
+                                const label = evt.item.dataset.label || 'New Field'
+
+                                evt.item.remove()
+
+                                if (!type) return
+
+                                $wire.call('addField', targetSectionId, type, label)
+                                return
+                            }
+
+                            const fields = []
 
                             document.querySelectorAll('.field-dropzone').forEach((dz) => {
                                 [...dz.querySelectorAll('.field-card')].forEach((row, i) => {
-                                    if (!row.dataset.fieldId) return;
+                                    if (!row.dataset.fieldId) return
 
                                     fields.push({
-                                        id: row.dataset.fieldId,
-                                        form_section_id: dz.dataset.sectionId,
+                                        id: Number(row.dataset.fieldId),
+                                        form_section_id: Number(dz.dataset.sectionId),
                                         sort_order: i + 1,
-                                    });
-                                });
-                            });
+                                    })
+                                })
+                            })
 
                             if (fields.length) {
-                                @this.reorderFields(fields);
+                                $wire.reorderFields(fields)
                             }
                         },
-                    });
 
-                    zone.dataset.sortableLoaded = 'true';
-                });
+                        onEnd(evt) {
+                            if (evt.item.classList.contains('fb-palette-item')) return
+
+                            const fields = []
+
+                            document.querySelectorAll('.field-dropzone').forEach((dz) => {
+                                [...dz.querySelectorAll('.field-card')].forEach((row, i) => {
+                                    if (!row.dataset.fieldId) return
+
+                                    fields.push({
+                                        id: Number(row.dataset.fieldId),
+                                        form_section_id: Number(dz.dataset.sectionId),
+                                        sort_order: i + 1,
+                                    })
+                                })
+                            })
+
+                            if (fields.length) {
+                                $wire.reorderFields(fields)
+                            }
+                        },
+                    })
+
+                    dropzoneSortables.set(sectionId, sortable)
+                })
             }
 
-            document.addEventListener('DOMContentLoaded', initFormBuilder);
-            document.addEventListener('livewire:navigated', initFormBuilder);
-            document.addEventListener('livewire:initialized', initFormBuilder);
-
-            // ── Options Sortable ────────────────────────────────────────────
-            function initOptionSortable() {
-                const el = document.getElementById('options-sortable');
-                if (!el) return;
-
-                // Destroy existing instance before re-attaching
-                if (el._sortableInstance) {
-                    el._sortableInstance.destroy();
-                    el._sortableInstance = null;
-                }
-
-                el._sortableInstance = new Sortable(el, {
-                    animation: 150,
-                    handle: '.option-handle',
-                    ghostClass: 'sortable-ghost',
-                    onEnd() {
-                        // Send current order of data-index values to Livewire
-                        @this.reorderOptions(
-                            [...el.querySelectorAll('.opt-row')].map(row => Number(row.dataset.index))
-                        );
-                    },
-                });
+            const initBuilder = () => {
+                initPalette()
+                initSections()
+                initDropzones()
             }
 
-            // Re-init on page navigation / Livewire boot
-            document.addEventListener('livewire:initialized', initOptionSortable);
-            document.addEventListener('livewire:navigated', initOptionSortable);
+            initBuilder()
 
-            // KEY FIX: init every time the options modal is opened (DOM exists only then)
+            $wire.interceptMessage(({ onSuccess }) => {
+                onSuccess(({ onRender }) => {
+                    onRender(() => {
+                        initBuilder()
+                    })
+                })
+            })
+
             window.addEventListener('open-modal', (e) => {
                 if (e.detail?.id === 'field-options-modal') {
-                    setTimeout(initOptionSortable, 60);
+                    requestAnimationFrame(() => {
+                        const el = document.getElementById('options-sortable')
+                        if (!el) return
+
+                        if (el._sortableInstance) {
+                            el._sortableInstance.destroy()
+                        }
+
+                        el._sortableInstance = new Sortable(el, {
+                            animation: 150,
+                            handle: '.option-handle',
+                            ghostClass: 'sortable-ghost',
+                            onEnd() {
+                                $wire.reorderOptions(
+                                    [...el.querySelectorAll('.opt-row')].map(row => Number(row.dataset.index))
+                                )
+                            },
+                        })
+                    })
                 }
-            });
+            })
         </script>
+        @endscript
     @endpush
 </x-filament-panels::page>

@@ -2,19 +2,16 @@
 
 namespace App\Filament\Resources\FormTemplates\Schemas;
 
-use App\Models\Branch;
 use App\Models\FormTemplate;
 use App\Models\User;
-use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
-use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Str;
 
 class FormTemplateForm
 {
@@ -30,18 +27,13 @@ class FormTemplateForm
                     ->live()
                     ->afterStateUpdated(fn (Set $set) => $set('user_id', null))
                     ->required()
-                    ->rules([
-                        // On CREATE: branch_id must not already exist in form_templates
-                        fn (Get $get) => Rule::unique(FormTemplate::class, 'branch_id')
-                            ->ignore(
-                                // On EDIT: ignore the current record's own branch_id
-                                request()->route('record')
-                            ),
-                    ])
+                    ->rule(function ($record) {
+                        return Rule::unique('form_templates', 'branch_id')
+                            ->ignore($record?->id);
+                    })
                     ->validationMessages([
-                        'unique' => 'A form template already exists for this branch. Each branch can only have one template.',
-                    ])
-                    ->placeholder('Select a branch'),
+                        'unique' => 'This branch already has a form template.',
+                    ]),
                 // TextInput::make('active_version_id')
                 //     ->numeric(),
                 Select::make('user_id')
@@ -67,9 +59,15 @@ class FormTemplateForm
                 TextInput::make('registration_serial')
                     ->required(),
                 TextInput::make('name')
-                    ->required(),
+                    ->required()
+                    ->live(onBlur: true)
+                    ->afterStateUpdated(function (Set $set, ?string $state, ?FormTemplate $record) {
+                        $set('slug', self::generateUniqueSlug($state ?? '', $record?->id));
+                    }),
                 TextInput::make('slug')
-                    ->required(),
+                    ->required()
+                    ->readOnly()
+                    ->dehydrated(),
                 Select::make('type')
                     ->options(['admission' => 'Admission'])
                     ->default('admission')
@@ -91,4 +89,21 @@ class FormTemplateForm
                     ->columnSpanFull(),
             ]);
     }
+
+    public static function generateUniqueSlug(string $name, ?int $ignoreId = null): string
+    {
+        $slug = Str::slug($name);
+        $originalSlug = $slug;
+        $count = 1;
+
+        while (
+            FormTemplate::where('slug', $slug)
+                ->when($ignoreId, fn ($query) => $query->where('id', '!=', $ignoreId))
+                ->exists()
+        ) {
+            $slug = $originalSlug . '-' . $count++;
+        }
+
+        return $slug;
+    }    
 }

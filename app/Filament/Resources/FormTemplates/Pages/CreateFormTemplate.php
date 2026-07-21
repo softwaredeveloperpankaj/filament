@@ -9,7 +9,6 @@ use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\UniqueConstraintViolationException;
 
 class CreateFormTemplate extends CreateRecord
 {
@@ -35,14 +34,12 @@ class CreateFormTemplate extends CreateRecord
         try {
             return parent::handleRecordCreation($data);
 
-        } catch (UniqueConstraintViolationException $e) {
-            // Find which branch already has a template
-            $branchName = Branch::find($data['branch_id'])?->name ?? 'the selected branch';
+        } catch (\Exception $e) {
 
             Notification::make()
                 ->danger()
-                ->title('Duplicate Template')
-                ->body("A form template already exists for \"{$branchName}\". Each branch can only have one active template. Please edit the existing one instead.")
+                ->title('System Error')
+                ->body('Something went wrong while processing your request. Please try again or contact support if the issue persists.')
                 ->persistent()
                 ->send();
 
