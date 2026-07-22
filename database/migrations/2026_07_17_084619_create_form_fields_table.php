@@ -13,7 +13,6 @@ return new class extends Migration
     {
         Schema::create('form_fields', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('form_template_id')->constrained()->cascadeOnDelete();
             $table->foreignId('form_section_id')->constrained('form_sections')->cascadeOnDelete();
             $table->string('field_key');
             $table->string('label');
@@ -29,8 +28,8 @@ return new class extends Migration
             $table->json('visibility_conditions')->nullable(); // required_if / show_if style conditions
             $table->timestamps();
 
-            $table->unique(['form_template_id', 'field_key']);
-            $table->index(['form_template_id', 'form_section_id', 'sort_order']);
+            $table->unique(['field_key']);
+            $table->index(['form_section_id', 'sort_order']);
         });
     }
 

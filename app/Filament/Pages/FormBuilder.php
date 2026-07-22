@@ -37,8 +37,13 @@ class FormBuilder extends Page
     public array $fieldOptions = [];
     public string $newOption = '';
 
-    // ── Versions ──────────────────────────────────────────────────
+    //  Versions 
     public array $templateVersions = [];
+
+    // Section
+    public ?int $sectionToDelete = null;
+    public ?int $editingSectionId = null;
+    public string $editingSectionTitle = '';    
 
     public function mount(FormTemplate $template): void
     {
@@ -68,12 +73,7 @@ class FormBuilder extends Page
         ]);
         $this->newSectionTitle = '';
         $this->loadTemplate();
-    }
-
-    public function deleteSection(int $sectionId): void
-    {
-        FormSection::destroy($sectionId);
-        $this->loadTemplate();
+        $this->markAsDraft();
     }
 
     public function reorderSections(array $sections): void
@@ -82,6 +82,66 @@ class FormBuilder extends Page
             FormSection::where('id', $item['id'])
                 ->update(['sort_order' => $item['sort_order']]);
         }
+    }
+
+    public function openEditSection(int $sectionId): void
+    {
+        $section = $this->template->sections()->findOrFail($sectionId);
+
+        $this->editingSectionId = $section->id;
+        $this->editingSectionTitle = $section->title ?? '';
+
+        $this->dispatch('open-modal', id: 'edit-section-modal');
+    }
+
+    public function saveEditSection(): void
+    {
+        $this->validate([
+            'editingSectionTitle' => ['required', 'string', 'max:255'],
+        ]);
+
+        $section = $this->template->sections()->findOrFail($this->editingSectionId);
+
+        $section->update([
+            'title' => $this->editingSectionTitle,
+        ]);
+
+        $this->editingSectionId = null;
+        $this->editingSectionTitle = '';
+
+        $this->template->refresh();
+
+        $this->markAsDraft();
+        $this->dispatch('close-modal', id: 'edit-section-modal');
+
+        Notification::make()
+            ->title('Section updated successfully')
+            ->success()
+            ->send();
+    }
+
+    public function confirmDeleteSection(int $sectionId): void
+    {
+        $this->sectionToDelete = $sectionId;
+
+        $this->dispatch('open-modal', id: 'delete-section-modal');
+    }
+
+    public function deleteSection(): void
+    {
+        $section = $this->template->sections()->findOrFail($this->sectionToDelete);
+
+        $section->delete();
+
+        $this->sectionToDelete = null;
+        $this->template->refresh();
+
+        $this->dispatch('close-modal', id: 'delete-section-modal');
+
+        Notification::make()
+            ->title('Section deleted successfully')
+            ->success()
+            ->send();
     }
 
     // ── Fields ────────────────────────────────────────────────────
@@ -97,6 +157,7 @@ class FormBuilder extends Page
             'sort_order'      => $section->fields()->count() + 1,
         ]);
         $this->loadTemplate();
+        $this->markAsDraft();
     }
 
     public function confirmDeleteField(int $id): void
@@ -115,6 +176,7 @@ class FormBuilder extends Page
         $this->dispatch('close-modal', id: 'delete-field-modal');
 
         $this->loadTemplate();
+        $this->markAsDraft();
         
         Notification::make()
             ->success()
@@ -131,6 +193,8 @@ class FormBuilder extends Page
             ]);
         }
         $this->loadTemplate();
+        $this->markAsDraft();
+
     }
 
     // Open Edit Modal
@@ -200,6 +264,7 @@ class FormBuilder extends Page
         $this->editingFieldData = [];
         $this->dispatch('close-modal', id: 'edit-field-modal');
         $this->loadTemplate();
+        $this->markAsDraft();
 
         Notification::make()->title('Field updated!')->success()->send();
     }
@@ -336,12 +401,10 @@ class FormBuilder extends Page
         $this->validate([
             'newSectionTitle' => ['required', 'string', 'max:255'],
         ]);
-
         // Your existing section creation logic
         $this->addSection();
-
         $this->newSectionTitle = '';
-
+        $this->markAsDraft();
         $this->dispatch('close-modal', id: 'add-section-modal');
     }
 
@@ -389,6 +452,7 @@ class FormBuilder extends Page
         unset($this->fieldOptions[$index]);
 
         $this->fieldOptions = array_values($this->fieldOptions);
+        $this->markAsDraft();
     }
 
     // NEW — receives flat array of old indexes in new visual order
@@ -401,6 +465,7 @@ class FormBuilder extends Page
             }
         }
         $this->fieldOptions = $reordered;
+        $this->markAsDraft();
     }
 
     public function saveOptions(): void
@@ -436,6 +501,7 @@ class FormBuilder extends Page
                 ->send();
         }
 
+        $this->markAsDraft();
         $this->dispatch('close-modal', id: 'field-options-modal');
 
         Notification::make()
@@ -479,5 +545,16 @@ class FormBuilder extends Page
             ->success()
             ->title('Version ' . $version->version_number . ' ' . ($version->fresh()->is_active ? 'activated' : 'deactivated'))
             ->send();
-    }    
+    }
+    
+    protected function markAsDraft(): void
+    {
+        if ($this->template->status !== 'draft') {
+            $this->template->update([
+                'status' => 'draft',
+            ]);
+
+            $this->template->refresh();
+        }
+    }   
 }

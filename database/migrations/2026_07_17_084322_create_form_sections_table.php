@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('form_sections', function (Blueprint $table) {
             $table->id();
             $table->foreignId('form_template_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('form_template_version_id')->constrained()->cascadeOnDelete();
             $table->string('title');
             $table->string('section_key');
             $table->unsignedInteger('sort_order')->default(0);

@@ -119,7 +119,7 @@
                             <div class="fb-section-header" @click="open = !open">
                                 <div class="fb-section-left">
                                     <button type="button" class="handle fb-handle" @click.stop>
-                                        <x-filament::icon name="heroicon-o-bars-3" class="h-5 w-5" />
+                                        <x-filament::icon icon="heroicon-o-bars-3" class="h-5 w-5" />
                                     </button>
 
                                     <div>
@@ -130,22 +130,35 @@
                                     </div>
                                 </div>
 
-                                <div class="flex items-center gap-2" @click.stop>
-                                    <x-filament::badge color="gray" size="sm">
-                                        <x-filament::icon
-                                            x-bind:icon="open ? 'heroicon-m-chevron-up' : 'heroicon-m-chevron-down'"
-                                            icon="heroicon-m-chevron-down"
-                                            class="h-4 w-4"
-                                        />
-                                    </x-filament::badge>
-
-                                    <x-filament::icon-button
+                                <div class="fb-field-actions" @click.stop>
+                                    {{-- <x-filament::icon-button
                                         icon="heroicon-o-trash"
                                         color="danger"
                                         size="sm"
                                         wire:click="deleteSection({{ $section->id }})"
                                         wire:confirm="Delete this section and all its fields?"
                                         tooltip="Delete Section"
+                                    /> --}}
+                                    <x-filament::icon-button
+                                        icon="heroicon-o-pencil-square"
+                                        color="warning"
+                                        size="sm"
+                                        wire:click="openEditSection({{ $section->id }})"
+                                        tooltip="Edit Section"
+                                    />
+
+                                    <x-filament::icon-button
+                                        icon="heroicon-o-trash"
+                                        color="danger"
+                                        size="sm"
+                                        wire:click="confirmDeleteSection({{ $section->id }})"
+                                        tooltip="Delete Section"
+                                    />
+                                    
+                                    <x-filament::icon
+                                        icon="heroicon-m-chevron-down"
+                                        class="h-4 w-4 transition-transform duration-200 pointer-events-none"
+                                        x-bind:style="`transform: rotate(${open ? 180 : 0}deg); transition: transform .2s ease;`"
                                     />
                                 </div>
                             </div>
@@ -161,6 +174,10 @@
                                             class="field-card fb-field"
                                             data-field-id="{{ $field->id }}"
                                         >
+                                            <button type="button" class="fb-field-handle">
+                                                <x-filament::icon icon="heroicon-o-bars-3" class="h-5 w-5" />
+                                            </button>
+
                                             <div class="fb-field-main">
                                                 <div class="fb-field-top">
                                                     <div class="fb-field-title">{{ $field->label }}</div>
@@ -207,11 +224,8 @@
                                                     color="danger"
                                                     size="sm"
                                                     wire:click="confirmDeleteField({{ $field->id }})"
+                                                    tooltip="Delete Field"
                                                 />
-
-                                                <button type="button" class="fb-field-handle">
-                                                    <x-filament::icon name="heroicon-o-bars-3" class="h-5 w-5" />
-                                                </button>
                                             </div>
                                         </div>
                                     @empty
@@ -223,24 +237,37 @@
                             </div>
                         </div>
                     @empty
-                        <div class="fb-empty-state">
-                            <div class="fb-empty-title">No sections created yet.</div>
-                            <div class="fb-empty-text">
-                                Add a section from the left panel to start building the form.
-                            </div>
-                        </div>
+                        <x-filament::empty-state
+                            icon="heroicon-o-clock"
+                            icon-color="info"
+                        >
+                            <x-slot name="heading">
+                                {{ __("No sections created yet.") }}
+                            </x-slot>
+
+                            <x-slot name="description">
+                                {{ __("Add a section from the left panel to start building the form.") }}
+                            </x-slot>
+                        </x-filament::empty-state>                    
                     @endforelse
                 </div>
             </x-filament::section>
         </div>
     </div>
 
-    <x-filament::modal id="delete-field-modal">
+    {{-- Delete Field Modal --}}
+    <x-filament::modal
+        id="delete-field-modal"
+        icon="heroicon-o-exclamation-triangle"
+        icon-color="danger"
+    >
         <x-slot name="heading">
             {{ __('Delete Field') }}
         </x-slot>
 
-        {{ __('Are you sure you want to delete this field?') }}
+        <x-slot name="description">
+            {{ __('Are you sure you want to delete this field?') }}
+        </x-slot>
 
         <x-slot name="footerActions">
             <x-filament::button
@@ -255,6 +282,64 @@
                 wire:click="deleteField"
             >
                 {{ __('Delete') }}
+            </x-filament::button>
+        </x-slot>
+    </x-filament::modal>
+
+    {{-- Delete Section Modal --}}
+    <x-filament::modal id="delete-section-modal">
+        <x-slot name="heading">
+            {{ __('Delete Section') }}
+        </x-slot>
+
+        {{ __('Are you sure you want to delete this section and all its fields?') }}
+
+        <x-slot name="footerActions">
+            <x-filament::button
+                color="gray"
+                x-on:click="$dispatch('close-modal', { id: 'delete-section-modal' })"
+            >
+                {{ __('Cancel') }}
+            </x-filament::button>
+
+            <x-filament::button
+                color="danger"
+                wire:click="deleteSection"
+            >
+                {{ __('Delete') }}
+            </x-filament::button>
+        </x-slot>
+    </x-filament::modal>
+
+    {{-- Edit Section Modal--}}
+    <x-filament::modal id="edit-section-modal" width="md">
+        <x-slot name="heading">
+            Edit Section
+        </x-slot>
+
+        <div class="space-y-4">
+            <div class="space-y-2">
+                <label class="fb-label">Section Title</label>
+                <x-filament::input.wrapper>
+                    <x-filament::input
+                        wire:model="editingSectionTitle"
+                        type="text"
+                        placeholder="e.g. Student Information"
+                    />
+                </x-filament::input.wrapper>
+            </div>
+        </div>
+
+        <x-slot name="footerActions">
+            <x-filament::button
+                color="gray"
+                x-on:click="$dispatch('close-modal', { id: 'edit-section-modal' })"
+            >
+                Cancel
+            </x-filament::button>
+
+            <x-filament::button wire:click="saveEditSection">
+                Save Changes
             </x-filament::button>
         </x-slot>
     </x-filament::modal>
@@ -414,15 +499,15 @@
                             class="option-handle opt-handle"
                             title="Drag to reorder"
                         >
-                            <x-filament::icon name="heroicon-o-bars-3" class="h-4 w-4" />
+                            <x-filament::icon icon="heroicon-o-bars-3" class="h-4 w-4" />
                         </button>
 
                         {{-- Label --}}
                         <div>
                             <x-filament::input.wrapper>
                                 <x-filament::input
-                                    wire:model.live="fieldOptions.{{ $index }}.label"
-                                    placeholder="e.g. Male"
+                                    wire:model="fieldOptions.{{ $index }}.label"
+                                    placeholder="e.g. Option"
                                 />
                             </x-filament::input.wrapper>
                         </div>
@@ -431,8 +516,8 @@
                         <div>
                             <x-filament::input.wrapper>
                                 <x-filament::input
-                                    wire:model.live="fieldOptions.{{ $index }}.value"
-                                    placeholder="e.g. male"
+                                    wire:model="fieldOptions.{{ $index }}.value"
+                                    placeholder="e.g. option_value"
                                 />
                             </x-filament::input.wrapper>
                         </div>
@@ -440,7 +525,7 @@
                         {{-- Default --}}
                         <div class="flex items-center justify-center">
                             <x-filament::input.checkbox
-                                wire:model.live="fieldOptions.{{ $index }}.is_default"
+                                wire:model="fieldOptions.{{ $index }}.is_default"
                             />
                         </div>
 
@@ -457,7 +542,7 @@
                     </div>
                 @empty
                     <div class="opt-empty">
-                        <x-filament::icon name="heroicon-o-list-bullet" class="h-8 w-8 mx-auto mb-2 opacity-30" />
+                        <x-filament::icon icon="heroicon-o-list-bullet" class="h-8 w-8 mx-auto mb-2 opacity-30" />
                         <p>No options yet. Click <strong>Add Option</strong> to get started.</p>
                     </div>
                 @endforelse
@@ -501,17 +586,23 @@
         </x-slot>
 
         <x-slot name="description">
-            Only versions for <strong>{{ $this->template->name }}</strong> are shown.
-            Toggle <em>Active</em> to set which version is currently live.
+            {{ __("Only versions for") }} <strong>{{ $this->template->name }}</strong> {{ __("are shown.") }}
+            {{ __("Toggle") }}<em>{{ __("Active") }}</em>{{ __("to set which version is currently live.") }}
         </x-slot>
 
         <div>
             @if(count($templateVersions) === 0)
-                <div class="ver-empty">
-                    <x-filament::icon name="heroicon-o-clock" class="h-10 w-10 mx-auto mb-3 opacity-30" />
-                    <p class="text-sm text-gray-500">No versions published yet.</p>
-                    <p class="text-xs text-gray-400 mt-1">Click <strong>Publish Version</strong> in the header to create one.</p>
-                </div>
+                <x-filament::empty-state
+                    icon="heroicon-o-clock"
+                >
+                    <x-slot name="heading">
+                        {{ __("No versions published yet.") }}
+                    </x-slot>
+
+                    <x-slot name="description">
+                        {{ __("Click") }} <strong>{{ __("Publish Version") }}</strong> {{ __("in the header to create one.") }}
+                    </x-slot>
+                </x-filament::empty-state>
             @else
                 {{-- Table header --}}
                 <div class="ver-table-head">
@@ -578,11 +669,6 @@
             }
 
         /* ── Versions Modal ─────────────────────────────────────── */
-        .ver-empty {
-            text-align: center;
-            padding: 3rem 1rem;
-            color: rgb(156 163 175);
-        }
 
         .ver-table-head,
         .ver-row {
@@ -847,15 +933,6 @@
                 gap: 1rem;
             }
 
-            .fb-handle,
-            .fb-field-handle {
-                display: inline-flex;
-                align-items: center;
-                justify-content: center;
-                color: rgb(107 114 128);
-                cursor: move;
-            }
-
             .fb-dropzone {
                 min-height: 5rem;
                 padding: 1rem;
@@ -954,6 +1031,15 @@
                     width: 100%;
                     justify-content: flex-end;
                 }
+            }
+
+            .fb-handle,
+            .fb-field-handle {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                color: rgb(107 114 128);
+                cursor: move;
             }
 
             .fb-handle,
