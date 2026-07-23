@@ -109,7 +109,7 @@
                 </x-slot>
 
                 <div id="sections-wrapper" class="fb-sections">
-                    @forelse ($this->getBuilderSections() as $section)
+                    @forelse ($this->template->sections as $section)
                         <div
                             wire:key="section-{{ $section->id }}"
                             class="section-card fb-section"

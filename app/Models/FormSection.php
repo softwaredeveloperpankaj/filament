@@ -7,13 +7,18 @@ use Illuminate\Database\Eloquent\Model;
 class FormSection extends Model
 {
     protected $fillable = [
-        'form_template_version_id', 'title', 'section_key', 'sort_order', 'is_active'
+        'form_template_id', 'form_template_version_id', 'title', 'section_key', 'sort_order', 'is_active'
     ];
 
     public function template()
     {
         return $this->belongsTo(FormTemplate::class, 'form_template_id');
     }
+
+    public function version()
+    {
+        return $this->belongsTo(FormTemplateVersion::class, 'form_template_version_id');
+    }    
 
     public function fields()
     {

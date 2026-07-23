@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class FormTemplate extends Model
 {
@@ -26,14 +28,21 @@ class FormTemplate extends Model
         return $this->belongsTo(Branch::class);
     }
 
-    public function sections()
+    public function sections(): HasMany
     {
         return $this->hasMany(FormSection::class)->orderBy('sort_order');
     }
-    public function versions()
+
+    public function versions(): HasMany
     {
-        return $this->hasMany(FormTemplateVersion::class);
+        return $this->hasMany(FormTemplateVersion::class, 'form_template_id');
     }
+
+    // The currently active version
+    public function activeVersion(): HasOne
+    {
+        return $this->hasOne(FormTemplateVersion::class)->where('is_active', true)->latestOfMany('version');
+    }    
 
     public function user(): BelongsTo
     {
