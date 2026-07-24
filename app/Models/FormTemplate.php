@@ -41,7 +41,7 @@ class FormTemplate extends Model
     // The currently active version
     public function activeVersion(): HasOne
     {
-        return $this->hasOne(FormTemplateVersion::class)->where('is_active', true)->latestOfMany('version');
+        return $this->hasOne(FormTemplateVersion::class)->where('is_active', true)->orderByDesc('version');
     }    
 
     public function user(): BelongsTo

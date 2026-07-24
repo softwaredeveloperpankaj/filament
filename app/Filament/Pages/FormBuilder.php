@@ -57,12 +57,10 @@ class FormBuilder extends Page
     {
         $this->template = FormTemplate::with([
             'branch',
-            'activeVersion.sections.fields.options',
-            // also load draft-level sections (used when no version is published yet)
             'sections.fields.options',
         ])->findOrFail($this->templateId);
 
-        $this->workingVersion = $this->template->activeVersion;
+        $this->loadWorkingVersion();
     }
 
     /**
