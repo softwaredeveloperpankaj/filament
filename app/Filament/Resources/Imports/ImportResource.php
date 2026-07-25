@@ -21,7 +21,10 @@ class ImportResource extends Resource
 {
     protected static ?string $model = Import::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::ArrowDownTray;
+
+    protected static string|\UnitEnum|null $navigationGroup = 'Security';
+    protected static ?int $navigationSort = 3;
 
     // public static function form(Schema $schema): Schema
     // {
@@ -54,4 +57,9 @@ class ImportResource extends Resource
             // 'edit' => EditImport::route('/{record}/edit'),
         ];
     }
+    
+    public static function getNavigationBadge(): ?string
+    {
+        return static::getModel()::count();
+    }    
 }

@@ -21,7 +21,9 @@ class ExportResource extends Resource
 {
     protected static ?string $model = Export::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::ArrowUpTray;
+    protected static string|\UnitEnum|null $navigationGroup = 'Security';
+    protected static ?int $navigationSort = 2;
 
     // public static function form(Schema $schema): Schema
     // {
@@ -54,4 +56,9 @@ class ExportResource extends Resource
             // 'edit' => EditExport::route('/{record}/edit'),
         ];
     }
+
+    public static function getNavigationBadge(): ?string
+    {
+        return static::getModel()::count();
+    }    
 }

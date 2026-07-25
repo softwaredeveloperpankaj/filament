@@ -5,12 +5,13 @@ namespace App\Filament\Resources\Exports\Tables;
 use App\Models\Export;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
+use Filament\Actions\Exports\Enums\ExportFormat;
 use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Database\Eloquent\Builder;
 
 class ExportsTable
@@ -82,20 +83,28 @@ class ExportsTable
                     ->query(fn (Builder $query) => $query->whereNull('completed_at')),
             ])
             ->recordActions([
-                ViewAction::make(),   // ← add this
                 ActionGroup::make([
+                    ViewAction::make(),   // ← add this
                     Action::make('download')
                         ->label('Download')
                         ->icon('heroicon-o-arrow-down-tray')
                         ->color('success')
-                        ->action(fn (Export $record) => response()->streamDownload(
-                            fn () => print(Storage::disk($record->file_disk)->get($record->file_path)),
-                            basename($record->file_path)
+                        ->url(fn (Export $record): string => URL::signedRoute(
+                            'filament.exports.download',
+                            [
+                                'export'    => $record->getKey(),
+                                'format'    => ExportFormat::Csv->value,
+                                'authGuard' => config('filament.auth.guard', 'web'),
+                            ],
+                            absolute: false
                         ))
+                        ->openUrlInNewTab()
                         ->visible(fn (Export $record): bool =>
-                            ! is_null($record->file_path) && ! is_null($record->completed_at)
+                            ! is_null($record->file_name) &&
+                            ! is_null($record->completed_at)
                         ),
                 ]),
-            ]);
+            ])
+            ->recordActionsColumnLabel('Actions');
     }
 }
