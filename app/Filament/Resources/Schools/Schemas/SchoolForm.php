@@ -7,6 +7,7 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Schema;
+use Illuminate\Database\Eloquent\Builder;
 
 class SchoolForm
 {
@@ -16,7 +17,11 @@ class SchoolForm
             ->components([
                 Select::make('user_id')
                     ->label('User')
-                    ->relationship('user', 'name')
+                    ->relationship(
+                        name: 'user',
+                        titleAttribute: 'name',
+                        modifyQueryUsing: fn (Builder $query) => $query->role('admin'),
+                    )
                     ->searchable()
                     ->preload()
                     ->placeholder('Select a user')
@@ -43,6 +48,7 @@ class SchoolForm
                 Textarea::make('address')
                     ->label('Address')
                     ->placeholder('Address')
+                    ->required()
                     ->columnSpanFull(),
                 FileUpload::make('logo')
                     ->label('School logo')
