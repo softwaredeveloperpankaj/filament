@@ -25,17 +25,23 @@ class FormBuilder extends Page
     public ?FormTemplate $template = null;
     public ?FormTemplateVersion $workingVersion = null;
 
-    // State properties
+    // Add Section
     public string $newSectionTitle = '';
+
+    // Edit Field
     public ?int $editingFieldId = null;
     public array $editingFieldData = [];
     public ?int $fieldToDelete = null;
 
+    // Options
     public ?int $editingOptionsFieldId = null;
     public array $fieldOptions = [];
     public string $newOption = '';
 
+    // Versions
     public array $templateVersions = [];
+
+    // Section CRUD
     public ?int $sectionToDelete = null;
     public ?int $editingSectionId = null;
     public string $editingSectionTitle = '';
@@ -46,61 +52,88 @@ class FormBuilder extends Page
         $this->loadTemplate();
     }
 
-    // ── Core Loaders ────────────────────────────────────────────────
+    // ── Core Load ────────────────────────────────────────────────
 
     private function loadTemplate(): void
     {
-        $this->template = FormTemplate::with(['branch', 'sections.fields.options'])
-            ->findOrFail($this->templateId);
+        $this->template = FormTemplate::with([
+            'branch',
+            'sections.fields.options',
+        ])->findOrFail($this->templateId);
 
         $this->loadWorkingVersion();
     }
 
-    private function loadWorkingVersion(): void
-    {
-        $versions = $this->template->versions()->orderByDesc('version')->get();
+/**
+ * Resolve which version to edit:
+ * 1. Any version exists?
+ *    a. Active version found  → load it with its sections/fields/options
+ *    b. No active but has versions → load the latest version (draft state)
+ * 2. No versions at all → auto-create version 1 as draft and load it
+ */
+private function loadWorkingVersion(): void
+{
+    // Step 1: check if ANY version exists for this template
+    $latestVersion = $this->template->versions()
+        ->orderByDesc('version')
+        ->first();
 
-        if ($versions->isNotEmpty()) {
-            $this->workingVersion = $versions->firstWhere('is_active', true) ?? $versions->first();
-            $this->workingVersion->setRelation(
-                'sections',
-                FormSection::with(['fields.options'])
-                    ->where('form_template_version_id', $this->workingVersion->id)
-                    ->orderBy('sort_order')
-                    ->get()
-            );
-            return;
-        }
+    if ($latestVersion) {
+        // Step 1a: prefer the active version; fall back to latest if none is active
+        $targetVersion = $this->template->versions()
+            ->where('is_active', true)
+            ->orderByDesc('version')
+            ->first() ?? $latestVersion;
 
-        // Initialize draft V1 if no versions exist
-        $this->workingVersion = FormTemplateVersion::create([
-            'form_template_id' => $this->templateId,
-            'version'          => 1,
-            'is_active'        => false,
-            'schema_json'      => [],
-        ]);
+        $this->workingVersion = $targetVersion;
+        $this->workingVersion->setRelation(
+            'sections',
+            FormSection::with(['fields.options'])
+                ->where('form_template_version_id', $targetVersion->id)
+                ->orderBy('sort_order')
+                ->get()
+        );
 
-        $this->workingVersion->setRelation('sections', collect());
+        return;
     }
 
+    // Step 2: no versions at all → auto-create a draft version 1
+    $this->workingVersion = FormTemplateVersion::create([
+        'form_template_id' => $this->templateId,
+        'version'          => 1,
+        'is_active'        => false,   // draft — not published yet
+        'schema_json'      => [],
+        'published_at'     => null,
+    ]);
+
+    // Fresh version has no sections yet — set empty relation
+    $this->workingVersion->setRelation('sections', collect());
+}
+
+    /**
+     * Returns the sections to render in the builder:
+     * - Active version's sections if version is active
+     * - Template-level sections if no active version (draft mode)
+     */
     public function getBuilderSections()
     {
         return $this->workingVersion?->sections ?? collect();
     }
 
-    // ── Section Management ──────────────────────────────────────────
+    // ── Sections ─────────────────────────────────────────────────
 
     public function addSection(): void
     {
         if (!trim($this->newSectionTitle)) return;
 
+        $versionId = $this->workingVersion?->id;
         $maxSort = $this->workingVersion
             ? $this->workingVersion->sections()->max('sort_order')
             : $this->template->sections()->whereNull('form_template_version_id')->max('sort_order');
 
         FormSection::create([
             'form_template_id'         => $this->templateId,
-            'form_template_version_id' => $this->workingVersion?->id,
+            'form_template_version_id' => $versionId,
             'title'                    => $this->newSectionTitle,
             'section_key'              => Str::slug($this->newSectionTitle, '_') . '_' . time(),
             'sort_order'               => ($maxSort ?? 0) + 1,
@@ -111,17 +144,11 @@ class FormBuilder extends Page
         $this->markAsDraft();
     }
 
-    public function createSection(): void
-    {
-        $this->validate(['newSectionTitle' => ['required', 'string', 'max:255']]);
-        $this->addSection();
-        $this->dispatch('close-modal', id: 'add-section-modal');
-    }
-
     public function reorderSections(array $sections): void
     {
         foreach ($sections as $item) {
-            FormSection::where('id', $item['id'])->update(['sort_order' => $item['sort_order']]);
+            FormSection::where('id', $item['id'])
+                ->update(['sort_order' => $item['sort_order']]);
         }
         $this->loadTemplate();
     }
@@ -129,6 +156,7 @@ class FormBuilder extends Page
     public function openEditSection(int $sectionId): void
     {
         $section = FormSection::findOrFail($sectionId);
+
         $this->editingSectionId    = $section->id;
         $this->editingSectionTitle = $section->title ?? '';
 
@@ -137,16 +165,19 @@ class FormBuilder extends Page
 
     public function saveEditSection(): void
     {
-        $this->validate(['editingSectionTitle' => ['required', 'string', 'max:255']]);
+        $this->validate([
+            'editingSectionTitle' => ['required', 'string', 'max:255'],
+        ]);
 
-        FormSection::where('id', $this->editingSectionId)
-            ->update(['title' => $this->editingSectionTitle]);
+        $section = FormSection::findOrFail($this->editingSectionId);
+        $section->update(['title' => $this->editingSectionTitle]);
 
-        $this->editingSectionId = null;
+        $this->editingSectionId    = null;
         $this->editingSectionTitle = '';
 
         $this->loadTemplate();
         $this->markAsDraft();
+
         $this->dispatch('close-modal', id: 'edit-section-modal');
 
         Notification::make()->title('Section updated successfully')->success()->send();
@@ -160,28 +191,31 @@ class FormBuilder extends Page
 
     public function deleteSection(): void
     {
-        FormSection::destroy($this->sectionToDelete);
-        $this->sectionToDelete = null;
+        $section = FormSection::findOrFail($this->sectionToDelete);
+        $section->delete();
 
+        $this->sectionToDelete = null;
         $this->loadTemplate();
         $this->markAsDraft();
+
         $this->dispatch('close-modal', id: 'delete-section-modal');
 
         Notification::make()->title('Section deleted successfully')->success()->send();
     }
 
-    // ── Field Management ───────────────────────────────────────────
+    // ── Fields ────────────────────────────────────────────────────
 
     public function addField(int $sectionId, string $type, string $label): void
     {
-        if (!$section = FormSection::find($sectionId)) return;
+        $section = FormSection::find($sectionId);
+        if (!$section) return;
 
         FormField::create([
-            'form_section_id' => $sectionId,
-            'label'           => $label,
-            'field_key'       => strtolower(str_replace(' ', '_', $label)) . '_' . time(),
-            'type'            => $type,
-            'sort_order'      => $section->fields()->count() + 1,
+            'form_section_id'  => $sectionId,
+            'label'            => $label,
+            'field_key'        => strtolower(str_replace(' ', '_', $label)) . '_' . time(),
+            'type'             => $type,
+            'sort_order'       => $section->fields()->count() + 1,
         ]);
 
         $this->loadTemplate();
@@ -199,7 +233,6 @@ class FormBuilder extends Page
         FormField::destroy($this->fieldToDelete);
         $this->fieldToDelete = null;
         $this->dispatch('close-modal', id: 'delete-field-modal');
-        
         $this->loadTemplate();
         $this->markAsDraft();
 
@@ -230,31 +263,38 @@ class FormBuilder extends Page
                 'placeholder'                 => $field->placeholder,
                 'help_text'                   => $field->help_text,
                 'option_layout'               => $field->option_layout ?? 'horizontal',
-                'validation_rules_input'      => $field->validation_rules ? implode('|', $field->validation_rules) : '',
-                'visibility_conditions_input' => $field->visibility_conditions ? json_encode($field->visibility_conditions, JSON_PRETTY_PRINT) : '',
-                'settings_input'              => $field->settings ? json_encode($field->settings, JSON_PRETTY_PRINT) : '',
+                'validation_rules_input'      => $field->validation_rules
+                                                    ? implode('|', $field->validation_rules) : '',
+                'visibility_conditions_input' => $field->visibility_conditions
+                                                    ? json_encode($field->visibility_conditions, JSON_PRETTY_PRINT) : '',
+                'settings_input'              => $field->settings
+                                                    ? json_encode($field->settings, JSON_PRETTY_PRINT) : '',
             ];
-            $this->dispatch('open-modal', id: 'edit-field-modal');
         } catch (\Throwable $th) {
-            Notification::make()->title('Error opening field')->body($th->getMessage())->danger()->send();
+            Notification::make()->title('Something went wrong')->body($th->getMessage())->danger()->send();
         }
+
+        $this->dispatch('open-modal', id: 'edit-field-modal');
     }
 
     public function saveEditField(): void
     {
         $field = FormField::findOrFail($this->editingFieldId);
 
-        $rules = !empty($this->editingFieldData['validation_rules_input'])
-            ? explode('|', $this->editingFieldData['validation_rules_input'])
-            : null;
+        $validationRules = [];
+        if (!empty($this->editingFieldData['validation_rules_input'])) {
+            $validationRules = explode('|', $this->editingFieldData['validation_rules_input']);
+        }
 
-        $visibility = !empty($this->editingFieldData['visibility_conditions_input'])
-            ? json_decode($this->editingFieldData['visibility_conditions_input'], true)
-            : null;
+        $visibilityConditions = null;
+        if (!empty($this->editingFieldData['visibility_conditions_input'])) {
+            $visibilityConditions = json_decode($this->editingFieldData['visibility_conditions_input'], true);
+        }
 
-        $settings = !empty($this->editingFieldData['settings_input'])
-            ? json_decode($this->editingFieldData['settings_input'], true)
-            : null;
+        $settings = null;
+        if (!empty($this->editingFieldData['settings_input'])) {
+            $settings = json_decode($this->editingFieldData['settings_input'], true);
+        }
 
         $field->update([
             'label'                 => $this->editingFieldData['label'],
@@ -263,22 +303,21 @@ class FormBuilder extends Page
             'placeholder'           => $this->editingFieldData['placeholder'],
             'help_text'             => $this->editingFieldData['help_text'],
             'option_layout'         => $this->editingFieldData['option_layout'],
-            'validation_rules'      => $rules,
-            'visibility_conditions' => $visibility,
+            'validation_rules'      => $validationRules ?: null,
+            'visibility_conditions' => $visibilityConditions,
             'settings'              => $settings,
         ]);
 
         $this->editingFieldId = null;
         $this->editingFieldData = [];
         $this->dispatch('close-modal', id: 'edit-field-modal');
-
         $this->loadTemplate();
         $this->markAsDraft();
 
         Notification::make()->title('Field updated!')->success()->send();
     }
 
-    // ── Field Options Management ────────────────────────────────────
+    // ── Options ───────────────────────────────────────────────────
 
     public function openOptionsModal(int $fieldId): void
     {
@@ -287,17 +326,17 @@ class FormBuilder extends Page
 
         $this->fieldOptions = $field->options
             ->sortBy('sort_order')
-            ->map(fn ($opt) => [
-                'id'         => $opt->id,
-                'label'      => $opt->label,
-                'value'      => $opt->value,
-                'is_default' => $opt->is_default,
+            ->map(fn ($option) => [
+                'id'         => $option->id,
+                'label'      => $option->label,
+                'value'      => $option->value,
+                'is_default' => $option->is_default,
             ])
             ->values()
             ->toArray();
 
         if (empty($this->fieldOptions)) {
-            $this->addOption();
+            $this->fieldOptions[] = ['id' => null, 'label' => '', 'value' => '', 'is_default' => false];
         }
 
         $this->dispatch('open-modal', id: 'field-options-modal');
@@ -317,70 +356,75 @@ class FormBuilder extends Page
 
     public function reorderOptions(array $orderedIndexes): void
     {
-        $this->fieldOptions = array_values(array_intersect_key(
-            array_replace(array_flip($orderedIndexes), $this->fieldOptions),
-            $this->fieldOptions
-        ));
+        $reordered = [];
+        foreach ($orderedIndexes as $i) {
+            if (isset($this->fieldOptions[$i])) {
+                $reordered[] = $this->fieldOptions[$i];
+            }
+        }
+        $this->fieldOptions = $reordered;
         $this->markAsDraft();
     }
 
     public function saveOptions(): void
     {
+        $count   = count($this->fieldOptions);
+        $keepIds = [];
+
         try {
-            $keepIds = [];
             foreach ($this->fieldOptions as $index => $option) {
-                $result = FormFieldOption::updateOrCreate(
-                    ['id' => $option['id'] ?? null],
-                    [
-                        'form_field_id' => $this->editingOptionsFieldId,
-                        'label'         => $option['label'],
-                        'value'         => $option['value'],
-                        'sort_order'    => $index + 1,
-                        'is_default'    => $option['is_default'],
-                    ]
-                );
+                $data = [
+                    'form_field_id' => $this->editingOptionsFieldId,
+                    'label'         => $option['label'],
+                    'value'         => $option['value'],
+                    'sort_order'    => $index + 1,
+                    'is_default'    => $option['is_default'],
+                ];
+
+                $result    = FormFieldOption::updateOrCreate(['id' => $option['id'] ?? null], $data);
                 $keepIds[] = $result->id;
             }
 
             FormFieldOption::where('form_field_id', $this->editingOptionsFieldId)
                 ->whereNotIn('id', $keepIds)
                 ->delete();
-
         } catch (\Throwable $th) {
             Notification::make()->danger()->title('Error saving options')->body($th->getMessage())->send();
             return;
         }
 
-        $count = count($this->fieldOptions);
         $this->loadTemplate();
         $this->markAsDraft();
         $this->dispatch('close-modal', id: 'field-options-modal');
 
-        Notification::make()->success()->title('Options saved')->body("{$count} option(s) saved.")->send();
+        Notification::make()->success()->title('Options saved')->body("$count option(s) saved.")->send();
     }
 
-    // ── Publishing & Versions ──────────────────────────────────────
+    // ── Publish / Versions ────────────────────────────────────────
 
-    public function publishVersion(string $mode = 'create_new'): void
-    {
-        $hasAnyVersion = $this->template->versions()->exists();
-        $activeVersion = $this->template->versions()->where('is_active', true)->first();
+public function publishVersion(string $mode = 'create_new'): void
+{
+    $hasAnyVersion = $this->template->versions()->exists();
+    $activeVersion = $this->template->versions()
+        ->where('is_active', true)
+        ->orderByDesc('version')
+        ->first();
 
-        if ($hasAnyVersion && !$activeVersion) {
-            Notification::make()
-                ->warning()
-                ->title('No active version')
-                ->body('Please activate a version from "View Versions" before publishing.')
-                ->persistent()
-                ->send();
-            return;
-        }
+    if ($hasAnyVersion && ! $activeVersion) {
+        Notification::make()
+            ->warning()
+            ->title('No active version')
+            ->body('Please activate a version from "View Versions" before publishing.')
+            ->persistent()
+            ->send();
+        return;
+    }
 
-        DB::transaction(function () use ($activeVersion, $mode) {
-            $sections = $this->getBuilderSections();
+    DB::transaction(function () use ($activeVersion, $mode) {
+        $sections = $this->getBuilderSections();
 
-            // Build schema snapshot
-            $snapshot = $sections->map(fn ($section) => [
+        $snapshot = $sections->map(function ($section) {
+            return [
                 'title'       => $section->title,
                 'section_key' => $section->section_key,
                 'sort_order'  => $section->sort_order,
@@ -411,54 +455,74 @@ class FormBuilder extends Page
 
                     return $fieldData;
                 })->values()->toArray(),
-            ])->toArray();
+            ];
+        })->toArray();
 
-            // Handle overwrite mode
-            if ($activeVersion && $mode === 'update_existing') {
-                $activeVersion->update([
-                    'schema_json'  => $snapshot,
-                    'published_at' => now(),
-                ]);
-
-                $this->template->update(['status' => 'published']);
-                Notification::make()->success()->title("Version {$activeVersion->version} updated successfully")->send();
-                return;
-            }
-
-            // Create new version release
-            $nextVersion = ($this->template->versions()->max('version') ?? 0) + 1;
-            $this->template->versions()->update(['is_active' => false]);
-
-            $newVersion = FormTemplateVersion::create([
-                'form_template_id' => $this->template->id,
-                'user_id'          => $this->template->user_id,
-                'version'          => $nextVersion,
-                'schema_json'      => $snapshot,
-                'is_active'        => true,
-                'published_at'     => now(),
+        if ($activeVersion && $mode === 'update_existing') {
+            $activeVersion->update([
+                'schema_json'  => $snapshot,
+                'published_at' => now(),
             ]);
 
-            $this->cloneSectionsIntoVersion($sections, $newVersion);
             $this->template->update(['status' => 'published']);
 
-            Notification::make()->success()->title("Version {$nextVersion} published!")->send();
-        });
+            Notification::make()
+                ->success()
+                ->title("Version {$activeVersion->version} updated successfully")
+                ->send();
 
-        $this->loadTemplate();
-    }
+            return;
+        }
 
+        $lastVersion = $this->template->versions()->max('version') ?? 0;
+        $nextVersion = $lastVersion + 1;
+
+        $this->template->versions()->update(['is_active' => false]);
+
+        $newVersion = FormTemplateVersion::create([
+            'form_template_id' => $this->template->id,
+            'user_id'          => $this->template->user_id,
+            'version'          => $nextVersion,
+            'schema_json'      => $snapshot,
+            'is_active'        => true,
+            'published_at'     => now(),
+        ]);
+
+        $this->cloneSectionsIntoVersion($sections, $newVersion);
+
+        $this->template->update(['status' => 'published']);
+
+        Notification::make()
+            ->success()
+            ->title("Version {$nextVersion} published!")
+            ->send();
+    });
+
+    $this->loadTemplate();
+}
+
+    /**
+     * Deep-clone sections + fields + options into a specific version.
+     * Called on every publish so the new version owns its own DB records.
+     */
     private function cloneSectionsIntoVersion($sections, FormTemplateVersion $version): void
     {
         foreach ($sections as $section) {
             $newSection = $section->replicate(['id', 'created_at', 'updated_at']);
             $newSection->form_template_version_id = $version->id;
-            $newSection->section_key = Str::beforeLast($section->section_key, '_') . '_' . time();
+
+            $sectionBaseKey = Str::beforeLast($section->section_key, '_');
+            $newSection->section_key = $sectionBaseKey . '_' . time();
+
             $newSection->save();
 
             foreach ($section->fields as $field) {
                 $newField = $field->replicate(['id', 'created_at', 'updated_at']);
                 $newField->form_section_id = $newSection->id;
-                $newField->field_key = Str::beforeLast($field->field_key, '_') . '_' . time() . rand(10, 99);
+
+                $fieldBaseKey = Str::beforeLast($field->field_key, '_');
+                $newField->field_key = $fieldBaseKey . '_' . time() . rand(10, 99);
+
                 $newField->save();
 
                 foreach ($field->options as $option) {
@@ -473,7 +537,7 @@ class FormBuilder extends Page
     public function openVersionsModal(): void
     {
         $this->templateVersions = FormTemplateVersion::where('form_template_id', $this->templateId)
-            ->orderByDesc('version')
+            ->orderBy('version', 'desc')
             ->get()
             ->map(fn ($v) => [
                 'id'           => $v->id,
@@ -489,18 +553,27 @@ class FormBuilder extends Page
     public function toggleVersionActive(int $versionId): void
     {
         DB::transaction(function () use ($versionId) {
-            FormTemplateVersion::where('form_template_id', $this->templateId)->update(['is_active' => false]);
-            FormTemplateVersion::where('id', $versionId)->update(['is_active' => true]);
+            // Deactivate all versions first
+            FormTemplateVersion::where('form_template_id', $this->templateId)
+                ->update(['is_active' => false]);
+
+            // Toggle the selected one
+            $version = FormTemplateVersion::findOrFail($versionId);
+            $version->update(['is_active' => true]);
         });
 
+        // Reload builder to reflect active version's sections/fields/options
         $this->loadTemplate();
         $this->openVersionsModal();
 
         $version = FormTemplateVersion::findOrFail($versionId);
-        Notification::make()->success()->title("Version {$version->version} active — builder loaded.")->send();
+        Notification::make()
+            ->success()
+            ->title("Version {$version->version} is now active — builder loaded.")
+            ->send();
     }
 
-    // ── Header Actions ─────────────────────────────────────────────
+    // ── Header Actions ────────────────────────────────────────────
 
     protected function getHeaderActions(): array
     {
@@ -523,12 +596,15 @@ class FormBuilder extends Page
                 ->color('success')
                 ->modalWidth('md')
                 ->modalHeading('Publish Version')
-                ->modalDescription(fn () => $this->workingVersion?->is_active
-                    ? 'An active version is live. Choose target destination:'
-                    : 'No active version exists. Publishing sets this as active.'
-                )
+                ->modalDescription(function () {
+                    return $this->workingVersion?->is_active
+                        ? 'An active version is currently live. Choose your target destination below:'
+                        : 'No active version exists yet. Publishing will establish this as the active version.';
+                })
                 ->schema(function (): array {
-                    if (!$this->workingVersion?->is_active) return [];
+                    if (! $this->workingVersion?->is_active) {
+                        return [];
+                    }
 
                     return [
                         Radio::make('mode')
@@ -538,17 +614,37 @@ class FormBuilder extends Page
                                 'create_new'      => 'Publish as New Version',
                             ])
                             ->descriptions([
-                                'update_existing' => 'Updates the current active version directly.',
-                                'create_new'      => 'Preserves history and creates a new release.',
+                                'update_existing' => 'Updates the current active version directly with your changes.',
+                                'create_new'      => 'Preserves current active version history and creates a new release.',
                             ])
                             ->default('update_existing')
                             ->required(),
                     ];
                 })
-                ->modalSubmitActionLabel(fn () => $this->workingVersion?->is_active ? 'Confirm & Publish' : 'Publish Initial Version')
+                ->modalSubmitActionLabel(function () {
+                    return $this->workingVersion?->is_active
+                        ? 'Confirm & Publish'
+                        : 'Publish Initial Version';
+                })
                 ->modalCancelActionLabel('Cancel')
-                ->action(fn (array $data) => $this->publishVersion($data['mode'] ?? 'create_new')),
+                ->action(function (array $data): void {
+                    $mode = $data['mode'] ?? 'create_new';
+
+                    $this->publishVersion($mode);
+                }),
+
         ];
+    }
+
+    public function createSection(): void
+    {
+        $this->validate([
+            'newSectionTitle' => ['required', 'string', 'max:255'],
+        ]);
+
+        $this->addSection();
+        $this->newSectionTitle = '';
+        $this->dispatch('close-modal', id: 'add-section-modal');
     }
 
     protected function markAsDraft(): void
