@@ -80,6 +80,12 @@ class FormBuilder extends Page
             'schema_json'      => [],
         ]);
 
+        FormTemplate::where('id', $this->templateId)->update([
+            'active_version_id' => $this->workingVersion->id,
+            'status' => 'draft',
+            'is_active' => false,
+        ]);
+
         $this->workingVersion->setRelation('sections', collect());
     }
 
@@ -420,7 +426,7 @@ class FormBuilder extends Page
                     'published_at' => now(),
                 ]);
 
-                $this->template->update(['status' => 'published']);
+                $this->template->update(['status' => 'published', 'active_version_id' => $activeVersion->id]);
                 Notification::make()->success()->title("Version {$activeVersion->version} updated successfully")->send();
                 return;
             }
@@ -439,7 +445,7 @@ class FormBuilder extends Page
             ]);
 
             $this->cloneSectionsIntoVersion($sections, $newVersion);
-            $this->template->update(['status' => 'published']);
+            $this->template->update(['status' => 'published', 'active_version_id' => $newVersion->id]);
 
             Notification::make()->success()->title("Version {$nextVersion} published!")->send();
         });

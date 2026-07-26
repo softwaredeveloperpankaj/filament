@@ -6,6 +6,7 @@ use App\Models\FormField;
 use App\Models\FormFieldOption;
 use App\Models\FormSection;
 use App\Models\FormTemplate;
+use App\Models\FormTemplateVersion;
 use Filament\Actions\Action;
 use Filament\Forms\Components\FileUpload;
 use Filament\Notifications\Notification;
@@ -86,7 +87,7 @@ class FormTemplateImportAction
             ->label('Import Form (Builder)')
             ->icon('heroicon-o-document-arrow-up')
             ->color('warning')
-            ->form([
+            ->schema([
                 FileUpload::make('form_file')
                     ->label('Form Builder JSON File')
                     ->acceptedFileTypes(['application/json', 'text/plain'])
@@ -109,6 +110,19 @@ class FormTemplateImportAction
                         return;
                     }
 
+                    if(empty($record->active_version_id)){
+                        $template_version = FormTemplateVersion::create([
+                            'form_template_id' => $record->id,
+                            'version'          => 1,
+                            'is_active'        => false,
+                            'schema_json'      => [],
+                        ]);
+
+                        $template_version_id = $template_version->id;
+                    }else{
+                        $template_version_id = $record->active_version_id;
+                    }
+
                     $existingMaxOrder = FormSection::where('form_template_id', $record->id)
                         ->max('sort_order') ?? 0;
 
@@ -118,6 +132,7 @@ class FormTemplateImportAction
                     foreach ($json['sections'] as $sectionData) {
                         $section = FormSection::create([
                             'form_template_id' => $record->id,
+                            'form_template_version_id' => $template_version_id,
                             'title'            => $sectionData['title'],
                             'section_key'      => ($sectionData['section_key'] ?? Str::slug($sectionData['title'], '_')) . '_' . time(),
                             'sort_order'       => $existingMaxOrder + ($sectionData['sort_order'] ?? 1),

@@ -15,7 +15,6 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
-use Filament\Actions\ExportAction;
 use Filament\Actions\ExportBulkAction;
 use Filament\Actions\ImportAction;
 use Filament\Actions\ViewAction;
@@ -25,6 +24,7 @@ use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+
 
 class FormTemplatesTable
 {
@@ -123,16 +123,11 @@ class FormTemplatesTable
                     ->importer(FormTemplateImporter::class)
                     ->label('Import Templates'),
 
-                ExportAction::make()
-                    ->exporter(FormTemplateExporter::class)
-                    ->label('Export All Templates'),
-                BulkExportFormsAction::make(),
                 BulkActionGroup::make([
                     ExportBulkAction::make()
                         ->exporter(FormTemplateExporter::class)
-                        ->label('Export Selected Templates'),
+                        ->label('Export Templates'),
 
-                    BulkImportFormAction::make(),
                     DeleteBulkAction::make(),
                 ]),
             ]);
