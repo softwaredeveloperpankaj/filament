@@ -363,6 +363,7 @@
                     </x-filament::input.wrapper>
                 </div>
 
+                @if (!empty($editingFieldData['option_layout']))
                 <div class="space-y-2">
                     <label class="fb-label">{{ __('Option Layout') }}</label>
 
@@ -375,6 +376,7 @@
 
                     <p class="fb-help">{{ __('For radio/checkbox fields only.') }}</p>
                 </div>
+                @endif
             </div>
 
             <div class="space-y-2">

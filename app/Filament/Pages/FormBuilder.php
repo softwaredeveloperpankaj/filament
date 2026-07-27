@@ -235,11 +235,13 @@ class FormBuilder extends Page
                 'is_required'                 => $field->is_required,
                 'placeholder'                 => $field->placeholder,
                 'help_text'                   => $field->help_text,
-                'option_layout'               => $field->option_layout ?? 'horizontal',
                 'validation_rules_input'      => $field->validation_rules ? implode('|', $field->validation_rules) : '',
                 'visibility_conditions_input' => $field->visibility_conditions ? json_encode($field->visibility_conditions, JSON_PRETTY_PRINT) : '',
                 'settings_input'              => $field->settings ? json_encode($field->settings, JSON_PRETTY_PRINT) : '',
             ];
+            if (in_array($field->type, ['radio', 'checkbox'])) {
+                $this->editingFieldData['option_layout'] = $field->option_layout ?? 'horizontal';
+            }
             $this->dispatch('open-modal', id: 'edit-field-modal');
         } catch (\Throwable $th) {
             Notification::make()->title('Error opening field')->body($th->getMessage())->danger()->send();
@@ -262,13 +264,17 @@ class FormBuilder extends Page
             ? json_decode($this->editingFieldData['settings_input'], true)
             : null;
 
+        $option_layout = !empty($this->editingFieldData['option_layout'])
+            ? $this->editingFieldData['option_layout']
+            : null;
+
         $field->update([
             'label'                 => $this->editingFieldData['label'],
             'field_key'             => $this->editingFieldData['field_key'],
             'is_required'           => $this->editingFieldData['is_required'] ?? false,
             'placeholder'           => $this->editingFieldData['placeholder'],
             'help_text'             => $this->editingFieldData['help_text'],
-            'option_layout'         => $this->editingFieldData['option_layout'],
+            'option_layout'         => $option_layout,
             'validation_rules'      => $rules,
             'visibility_conditions' => $visibility,
             'settings'              => $settings,
