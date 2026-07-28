@@ -73,64 +73,6 @@ trait BuildsDynamicFormFields
         return $sections;
     }
 
-// public static function getDynamicFormComponents(?int $templateId): array
-// {
-//     if (!$templateId) return [];
-
-//     // Use a static cache variable to prevent rebuilding components 
-//     // and dropping state bindings during Livewire background requests (like file uploads)
-//     static $cache = [];
-
-//     if (isset($cache[$templateId])) {
-//         return $cache[$templateId];
-//     }
-
-//     $template = FormTemplate::with([
-//         'sections' => fn ($q) => $q->orderBy('sort_order'),
-//         'sections.fields' => fn ($q) => $q->orderBy('sort_order'),
-//         'sections.fields.options' => fn ($q) => $q->orderBy('sort_order'),
-//     ])->find($templateId);
-
-//     if (!$template) return [];
-
-//     $sections = [];
-
-//     foreach ($template->sections as $section) {
-//         $normalFields = [];
-//         $uploadFields = [];
-
-//         foreach ($section->fields as $field) {
-//             if (static::isUploadField($field)) {
-//                 $uploadFields[] = static::makeFormField($field);
-//             } else {
-//                 $normalFields[] = static::makeFormField($field);
-//             }
-//         }
-
-//         if (! empty($normalFields)) {
-//             $sections[] = Section::make($section->title)
-//                 ->schema($normalFields)
-//                 ->columns(2)
-//                 ->columnSpan([
-//                     'default' => 1,
-//                     'lg' => ! empty($uploadFields) ? 2 : 3,
-//                 ]);
-//         }
-
-//         if (! empty($uploadFields)) {
-//             $sections[] = Section::make($section->title)
-//                 ->schema($uploadFields)
-//                 ->columns(1)
-//                 ->columnSpan([
-//                     'default' => 1,
-//                     'lg' => ! empty($normalFields) ? 1 : 3,
-//                 ]);
-//         }
-//     }        
-
-//     return $cache[$templateId] = $sections;
-// }    
-
     /**
      * Returns Filament infolist entries from a FormTemplate's fields.
      */
