@@ -15,13 +15,16 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
-use Filament\Actions\ExportAction;
 use Filament\Actions\ExportBulkAction;
 use Filament\Actions\ImportAction;
 use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\Filter;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+
 
 class FormTemplatesTable
 {
@@ -44,6 +47,7 @@ class FormTemplatesTable
                 TextColumn::make('user.name')
                     ->toggleable()
                     ->badge()
+                    ->color('secondary')
                     ->sortable(),
                 TextColumn::make('registration_serial')
                     ->toggleable()
@@ -52,15 +56,23 @@ class FormTemplatesTable
                     ->toggleable()
                     ->searchable(),
                 TextColumn::make('slug')
+                    ->label('Form Slug')
                     ->toggleable()
                     ->searchable(),
                 TextColumn::make('type')
                     ->toggleable()
                     ->searchable(),
                 TextColumn::make('status')
+                    ->label('Form Status')
                     ->toggleable()
-                    ->badge(),
+                    ->badge()
+                    ->color(fn ($state) => match ($state) {
+                        'published' => 'success',
+                        'draft' => 'warning',
+                        default => 'secondary',
+                    }),
                 IconColumn::make('is_active')
+                    ->label('Is Template Active')
                     ->toggleable()
                     ->boolean(),
                 TextColumn::make('form_layout')
@@ -79,7 +91,14 @@ class FormTemplatesTable
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                //
+                Filter::make('is_active')
+                    ->query(
+                        fn (Builder $query): Builder => $query->where('is_active', true)
+                    ),
+                SelectFilter::make('rollno_generation_scope')
+                    ->options(['class' => 'Class', 'section' => 'Section']),
+                SelectFilter::make('status')
+                    ->options(['draft' => 'Draft', 'published' => 'Published', 'archived' => 'Archived'])
             ])
             ->recordActions([
                 ActionGroup::make([
@@ -104,15 +123,10 @@ class FormTemplatesTable
                     ->importer(FormTemplateImporter::class)
                     ->label('Import Templates'),
 
-                ExportAction::make()
-                    ->exporter(FormTemplateExporter::class)
-                    ->label('Export All Templates'),
-                BulkExportFormsAction::make(),
-                BulkImportFormAction::make(),
                 BulkActionGroup::make([
                     ExportBulkAction::make()
                         ->exporter(FormTemplateExporter::class)
-                        ->label('Export Selected Templates'),
+                        ->label('Export Templates'),
 
                     DeleteBulkAction::make(),
                 ]),

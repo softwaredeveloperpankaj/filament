@@ -6,7 +6,6 @@ use App\Filament\Resources\Schools\Pages\CreateSchool;
 use App\Filament\Resources\Schools\Pages\EditSchool;
 use App\Filament\Resources\Schools\Pages\ListSchools;
 use App\Filament\Resources\Schools\Pages\ViewSchool;
-use App\Filament\Resources\Schools\RelationManagers\BranchesRelationManager;
 use App\Filament\Resources\Schools\Schemas\SchoolForm;
 use App\Filament\Resources\Schools\Schemas\SchoolInfolist;
 use App\Filament\Resources\Schools\Tables\SchoolsTable;

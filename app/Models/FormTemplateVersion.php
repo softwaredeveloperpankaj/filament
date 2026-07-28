@@ -25,4 +25,10 @@ class FormTemplateVersion extends Model
     {
         return $this->belongsTo(FormTemplate::class);
     }
+
+    public function sections()
+    {
+        return $this->hasMany(FormSection::class, 'form_template_version_id')
+                    ->orderBy('sort_order');
+    }    
 }

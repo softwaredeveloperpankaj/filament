@@ -4,9 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Student extends Model
 {
+    use SoftDeletes;
+
     protected $fillable = [
         'branch_id',
         'branch_class_id',
@@ -37,8 +40,7 @@ class Student extends Model
      */
     public function class(): BelongsTo
     {
-        return $this->belongsTo(BranchClass::class, 'branch_class_id')
-                    ->where('branch_id', $this->branch_id);
+        return $this->belongsTo(BranchClass::class, 'branch_class_id');
     }
 
     /**
@@ -46,8 +48,7 @@ class Student extends Model
      */
     public function section(): BelongsTo
     {
-        return $this->belongsTo(ClassSection::class, 'section_id')
-                    ->where('branch_class_id', $this->branch_class_id);
+        return $this->belongsTo(Section::class, 'section_id');
     }
 
     public function formTemplate(): BelongsTo

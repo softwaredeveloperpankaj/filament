@@ -50,7 +50,7 @@ class StudentForm
                         Select::make('section_id')
                             ->label('Section')
                             ->options(fn ($get) => 
-                                    $get('branch_class_id') 
+                                    $get('branch_class_id')
                                         ? ClassSection::where('branch_class_id', $get('branch_class_id'))
                                             ->with('section')
                                             ->get()
@@ -77,7 +77,14 @@ class StudentForm
                         TextInput::make('academic_year')
                             ->label('Academic Year')
                             ->default(now()->year . '-' . now()->addYear()->format('y'))
-                            ->required(),
+                            ->required()
+                            ->readOnly(),
+
+                        TextInput::make('roll_no')
+                            ->label('Academic Year')
+                            ->default(now()->year . '-' . now()->addYear()->format('y'))
+                            ->required()
+                            ->readOnly(),
                     ])
                     ->columns(2)
                     ->columnSpanFull(),

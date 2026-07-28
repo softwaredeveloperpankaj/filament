@@ -25,7 +25,7 @@ class StudentsTable
                     ->copyable()
                     ->toggleable(),
 
-                TextColumn::make('form_data.student_name')   // ← adjust to your field_key
+                TextColumn::make('form_data.st_name')   // ← adjust to your field_key
                     ->label('Student Name')
                     ->searchable()
                     ->toggleable(),
@@ -35,7 +35,7 @@ class StudentsTable
                     ->sortable()
                     ->toggleable(),
 
-                TextColumn::make('branchClass.name')
+                TextColumn::make('class.name')
                     ->label('Class')
                     ->sortable()
                     ->toggleable(),

@@ -38,17 +38,37 @@ trait BuildsDynamicFormFields
         $sections = [];
 
         foreach ($template->sections as $section) {
-            $fields = collect($section->fields)
-                ->map(fn ($field) => static::makeFormField($field))
-                ->toArray();
+            $normalFields = [];
+            $uploadFields = [];
 
-            if (!empty($fields)) {
-                $sections[] = Section::make($section->title)
-                    ->schema($fields)
-                    ->columns(2)
-                    ->columnSpanFull();
+            foreach ($section->fields as $field) {
+                if (static::isUploadField($field)) {
+                    $uploadFields[] = static::makeFormField($field);
+                } else {
+                    $normalFields[] = static::makeFormField($field);
+                }
             }
-        }
+
+            if (! empty($normalFields)) {
+                $sections[] = Section::make($section->title)
+                    ->schema($normalFields)
+                    ->columns(2)
+                    ->columnSpan([
+                        'default' => 1,
+                        'lg' => ! empty($uploadFields) ? 2 : 3,
+                    ]);
+            }
+
+            if (! empty($uploadFields)) {
+                $sections[] = Section::make($section->title)
+                    ->schema($uploadFields)
+                    ->columns(1)
+                    ->columnSpan([
+                        'default' => 1,
+                        'lg' => ! empty($normalFields) ? 1 : 3,
+                    ]);
+            }
+        }        
 
         return $sections;
     }
@@ -77,6 +97,11 @@ trait BuildsDynamicFormFields
         }
 
         return $entries;
+    }
+
+    protected static function isUploadField(FormField $field): bool
+    {
+        return in_array($field->type, ['file', 'image'], true);
     }
 
     protected static function makeFormField(FormField $field): Component
@@ -240,30 +265,30 @@ trait BuildsDynamicFormFields
             ->inline(($field->option_layout ?? 'vertical') === 'horizontal');
     }
 
-        protected static function makeCheckboxField(FormField $field): Component
-        {
-            $settings = $field->settings ?? [];
-            $options = static::fieldOptions($field);
+    protected static function makeCheckboxField(FormField $field): Component
+    {
+        $settings = $field->settings ?? [];
+        $options = static::fieldOptions($field);
 
-            if (! empty($options)) {
-                $component = CheckboxList::make(static::fieldKey($field))
-                    ->options($options);
+        if (! empty($options)) {
+            $component = CheckboxList::make(static::fieldKey($field))
+                ->options($options);
 
-                if (($field->option_layout ?? 'vertical') === 'horizontal') {
-                    $component->columns(count($options) > 4 ? 4 : count($options));
-                }
-
-                return $component;
-            }
-
-            $component = Checkbox::make(static::fieldKey($field));
-
-            if (! empty($settings['accepted'])) {
-                $component->accepted();
+            if (($field->option_layout ?? 'vertical') === 'horizontal') {
+                $component->columns(count($options) > 4 ? 4 : count($options));
             }
 
             return $component;
         }
+
+        $component = Checkbox::make(static::fieldKey($field));
+
+        if (! empty($settings['accepted'])) {
+            $component->accepted();
+        }
+
+        return $component;
+    }
 
     protected static function makeFileField(FormField $field): Component
     {
