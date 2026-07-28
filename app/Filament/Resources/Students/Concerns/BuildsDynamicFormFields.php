@@ -265,30 +265,30 @@ trait BuildsDynamicFormFields
             ->inline(($field->option_layout ?? 'vertical') === 'horizontal');
     }
 
-        protected static function makeCheckboxField(FormField $field): Component
-        {
-            $settings = $field->settings ?? [];
-            $options = static::fieldOptions($field);
+    protected static function makeCheckboxField(FormField $field): Component
+    {
+        $settings = $field->settings ?? [];
+        $options = static::fieldOptions($field);
 
-            if (! empty($options)) {
-                $component = CheckboxList::make(static::fieldKey($field))
-                    ->options($options);
+        if (! empty($options)) {
+            $component = CheckboxList::make(static::fieldKey($field))
+                ->options($options);
 
-                if (($field->option_layout ?? 'vertical') === 'horizontal') {
-                    $component->columns(count($options) > 4 ? 4 : count($options));
-                }
-
-                return $component;
-            }
-
-            $component = Checkbox::make(static::fieldKey($field));
-
-            if (! empty($settings['accepted'])) {
-                $component->accepted();
+            if (($field->option_layout ?? 'vertical') === 'horizontal') {
+                $component->columns(count($options) > 4 ? 4 : count($options));
             }
 
             return $component;
         }
+
+        $component = Checkbox::make(static::fieldKey($field));
+
+        if (! empty($settings['accepted'])) {
+            $component->accepted();
+        }
+
+        return $component;
+    }
 
     protected static function makeFileField(FormField $field): Component
     {
