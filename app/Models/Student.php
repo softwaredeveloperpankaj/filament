@@ -74,6 +74,10 @@ class Student extends Model
 
             if (empty($student->roll_no)) {
                 $student->roll_no = static::generateRollNo($student);
+            }
+
+            if (empty($student->admission_date)) {
+                $student->admission_date = now();
             }            
         });
 

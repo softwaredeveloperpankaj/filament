@@ -78,21 +78,27 @@ trait BuildsDynamicFormFields
      */
     public static function getDynamicInfolistEntries(FormTemplate $template): array
     {
+        $template->loadMissing([
+            'sections' => fn ($q) => $q->orderBy('sort_order'),
+            'sections.fields' => fn ($q) => $q->orderBy('sort_order'),
+        ]);
+
         $entries = [];
 
-        foreach ($template->formSections()->orderBy('order')->get() as $section) {
-            $sectionEntries = $section->formFields()
-                ->orderBy('order')
-                ->get()
+        foreach ($template->sections as $section) {
+            $sectionEntries = $section->fields
                 ->map(fn ($field) => TextEntry::make(
                     'form_data.' . ($field->field_key ?? Str::slug($field->label, '_'))
-                )->label($field->label)->placeholder('—'))
+                )
+                    ->label($field->label)
+                    ->placeholder('—'))
                 ->toArray();
 
-            if (!empty($sectionEntries)) {
+            if (! empty($sectionEntries)) {
                 $entries[] = Section::make($section->title)
                     ->schema($sectionEntries)
-                    ->columns(2);
+                    ->columns(2)
+                    ->columnSpanFull();
             }
         }
 

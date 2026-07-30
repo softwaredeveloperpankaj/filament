@@ -2,11 +2,17 @@
 
 namespace App\Filament\Resources\Students\Tables;
 
+use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Actions\ForceDeleteAction;
+use Filament\Actions\RestoreAction;
+use Filament\Actions\RestoreBulkAction;
 use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 
 class StudentsTable
@@ -18,6 +24,12 @@ class StudentsTable
                 TextColumn::make('id')
                     ->label('ID')
                     ->sortable(),
+
+                TextColumn::make('branch.name')
+                    ->label('Branch')
+                    ->sortable()
+                    ->toggleable(),
+
                 TextColumn::make('registration_number')
                     ->label('Reg. No.')
                     ->searchable()
@@ -25,15 +37,16 @@ class StudentsTable
                     ->copyable()
                     ->toggleable(),
 
-                TextColumn::make('form_data.st_name')   // ← adjust to your field_key
-                    ->label('Student Name')
-                    ->searchable()
+                TextColumn::make('roll_no')
+                    ->label('Roll No.')
+                    ->placeholder('—')
                     ->toggleable(),
 
-                TextColumn::make('branch.name')
-                    ->label('Branch')
-                    ->sortable()
-                    ->toggleable(),
+                // TextColumn::make('form_data.st_name')   // ← adjust to your field_key
+                //     ->label('Student Name')
+                //     ->searchable()
+                //     ->toggleable(),
+
 
                 TextColumn::make('class.name')
                     ->label('Class')
@@ -46,11 +59,6 @@ class StudentsTable
 
                 TextColumn::make('academic_year')
                     ->sortable()
-                    ->toggleable(),
-
-                TextColumn::make('roll_no')
-                    ->label('Roll No.')
-                    ->placeholder('—')
                     ->toggleable(),
 
                 TextColumn::make('status')
@@ -74,15 +82,22 @@ class StudentsTable
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                //
+                TrashedFilter::make(),
             ])
             ->recordActions([
-                ViewAction::make(),
-                EditAction::make(),
+                ActionGroup::make([
+                    ViewAction::make(),
+                    EditAction::make(),
+                    DeleteAction::make(),
+                    RestoreAction::make(),
+                    ForceDeleteAction::make(),
+                ]),
             ])
+            ->recordActionsColumnLabel('Actions')
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
+                    RestoreBulkAction::make(),
                 ]),
             ]);
     }

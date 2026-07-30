@@ -36,6 +36,7 @@ class StudentForm
                                 $set('section_id', null);
                                 $set('form_template_id', null);
                                 $set('roll_no', null);
+                                $set('academic_year', null);
                             }),
 
                         Select::make('branch_class_id')
@@ -48,13 +49,9 @@ class StudentForm
                             )
                             ->required()
                             ->live()
-                            ->afterStateUpdated(function ($set, $get) {
+                            ->afterStateUpdated(function ($set) {
                                 $set('section_id', null);
-                                $set('roll_no', static::previewRollNo(
-                                    (int) $get('form_template_id'),
-                                    (int) $get('branch_class_id'),
-                                    null
-                                ));
+                                $set('form_template_id', null);
                             }),
 
                         Select::make('section_id')
@@ -65,35 +62,42 @@ class StudentForm
                                     ? ClassSection::where('branch_class_id', $get('branch_class_id'))
                                     ->with('section')
                                     ->get()
-                                    ->pluck('section.name', 'id')
+                                    ->pluck('section.name', 'section_id')
                                     : []
                             )
                             ->required()
                             ->live()
-                            ->afterStateUpdated(function ($set, $get) {
-                                $classSection = ClassSection::find($get('section_id'));
-                                $set('roll_no', static::previewRollNo(
-                                    (int) $get('form_template_id'),
-                                    (int) $get('branch_class_id'),
-                                    $classSection?->section_id
-                                ));
+                            ->afterStateUpdated(function ($set) {
+                                $set('form_template_id', null);
                             }),
 
                         Select::make('form_template_id')
                             ->label('Form Template')
-                            ->options(
-                                fn($get) =>
-                                $get('branch_id')
-                                    ? FormTemplate::query()
+                            // ->options(
+                            //     fn($get) =>
+                            //     $get('branch_id')
+                            //         ? FormTemplate::query()
+                            //         ->where('branch_id', $get('branch_id'))
+                            //         ->where('status', 'published')
+                            //         ->where('is_active', true)
+                            //         ->pluck('name', 'id')
+                            //         : []
+                            // )
+                            ->options(function ($get) {
+                                if (blank($get('section_id')) || blank($get('branch_id'))) {
+                                    return [];
+                                }
+
+                                return FormTemplate::query()
                                     ->where('branch_id', $get('branch_id'))
                                     ->where('status', 'published')
                                     ->where('is_active', true)
-                                    ->pluck('name', 'id')
-                                    : []
-                            )
+                                    ->pluck('name', 'id');
+                            })
                             ->required()
                             ->live()
                             ->afterStateUpdated(function ($set, $get) {
+                                $set('academic_year', now()->year . '-' . now()->addYear()->format('y'));
                                 $classSection = ClassSection::find($get('section_id'));
                                 $set('roll_no', static::previewRollNo(
                                     (int) $get('form_template_id'),
@@ -107,12 +111,12 @@ class StudentForm
                             ->default(now()->year . '-' . now()->addYear()->format('y'))
                             ->required()
                             ->readOnly()
-                            ->dehydrated(true),
+                            ->dehydrated(true)
+                            ->placeholder('20__ - __'),
 
                         TextInput::make('roll_no')
-                            ->label('Roll Number (Preview)')
-                            ->placeholder('Select class/section & template above')
-                            ->helperText('Auto-generated on save. This is a preview only.')
+                            ->label('Roll Number')
+                            ->placeholder('Select form template above')
                             ->readOnly()
                             ->dehydrated(false),
                     ])
