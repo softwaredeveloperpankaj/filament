@@ -64,8 +64,8 @@ class StudentInfolist
                             ->dateTime()
                             ->placeholder('—'),
                     ])
-                    ->columns(2)
-                    ->columnSpanFull(),
+                    ->columns(3)
+                    ->columnSpan(3),
                     ...(
                         $record?->formTemplate
                         ? static::getDynamicInfolistEntries($record->formTemplate)
