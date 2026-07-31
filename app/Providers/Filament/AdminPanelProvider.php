@@ -74,7 +74,8 @@ class AdminPanelProvider extends PanelProvider
                     ->label('Security')
                     ->collapsed()
             ])
-            ->databaseNotifications();
+            ->databaseNotifications()
+            ->globalSearch(false);
             // ->globalSearch(position: GlobalSearchPosition::Sidebar)
             // ->sidebarCollapsibleOnDesktop();
     }
