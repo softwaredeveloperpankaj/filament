@@ -51,8 +51,7 @@ class StudentResource extends Resource
             'index' => ListStudents::route('/'),
             'create' => CreateStudent::route('/create'),
             'view' => ViewStudent::route('/{record}'),
-            'edit' => EditStudent::route('/{record}/edit'),
-            'print'  => PrintAdmissionForm::route('/{record}/print'),
+            'edit' => EditStudent::route('/{record}/edit')
         ];
     }
 }

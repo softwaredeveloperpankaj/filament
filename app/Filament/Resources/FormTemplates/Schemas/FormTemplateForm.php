@@ -112,40 +112,20 @@ class FormTemplateForm
     
     public static function printLayoutOptions(): array
     {
-        $viewPath = resource_path('views/filament/pages/admission-form-print');
+        $viewPath = resource_path('views/filament/print-admission-form');
 
         if (! is_dir($viewPath)) {
-            return ['default' => 'Default Layout'];
+            return ['default' => 'default'];
         }
 
-        $layouts = [];
+        $files = glob($viewPath . '/*.blade.php') ?: [];
 
-        foreach (glob($viewPath . '/*.blade.php') as $filePath) {
-            $filename = basename($filePath, '.blade.php'); // e.g. "letterhead"
-
-            // Read first 5 lines to find @layout-name metadata comment
-            $handle = fopen($filePath, 'r');
-            $label  = null;
-            $lines  = 0;
-
-            while (($line = fgets($handle)) !== false && $lines < 5) {
-                if (preg_match('/@layout-name\s+(.+)/', $line, $matches)) {
-                    $label = trim($matches[1]);
-                    break;
-                }
-                $lines++;
-            }
-
-            fclose($handle);
-            
-            $label ??= str(str_replace(['_', '-'], ' ', $filename))->title()->toString();
-
-            $layouts[$filename] = $label;
-        }
-
-        // Always ensure 'default' appears first
-        uksort($layouts, fn($a) => $a === 'default' ? -1 : 1);
-
-        return $layouts ?: ['default' => 'Default Layout'];
+        return collect($files)
+            ->mapWithKeys(function ($filePath) {
+                $filename = basename($filePath, '.blade.php');
+                return [$filename => ucfirst($filename)];
+            })
+            ->sortKeysUsing(fn ($a) => $a === 'default' ? -1 : 1)
+            ->all() ?: ['default' => 'default'];
     }
 }

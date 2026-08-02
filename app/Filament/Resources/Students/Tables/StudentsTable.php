@@ -2,8 +2,6 @@
 
 namespace App\Filament\Resources\Students\Tables;
 
-use App\Filament\Resources\Students\StudentResource;
-use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
@@ -88,12 +86,6 @@ class StudentsTable
             ])
             ->recordActions([
                 ActionGroup::make([
-                    Action::make('print_admission')
-                        ->label('Print Admission Form')
-                        ->icon('heroicon-o-printer')
-                        ->color('success')
-                        ->url(fn ($record) => StudentResource::getUrl('print', ['record' => $record]))
-                        ->openUrlInNewTab(),
                     ViewAction::make(),
                     EditAction::make(),
                     DeleteAction::make(),

@@ -12,77 +12,79 @@
         </x-filament::callout>
     @endif  
 
-    <div class="grid grid-cols-1 lg:grid-cols-[320px_minmax(0,1fr)] gap-5 items-start">
-        <div class="lg:sticky lg:top-4">
-            <x-filament::section>
-                <x-slot name="heading">{{ __('Field Palette') }}</x-slot>
+    <div class="fb-layout">
+        <div class="fb-sidebar">
+            <div class="fb-sticky">
+                <x-filament::section>
+                    <x-slot name="heading">{{ __('Field Palette') }}</x-slot>
 
-                <x-slot name="description">
-                    {{ __('Drag a field into any section.') }}
-                </x-slot>
+                    <x-slot name="description">
+                        {{ __('Drag a field into any section.') }}
+                    </x-slot>
 
-                <div class="space-y-3">
-                    <x-filament::button
-                        icon="heroicon-o-plus"
-                        class="w-full"
-                        x-on:click="$dispatch('open-modal', { id: 'add-section-modal' })"
-                    >
-                        {{ __('Add Section') }}
-                    </x-filament::button>
-
-                    <x-filament::modal id="add-section-modal" width="md">
-                        <x-slot name="heading">{{ __('Add Section') }}</x-slot>
-
-                        <div class="space-y-4">
-                            <x-filament::input.wrapper>
-                                <x-filament::input
-                                    wire:model.live="newSectionTitle"
-                                    type="text"
-                                    placeholder="{{ __('e.g. Student Information') }}"
-                                />
-                            </x-filament::input.wrapper>
-                        </div>
-
-                        <x-slot name="footerActions">
-                            <x-filament::button
-                                color="gray"
-                                x-on:click="$dispatch('close-modal', { id: 'add-section-modal' })"
-                            >
-                                {{ __('Cancel') }}
-                            </x-filament::button>
-
-                            <x-filament::button wire:click="createSection">
-                                {{ __('Create Section') }}
-                            </x-filament::button>
-                        </x-slot>
-                    </x-filament::modal>
-                </div>
-
-                <div class="my-4 h-px bg-gray-200 dark:bg-gray-700"></div>
-
-                <div id="field-palette" class="flex flex-col gap-3">
-                    @foreach ([
-                        'text' => __('Text'),
-                        'email' => __('Email'),
-                        'number' => __('Number'),
-                        'date' => __('Date'),
-                        'textarea' => __('Textarea'),
-                        'select' => __('Select'),
-                        'radio' => __('Radio'),
-                        'checkbox' => __('Checkbox'),
-                        'file' => __('File Upload'),
-                    ] as $type => $label)
-                        <div
-                            class="rounded-xl border border-gray-200 dark:border-gray-700 bg-white/80 dark:bg-gray-900/70 p-4 cursor-grab hover:border-primary-400 hover:-translate-y-0.5 transition-all duration-200"
-                            data-type="{{ $type }}"
-                            data-label="{{ $label }}"
+                    <div class="space-y-3">
+                        <x-filament::button
+                            icon="heroicon-o-plus"
+                            class="w-full"
+                            x-on:click="$dispatch('open-modal', { id: 'add-section-modal' })"
                         >
-                            <div class="font-semibold text-sm text-gray-900 dark:text-white">{{ $label }}</div>
-                            <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{ $type }}</div>
-                        </div>
-                    @endforeach
-                </div>
-            </x-filament::section>
+                            {{ __('Add Section') }}
+                        </x-filament::button>
+
+                        <x-filament::modal id="add-section-modal" width="md">
+                            <x-slot name="heading">{{ __('Add Section') }}</x-slot>
+
+                            <div class="space-y-4">
+                                <x-filament::input.wrapper>
+                                    <x-filament::input
+                                        wire:model.live="newSectionTitle"
+                                        type="text"
+                                        placeholder="{{ __('e.g. Student Information') }}"
+                                    />
+                                </x-filament::input.wrapper>
+                            </div>
+
+                            <x-slot name="footerActions">
+                                <x-filament::button
+                                    color="gray"
+                                    x-on:click="$dispatch('close-modal', { id: 'add-section-modal' })"
+                                >
+                                    {{ __('Cancel') }}
+                                </x-filament::button>
+
+                                <x-filament::button wire:click="createSection">
+                                    {{ __('Create Section') }}
+                                </x-filament::button>
+                            </x-slot>
+                        </x-filament::modal>
+                    </div>
+
+                    <div class="fb-divider"></div>
+
+                    <div id="field-palette" class="fb-palette">
+                        @foreach ([
+                            'text' => __('Text'),
+                            'email' => __('Email'),
+                            'number' => __('Number'),
+                            'date' => __('Date'),
+                            'textarea' => __('Textarea'),
+                            'select' => __('Select'),
+                            'radio' => __('Radio'),
+                            'checkbox' => __('Checkbox'),
+                            'file' => __('File Upload'),
+                        ] as $type => $label)
+                            <div
+                                class="fb-palette-item"
+                                data-type="{{ $type }}"
+                                data-label="{{ $label }}"
+                            >
+                                <div class="fb-palette-title">{{ $label }}</div>
+                                <div class="fb-palette-meta">{{ $type }}</div>
+                            </div>
+                        @endforeach
+                    </div>
+                </x-filament::section>
+            </div>
         </div>
 
         <div class="fb-canvas">
@@ -95,31 +97,29 @@
                     {{ __('Drag sections to reorder. Drag fields from palette or between sections.') }}
                 </x-slot>
 
-                <div id="sections-wrapper" class="flex flex-col gap-4">
+                <div id="sections-wrapper" class="fb-sections">
                     @forelse ($this->getBuilderSections() as $section)
                         <div
                             wire:key="section-{{ $section->id }}"
-                            class="section-card rounded-2xl border border-gray-200 dark:border-gray-700 bg-white/80 dark:bg-gray-900/70 overflow-hidden"
+                            class="section-card fb-section"
                             data-section-id="{{ $section->id }}"
                             x-data="{ open: {{ $loop->first ? 'true' : 'false' }} }"
                         >
-                            <div class="flex items-center justify-between gap-4 px-5 py-4 border-b border-gray-200 dark:border-gray-700 cursor-pointer" @click="open = !open">
-                                <div class="flex items-center gap-3 min-w-0">
-                                    <button
-                                        type="button"
-                                        class="fb-handle text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 cursor-grab touch-none" @click.stop>
+                            <div class="fb-section-header" @click="open = !open">
+                                <div class="fb-section-left">
+                                    <button type="button" class="handle fb-handle" @click.stop>
                                         <x-filament::icon icon="heroicon-o-bars-3" class="h-5 w-5" />
                                     </button>
 
                                     <div>
-                                        <div class="font-semibold text-sm text-gray-900 dark:text-white truncate">{{ $section->title }}</div>
-                                        <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                                        <div class="fb-section-title">{{ $section->title }}</div>
+                                        <div class="fb-section-meta">
                                             {{ trans_choice('{1} :count field|[2,*] :count fields', $section->fields->count(), ['count' => $section->fields->count()]) }}
                                         </div>
                                     </div>
                                 </div>
 
-                                <div class="flex items-center gap-2 flex-wrap" @click.stop>
+                                <div class="fb-field-actions" @click.stop>
                                     <x-filament::icon-button
                                         icon="heroicon-o-pencil-square"
                                         color="warning"
@@ -139,30 +139,29 @@
                                     <x-filament::icon
                                         icon="heroicon-m-chevron-down"
                                         class="h-4 w-4 transition-transform duration-200 pointer-events-none"
-                                        {{-- x-bind:style="`transform: rotate(${open ? 180 : 0}deg); transition: transform .2s ease;`" --}}
-                                        x-bind:class="open ? 'rotate-180' : ''"
+                                        x-bind:style="`transform: rotate(${open ? 180 : 0}deg); transition: transform .2s ease;`"
                                     />
                                 </div>
                             </div>
 
                             <div x-show="open" x-collapse>
                                 <div
-                                    class="field-dropzone min-h-24 p-4 flex flex-col gap-3"
+                                    class="field-dropzone fb-dropzone"
                                     data-section-id="{{ $section->id }}"
                                 >
                                     @forelse ($section->fields as $field)
                                         <div
                                             wire:key="field-{{ $field->id }}"
-                                            class="field-card flex flex-col md:flex-row md:items-center md:justify-between gap-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 select-none"
+                                            class="field-card fb-field"
                                             data-field-id="{{ $field->id }}"
                                         >
-                                            <button type="button" class="fb-field-handle text-gray-500 cursor-grab mt-0.5">
+                                            <button type="button" class="fb-field-handle">
                                                 <x-filament::icon icon="heroicon-o-bars-3" class="h-5 w-5" />
                                             </button>
 
-                                            <div class="flex-1 min-w-0">
-                                                <div class="flex flex-wrap items-center gap-2">
-                                                    <div class="font-medium text-sm text-gray-900 dark:text-white">{{ $field->label }}</div>
+                                            <div class="fb-field-main">
+                                                <div class="fb-field-top">
+                                                    <div class="fb-field-title">{{ $field->label }}</div>
 
                                                     <x-filament::badge color="gray" size="sm">
                                                         {{ $field->type }}
@@ -176,13 +175,13 @@
                                                 </div>
 
                                                 @if ($field->help_text)
-                                                    <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                                    <div class="fb-field-help">
                                                         {{ $field->help_text }}
                                                     </div>
                                                 @endif
                                             </div>
 
-                                            <div class="flex items-center gap-2 flex-wrap">
+                                            <div class="fb-field-actions">
                                                 @if (in_array($field->type, ['select', 'radio', 'checkbox']))
                                                     <x-filament::icon-button
                                                         icon="heroicon-o-list-bullet"
@@ -211,7 +210,7 @@
                                             </div>
                                         </div>
                                     @empty
-                                        <div class="rounded-xl border border-dashed border-gray-300 dark:border-gray-600 p-6 text-center text-sm text-gray-500 dark:text-gray-400">
+                                        <div class="fb-empty">
                                             {{ __('No fields yet. Drag from the palette.') }}
                                         </div>
                                     @endforelse
@@ -298,7 +297,7 @@
 
         <div class="space-y-4">
             <div class="space-y-2">
-                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-200">{{ __('Section Title') }}</label>
+                <label class="fb-label">{{ __('Section Title') }}</label>
 
                 <x-filament::input.wrapper>
                     <x-filament::input
@@ -330,14 +329,14 @@
         </x-slot>
 
         <div class="space-y-4">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="fb-form-grid">
                 <x-filament::fieldset>
                     <x-slot name="label"> {{ __('Label') }} </x-slot>
                     <x-filament::input.wrapper>
                         <x-filament::input wire:model="editingFieldData.label" type="text" />
                     </x-filament::input.wrapper>
 
-                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{ __('Appears above the field.') }}</p>
+                    <p class="fb-help">{{ __('Appears above the field.') }}</p>
                 </x-filament::fieldset>                
 
                 <x-filament::fieldset>
@@ -347,11 +346,11 @@
                         <x-filament::input wire:model="editingFieldData.field_key" type="text" />
                     </x-filament::input.wrapper>
 
-                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{ __('Unique identifier for this field.') }}</p>
+                    <p class="fb-help">{{ __('Unique identifier for this field.') }}</p>
                 </x-filament::fieldset>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="fb-form-grid">
                 <x-filament::fieldset>
                     <x-slot name="label">{{ __('Required') }}</x-slot>
                     <x-filament::input.wrapper>
@@ -372,7 +371,7 @@
                         </x-filament::input.select>
                     </x-filament::input.wrapper>
 
-                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{ __('For radio/checkbox fields only.') }}</p>
+                    <p class="fb-help">{{ __('For radio/checkbox fields only.') }}</p>
                 </x-filament::fieldset>                
                 @endif
             </div>
@@ -398,7 +397,7 @@
                     />
                 </x-filament::input.wrapper>
 
-                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{ __('Pipe-delimited rules, e.g. required|string|max:255') }}</p>
+                <p class="fb-help">{{ __('Pipe-delimited rules, e.g. required|string|max:255') }}</p>
             </x-filament::fieldset>
 
             <x-filament::fieldset>
@@ -408,7 +407,7 @@
                     <x-filament::input wire:model="editingFieldData.help_text" type="text" />
                 </x-filament::input.wrapper>
 
-                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{ __('Appears below the field.') }}</p>
+                <p class="fb-help">{{ __('Appears below the field.') }}</p>
             </x-filament::fieldset>            
 
             <x-filament::fieldset>
@@ -420,7 +419,7 @@
                     <textarea
                         wire:model="editingFieldData.visibility_conditions_input"
                         rows="3"
-                        class="w-full min-h-[90px] resize-y border-0 bg-transparent px-3 py-2 text-sm font-mono focus:ring-0"
+                        class="fb-textarea"
                         placeholder='{"field":"transport_required","equals":"yes"}'
                     ></textarea>
                 </x-filament::input.wrapper>
@@ -436,7 +435,7 @@
                     <textarea
                         wire:model="editingFieldData.settings_input"
                         rows="5"
-                        class="w-full min-h-[90px] resize-y border-0 bg-transparent px-3 py-2 text-sm font-mono focus:ring-0"
+                        class="fb-textarea"
                         placeholder='{"column_span": "full","accept": ["pdf", "jpg"]}'
                     >
                     </textarea>
@@ -530,24 +529,24 @@
         </x-slot>
 
         <div class="space-y-3">
-            <div class="grid grid-cols-[2rem_1fr_1fr_4rem_2.5rem] items-center gap-3 px-2 pb-2 border-b border-gray-200 dark:border-gray-700">
+            <div class="opt-header-row">
                 <span></span>
-                <span class="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">{{ __('Label') }}</span>
-                <span class="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">{{ __('Value') }}</span>
-                <span class="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 text-center">{{ __('Default') }}</span>
+                <span class="opt-col-label">{{ __('Label') }}</span>
+                <span class="opt-col-label">{{ __('Value') }}</span>
+                <span class="opt-col-label text-center">{{ __('Default') }}</span>
                 <span></span>
             </div>
 
             <div id="options-sortable" class="space-y-2">
                 @forelse($fieldOptions as $index => $option)
                     <div
-                        class="opt-row grid grid-cols-[2rem_1fr_1fr_4rem_2.5rem] items-center gap-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-3 transition-all duration-150 hover:border-gray-300 dark:hover:border-gray-600"
+                        class="opt-row"
                         wire:key="option-{{ $index }}"
                         data-index="{{ $index }}"
                     >
                         <button
                             type="button"
-                            class="option-handle inline-flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-600 dark:hover:text-gray-300 cursor-grab"
+                            class="option-handle opt-handle"
                             title="{{ __('Drag to reorder') }}"
                         >
                             <x-filament::icon icon="heroicon-o-bars-3" class="h-4 w-4" />
@@ -588,7 +587,7 @@
                         </div>
                     </div>
                 @empty
-                    <div class="rounded-xl border border-dashed border-gray-300 dark:border-gray-600 p-8 text-center text-sm text-gray-500 dark:text-gray-400">
+                    <div class="opt-empty">
                         <x-filament::icon icon="heroicon-o-list-bullet" class="h-8 w-8 mx-auto mb-2 opacity-30" />
                         <p>{!! __('No options yet. Click <strong>Add Option</strong> to get started.') !!}</p>
                     </div>
@@ -643,17 +642,17 @@
                     </x-slot>
                 </x-filament::empty-state>
             @else
-                <div class="grid grid-cols-[2.5rem_1fr_1fr_5rem] items-center gap-3 px-3 py-2 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">
+                <div class="ver-table-head">
                     <span>#</span>
                     <span>{{ __('Version') }}</span>
                     <span>{{ __('Published At') }}</span>
                     <span class="text-center">{{ __('Active') }}</span>
                 </div>
 
-                <div class="mt-2 space-y-2">
+                <div class="ver-table-body">
                     @foreach($templateVersions as $i => $ver)
-                        <div class="grid grid-cols-[2.5rem_1fr_1fr_5rem] items-center gap-3 rounded-xl border p-3 transition-all duration-150 {{ $ver['is_active'] ? 'border-success-300 bg-success-50 dark:border-success-700 dark:bg-success-950/20' : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800' }}">
-                            <span class="text-center text-xs font-semibold text-gray-400 dark:text-gray-500">{{ $i + 1 }}</span>
+                        <div class="ver-row {{ $ver['is_active'] ? 'ver-row-active' : '' }}">
+                            <span class="ver-cell-num">{{ $i + 1 }}</span>
 
                             <span>
                                 <x-filament::badge color="{{ $ver['is_active'] ? 'success' : 'gray' }}">
@@ -661,19 +660,19 @@
                                 </x-filament::badge>
                             </span>
 
-                            <span class="text-sm text-gray-600 dark:text-gray-300">
+                            <span class="ver-cell-date">
                                 {{ $ver['published_at'] }}
                             </span>
 
-                            <div class="flex justify-center">
+                            <div class="ver-cell-toggle">
                                 <button
                                     type="button"
                                     wire:click="toggleVersionActive({{ $ver['id'] }})"
                                     wire:loading.attr="disabled"
-                                    class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 {{ $ver['is_active'] ? 'bg-success-500' : 'bg-gray-300 dark:bg-gray-600' }}"
+                                    class="ver-toggle {{ $ver['is_active'] ? 'ver-toggle-on' : 'ver-toggle-off' }}"
                                     title="{{ $ver['is_active'] ? __('Deactivate') : __('Activate') }}"
                                 >
-                                    <span class="inline-block h-5 w-5 transform rounded-full bg-white shadow transition duration-200 {{ $ver['is_active'] ? 'translate-x-5' : 'translate-x-1' }}"></span>
+                                    <span class="ver-toggle-knob"></span>
                                 </button>
                             </div>
                         </div>
@@ -693,11 +692,402 @@
     </x-filament::modal>
 
     @push('styles')
-    <style>
-        .sortable-ghost {
-            opacity: 0.5;
-        }
-    </style>
+        <style>
+            .sortable-ghost {
+                opacity: 0.45;
+            }
+
+            .ver-table-head,
+            .ver-row {
+                display: grid;
+                grid-template-columns: 2.5rem 1fr 1fr 5rem;
+                align-items: center;
+                gap: 0.75rem;
+                padding: 0.625rem 0.75rem;
+            }
+
+            .ver-table-head {
+                font-size: 0.7rem;
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
+                color: rgb(107 114 128);
+                border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+                padding-bottom: 0.5rem;
+                margin-bottom: 0.25rem;
+            }
+
+            .ver-row {
+                border-radius: 0.75rem;
+                border: 1px solid rgba(148, 163, 184, 0.16);
+                background: rgba(255, 255, 255, 0.7);
+                margin-bottom: 0.375rem;
+                transition: border-color 0.15s, background 0.15s;
+            }
+
+            .dark .ver-row {
+                background: rgba(31, 41, 55, 0.75);
+                border-color: rgba(75, 85, 99, 0.3);
+            }
+
+            .ver-row-active {
+                border-color: rgba(34, 197, 94, 0.4) !important;
+                background: rgba(34, 197, 94, 0.04) !important;
+            }
+
+            .dark .ver-row-active {
+                background: rgba(34, 197, 94, 0.06) !important;
+            }
+
+            .ver-cell-num {
+                font-size: 0.75rem;
+                color: rgb(156 163 175);
+                font-weight: 600;
+                text-align: center;
+            }
+
+            .ver-cell-date {
+                font-size: 0.8125rem;
+                color: rgb(107 114 128);
+            }
+
+            .ver-cell-toggle {
+                display: flex;
+                justify-content: center;
+            }
+
+            .ver-toggle {
+                position: relative;
+                width: 2.75rem;
+                height: 1.5rem;
+                border-radius: 9999px;
+                border: none;
+                cursor: pointer;
+                transition: background 0.2s ease;
+                flex-shrink: 0;
+                display: inline-flex;
+                align-items: center;
+                padding: 0 0.25rem;
+            }
+
+            .ver-toggle-on {
+                background: rgb(34 197 94);
+            }
+
+            .ver-toggle-off {
+                background: rgb(209 213 219);
+            }
+
+            .dark .ver-toggle-off {
+                background: rgb(75 85 99);
+            }
+
+            .ver-toggle-knob {
+                position: absolute;
+                width: 1.1rem;
+                height: 1.1rem;
+                border-radius: 9999px;
+                background: white;
+                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+                transition: transform 0.2s ease;
+            }
+
+            .ver-toggle-on .ver-toggle-knob {
+                transform: translateX(1.2rem);
+            }
+
+            .ver-toggle-off .ver-toggle-knob {
+                transform: translateX(0);
+            }
+
+            .ver-toggle:disabled {
+                opacity: 0.6;
+                cursor: not-allowed;
+            }
+
+            .opt-header-row,
+            .opt-row {
+                display: grid;
+                grid-template-columns: 2rem 1fr 1fr 3.5rem 2.5rem;
+                align-items: center;
+                gap: 0.625rem;
+            }
+
+            .opt-header-row {
+                padding: 0 0.375rem 0.25rem;
+                border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+            }
+
+            .opt-col-label {
+                font-size: 0.75rem;
+                font-weight: 600;
+                color: rgb(107 114 128);
+                text-transform: uppercase;
+                letter-spacing: 0.04em;
+            }
+
+            .opt-row {
+                background: rgba(255, 255, 255, 0.7);
+                border: 1px solid rgba(148, 163, 184, 0.2);
+                border-radius: 0.75rem;
+                padding: 0.5rem 0.5rem 0.5rem 0.375rem;
+                transition: box-shadow 0.15s ease, border-color 0.15s ease;
+            }
+
+            .dark .opt-row {
+                background: rgba(31, 41, 55, 0.75);
+                border-color: rgba(75, 85, 99, 0.35);
+            }
+
+            .opt-row:hover {
+                border-color: rgba(148, 163, 184, 0.4);
+                box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+            }
+
+            .opt-handle {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                width: 2rem;
+                height: 2rem;
+                border-radius: 0.5rem;
+                color: rgb(156 163 175);
+                cursor: grab;
+                transition: background 0.15s, color 0.15s;
+                background: transparent;
+                border: none;
+            }
+
+            .opt-handle:hover {
+                background: rgba(148, 163, 184, 0.15);
+                color: rgb(75 85 99);
+            }
+
+            .opt-handle:active {
+                cursor: grabbing;
+            }
+
+            .opt-empty {
+                text-align: center;
+                padding: 2rem 1rem;
+                color: rgb(156 163 175);
+                font-size: 0.875rem;
+                border: 1px dashed rgba(148, 163, 184, 0.3);
+                border-radius: 0.75rem;
+            }
+
+            .sortable-ghost.opt-row {
+                background: rgba(99, 102, 241, 0.07) !important;
+                border: 1px dashed rgba(99, 102, 241, 0.4) !important;
+            }
+
+            .fb-layout {
+                display: grid;
+                grid-template-columns: 320px minmax(0, 1fr);
+                gap: 1.25rem;
+                align-items: start;
+            }
+
+            .fb-palette,
+            .fb-sections {
+                display: flex;
+                flex-direction: column;
+                gap: 0.875rem;
+            }
+
+            .fb-palette-item {
+                border: 1px solid rgba(148, 163, 184, 0.22);
+                border-radius: 0.875rem;
+                padding: 0.875rem 1rem;
+                cursor: grab;
+                background: rgba(255, 255, 255, 0.7);
+                transition: all 0.2s ease;
+            }
+
+            .dark .fb-palette-item {
+                background: rgba(17, 24, 39, 0.72);
+            }
+
+            .fb-palette-item:hover {
+                border-color: rgba(59, 130, 246, 0.35);
+                transform: translateY(-1px);
+            }
+
+            .fb-palette-title,
+            .fb-section-title,
+            .fb-field-title,
+            .fb-empty-title {
+                font-weight: 600;
+            }
+
+            .fb-palette-meta,
+            .fb-section-meta,
+            .fb-field-help,
+            .fb-help,
+            .fb-empty-text {
+                font-size: 0.8125rem;
+                color: rgb(107 114 128);
+            }
+
+            .fb-divider {
+                height: 1px;
+                background: rgba(148, 163, 184, 0.18);
+                margin: 1rem 0;
+            }
+
+            .fb-section {
+                border: 1px solid rgba(148, 163, 184, 0.18);
+                border-radius: 1rem;
+                overflow: hidden;
+                background: rgba(255, 255, 255, 0.72);
+            }
+
+            .dark .fb-section {
+                background: rgba(17, 24, 39, 0.62);
+            }
+
+            .fb-section-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                gap: 1rem;
+                padding: 1rem 1.125rem;
+                border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+                cursor: pointer;
+            }
+
+            .fb-section-left,
+            .fb-field {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 1rem;
+            }
+
+            .fb-dropzone {
+                min-height: 5rem;
+                padding: 1rem;
+                display: flex;
+                flex-direction: column;
+                gap: 0.75rem;
+            }
+
+            .fb-field {
+                border: 1px solid rgba(148, 163, 184, 0.16);
+                border-radius: 0.875rem;
+                padding: 0.875rem 1rem;
+                background: rgba(255, 255, 255, 0.82);
+            }
+
+            .dark .fb-field {
+                background: rgba(31, 41, 55, 0.8);
+            }
+
+            .fb-field-main {
+                min-width: 0;
+                flex: 1;
+            }
+
+            .fb-field-top,
+            .fb-field-actions {
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+                flex-wrap: wrap;
+            }
+
+            .fb-empty,
+            .fb-empty-state {
+                border: 1px dashed rgba(148, 163, 184, 0.3);
+                border-radius: 0.875rem;
+                padding: 1rem;
+                text-align: center;
+                color: rgb(107 114 128);
+            }
+
+            .fb-empty-state {
+                padding: 2rem 1rem;
+            }
+
+            .fb-form-grid {
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 1rem;
+            }
+
+            .fb-label {
+                display: block;
+                font-size: 0.875rem;
+                font-weight: 600;
+            }
+
+            .fb-textarea {
+                width: 100%;
+                min-height: 90px;
+                border: none;
+                outline: none;
+                resize: vertical;
+                background: transparent;
+                padding: 0.75rem 0.875rem;
+                font-size: 0.875rem;
+                font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            }
+
+            @media (max-width: 1024px) {
+                .fb-layout {
+                    grid-template-columns: 1fr;
+                }
+
+                .fb-sticky {
+                    position: static;
+                }
+            }
+
+            @media (max-width: 768px) {
+                .fb-form-grid {
+                    grid-template-columns: 1fr;
+                }
+
+                .fb-section-header,
+                .fb-field {
+                    flex-direction: column;
+                    align-items: flex-start;
+                }
+
+                .fb-field-actions {
+                    width: 100%;
+                    justify-content: flex-end;
+                }
+            }
+
+            .fb-handle,
+            .fb-field-handle {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                color: rgb(107 114 128);
+                cursor: move;
+            }
+
+            .fb-handle,
+            .fb-field-handle,
+            .option-handle {
+                cursor: grab;
+                touch-action: none;
+            }
+
+            .fb-handle:active,
+            .fb-field-handle:active,
+            .option-handle:active {
+                cursor: grabbing;
+            }
+
+            .fb-field,
+            .section-card,
+            .opt-row {
+                user-select: none;
+            }
+        </style>
     @endpush
 
     @push('scripts')
