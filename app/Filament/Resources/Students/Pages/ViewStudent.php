@@ -19,6 +19,14 @@ class ViewStudent extends ViewRecord
                 ->label('Back')
                 ->url($this->getResource()::getUrl('index'))
                 ->icon('heroicon-o-arrow-left'),
+
+            Action::make('print_admission')
+                ->label('Print Admission Form')
+                ->icon('heroicon-o-printer')
+                ->color('success')
+                ->url(fn () => StudentResource::getUrl('print', ['record' => $this->record]))
+                ->openUrlInNewTab(),                
+
             EditAction::make(),
             DeleteAction::make(),
         ];

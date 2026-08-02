@@ -330,43 +330,40 @@
 
         <div class="space-y-4">
             <div class="fb-form-grid">
-                <div class="space-y-2">
-                    <label class="fb-label">{{ __('Label') }}</label>
-
+                <x-filament::fieldset>
+                    <x-slot name="label"> {{ __('Label') }} </x-slot>
                     <x-filament::input.wrapper>
                         <x-filament::input wire:model="editingFieldData.label" type="text" />
                     </x-filament::input.wrapper>
 
                     <p class="fb-help">{{ __('Appears above the field.') }}</p>
-                </div>
+                </x-filament::fieldset>                
 
-                <div class="space-y-2">
-                    <label class="fb-label">{{ __('Field Key (Input Name)') }}</label>
+                <x-filament::fieldset>
+                    <x-slot name="label">{{ __('Field Key (Input Name)') }}</x-slot>
 
                     <x-filament::input.wrapper>
                         <x-filament::input wire:model="editingFieldData.field_key" type="text" />
                     </x-filament::input.wrapper>
 
                     <p class="fb-help">{{ __('Unique identifier for this field.') }}</p>
-                </div>
+                </x-filament::fieldset>
             </div>
 
             <div class="fb-form-grid">
-                <div class="space-y-2">
-                    <label class="fb-label">{{ __('Required') }}</label>
-
+                <x-filament::fieldset>
+                    <x-slot name="label">{{ __('Required') }}</x-slot>
                     <x-filament::input.wrapper>
                         <x-filament::input.select wire:model="editingFieldData.is_required">
                             <option value="0">{{ __('No') }}</option>
                             <option value="1">{{ __('Yes') }}</option>
                         </x-filament::input.select>
                     </x-filament::input.wrapper>
-                </div>
+                </x-filament::fieldset>
 
                 @if (!empty($editingFieldData['option_layout']))
-                <div class="space-y-2">
-                    <label class="fb-label">{{ __('Option Layout') }}</label>
-
+                <x-filament::fieldset>
+                    <x-slot name="label">{{ __('Option Layout') }}</x-slot>
                     <x-filament::input.wrapper>
                         <x-filament::input.select wire:model="editingFieldData.option_layout">
                             <option value="horizontal">{{ __('Horizontal') }}</option>
@@ -375,12 +372,11 @@
                     </x-filament::input.wrapper>
 
                     <p class="fb-help">{{ __('For radio/checkbox fields only.') }}</p>
-                </div>
+                </x-filament::fieldset>                
                 @endif
             </div>
-
-            <div class="space-y-2">
-                <label class="fb-label">{{ __('Placeholder') }}</label>
+            <x-filament::fieldset>
+                <x-slot name="label">{{ __('Placeholder') }}</x-slot>
 
                 <x-filament::input.wrapper>
                     <x-filament::input
@@ -389,11 +385,10 @@
                         placeholder="{{ __('e.g. Enter your full name') }}"
                     />
                 </x-filament::input.wrapper>
-            </div>
+            </x-filament::fieldset>
 
-            <div class="space-y-2">
-                <label class="fb-label">{{ __('Validation Rules') }}</label>
-
+            <x-filament::fieldset>
+                <x-slot name="label">{{ __('Validation Rules') }}</x-slot>
                 <x-filament::input.wrapper>
                     <x-filament::input
                         wire:model="editingFieldData.validation_rules_input"
@@ -403,20 +398,22 @@
                 </x-filament::input.wrapper>
 
                 <p class="fb-help">{{ __('Pipe-delimited rules, e.g. required|string|max:255') }}</p>
-            </div>
+            </x-filament::fieldset>
 
-            <div class="space-y-2">
-                <label class="fb-label">{{ __('Help Text') }}</label>
+            <x-filament::fieldset>
+                <x-slot name="label">{{ __('Help Text') }}</x-slot>
 
                 <x-filament::input.wrapper>
                     <x-filament::input wire:model="editingFieldData.help_text" type="text" />
                 </x-filament::input.wrapper>
 
                 <p class="fb-help">{{ __('Appears below the field.') }}</p>
-            </div>
+            </x-filament::fieldset>            
 
-            <div class="space-y-2">
-                <label class="fb-label">{{ __('Visibility JSON') }}</label>
+            <x-filament::fieldset>
+                <x-slot name="label">
+                    {{ __('Visibility JSON') }}
+                </x-slot>
 
                 <x-filament::input.wrapper>
                     <textarea
@@ -426,20 +423,88 @@
                         placeholder='{"field":"transport_required","equals":"yes"}'
                     ></textarea>
                 </x-filament::input.wrapper>
-            </div>
 
-            <div class="space-y-2">
-                <label class="fb-label">{{ __('Settings JSON') }}</label>
+            </x-filament::fieldset>
+
+            <x-filament::fieldset>
+                <x-slot name="label">
+                    {{ __('Settings JSON') }}
+                </x-slot>
 
                 <x-filament::input.wrapper>
                     <textarea
                         wire:model="editingFieldData.settings_input"
-                        rows="4"
+                        rows="5"
                         class="fb-textarea"
-                        placeholder='{"width":"full","accept":["pdf","jpg"]}'
-                    ></textarea>
+                        placeholder='{
+                        "column_span": "full",
+                        "accept": ["pdf", "jpg"]
+                        }'>
+                    </textarea>
                 </x-filament::input.wrapper>
-            </div>
+
+            </x-filament::fieldset>            
+
+            <x-filament::fieldset>
+                <x-slot name="label">
+                    {{ __('Available Settings JSON') }}
+                </x-slot>
+
+                <x-filament::section compact collapsible collapsed>
+                    <x-slot name="heading">
+                        {{ __('Settings JSON') }}
+                    </x-slot>
+
+                        <pre>
+                        //Common settings for all field types
+                        {
+                        "default": "mixed $state",
+                        "column_span": "array|int|string"
+                        }
+
+                        //For file upload
+                        {
+                        "accept": ["pdf", "jpg"],
+                        "directory": "string",
+                        "disk": "string",
+                        "visibility": "string",
+                        "max_size": "int",
+                        "multiple": "bool"
+                        },
+
+                        //Text & Email field
+                        {
+                        "min_length": "int",
+                        "max_length": "int"
+                        }
+
+                        //Number
+                        {
+                        "min_length": "",
+                        "max_length": "",
+                        "step": "int|float|string"
+                        }
+
+                        //Textarea
+                        {
+                        "rows": "int"
+                        }
+
+                        //Select
+                        {
+                        "searchable": "bool|array",
+                        "multiple":"bool"
+                        }
+
+                        //Checkbox
+                        {
+                        "accepted": "bool"
+                        }
+                        </pre>
+                </x-filament::section>
+
+            </x-filament::fieldset>
+
         </div>
 
         <x-slot name="footerActions">
@@ -1148,12 +1213,17 @@
                             if (isPaletteClone) {
                                 const type = evt.item.dataset.type
                                 const label = evt.item.dataset.label || '{{ __('New Field') }}'
-
                                 evt.item.remove()
 
                                 if (!type) return
-
-                                $wire.call('addField', targetSectionId, type, label)
+                                if(type === 'file') {
+                                    const settings = {
+                                        accept : ['pdf', 'jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'],
+                                    }
+                                    $wire.call('addField', targetSectionId, type, label, settings)
+                                } else {
+                                    $wire.call('addField', targetSectionId, type, label)
+                                }
                                 return
                             }
 
