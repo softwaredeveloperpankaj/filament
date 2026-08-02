@@ -178,7 +178,7 @@ class FormBuilder extends Page
 
     // ── Field Management ───────────────────────────────────────────
 
-    public function addField(int $sectionId, string $type, string $label): void
+    public function addField(int $sectionId, string $type, string $label, ?array $settings = null): void
     {
         if (!$section = FormSection::find($sectionId)) return;
 
@@ -188,6 +188,7 @@ class FormBuilder extends Page
             'field_key'       => strtolower(str_replace(' ', '_', $label)) . '_' . time(),
             'type'            => $type,
             'sort_order'      => $section->fields()->count() + 1,
+            'settings'        => $settings,
         ]);
 
         $this->loadTemplate();

@@ -62,8 +62,8 @@ trait BuildsDynamicFormFields
             $uploadFields = [];
 
             foreach ($section->fields as $field) {
-                if (static::isUploadField($field)) {
-                    $uploadFields[] = static::makeFormField($field);
+                if ($field->type === 'file') {
+                    $uploadFields[] = static::makeFileField($field);
                 } else {
                     $normalFields[] = static::makeFormField($field);
                 }
@@ -102,158 +102,154 @@ trait BuildsDynamicFormFields
     /**
      * Returns Filament infolist entries from a FormTemplate's fields.
      */
-    // public static function getDynamicInfolistEntries(FormTemplate $template): array
-    // {
-    //     $template->loadMissing([
-    //         'sections' => fn ($q) => $q->orderBy('sort_order'),
-    //         'sections.fields' => fn ($q) => $q->orderBy('sort_order'),
-    //     ]);
-
-    //     $entries = [];
-
-    //     foreach ($template->sections as $section) {
-    //         $sectionEntries = $section->fields
-    //             ->map(fn ($field) => TextEntry::make(
-    //                 'form_data.' . ($field->field_key ?? Str::slug($field->label, '_'))
-    //             )
-    //                 ->label($field->label)
-    //                 ->placeholder('—'))
-    //             ->toArray();
-
-    //         if (! empty($sectionEntries)) {
-    //             $entries[] = Section::make($section->title)
-    //                 ->schema($sectionEntries)
-    //                 ->columns(2)
-    //                 ->columnSpanFull();
-    //         }
-    //     }
-
-    //     return $entries;
-    // }
-public static function getDynamicInfolistEntries(FormTemplate $template): array
-{
-    $template->loadMissing([
-        'sections' => fn ($q) => $q->orderBy('sort_order'),
-        'sections.fields' => fn ($q) => $q->orderBy('sort_order'),
-    ]);
-
-    $entries = [];
-
-    foreach ($template->sections as $section) {
-        $normalEntries = [];
-        $mediaEntries = [];
-
-        foreach ($section->fields as $field) {
-            if (in_array($field->type, ['file', 'image'], true)) {
-                $mediaEntries[] = static::makeInfolistEntry($field);
-            } else {
-                $normalEntries[] = static::makeInfolistEntry($field);
-            }
-        }
-
-        if (! empty($normalEntries)) {
-            $entries[] = Section::make($section->title)
-                ->schema($normalEntries)
-                ->columns(2)
-                ->columnSpan([
-                    'default' => 1,
-                    'lg' => ! empty($mediaEntries) ? 2 : 3,
-                ]);
-        }
-
-        if (! empty($mediaEntries)) {
-            $entries[] = Section::make($section->title . ' Files')
-                ->schema($mediaEntries)
-                ->columns(1)
-                ->columnSpan([
-                    'default' => 1,
-                    'lg' => ! empty($normalEntries) ? 1 : 3,
-                ]);
-        }
-    }
-
-    return $entries;
-}
-
-protected static function makeInfolistEntry(FormField $field)
-{
-    return match ($field->type) {
-        'image' => static::makeImageInfolistEntry($field),
-        'file' => static::makeFileInfolistEntry($field),
-        default => static::makeTextInfolistEntry($field),
-    };
-}
-
-protected static function makeTextInfolistEntry(FormField $field)
-{
-    $entry = TextEntry::make('form_data.' . static::fieldKey($field))
-        ->placeholder('—');
-
-    return static::applyCommonInfolistConfig($entry, $field);
-}
-
-protected static function makeImageInfolistEntry(FormField $field)
-{
-    $settings = $field->settings ?? [];
-    $disk = $settings['disk'] ?? config('filament.default_filesystem_disk', config('filesystems.default'));
-    $visibility = $settings['visibility'] ?? 'public';
-
-    $entry = ImageEntry::make('form_data.' . static::fieldKey($field))
-        ->disk($disk)
-        ->visibility($visibility)
-        ->height(120)
-        ->square(false)
-        ->placeholder('—')
-        ->columnSpanFull();
-
-    return static::applyCommonInfolistConfig($entry, $field);
-}
-
-protected static function makeFileInfolistEntry(FormField $field)
-{
-    $settings = $field->settings ?? [];
-    $disk = $settings['disk'] ?? config('filament.default_filesystem_disk', config('filesystems.default'));
-
-    $entry = TextEntry::make('form_data.' . static::fieldKey($field))
-        ->formatStateUsing(function ($state) {
-            if (blank($state)) {
-                return '—';
-            }
-
-            if (is_array($state)) {
-                return collect($state)
-                    ->map(fn ($file) => basename($file))
-                    ->join(', ');
-            }
-
-            return basename($state);
-        })
-        ->url(function ($state) use ($disk) {
-            if (blank($state) || is_array($state)) {
-                return null;
-            }
-
-            return Storage::disk($disk)->url($state);
-        })
-        ->openUrlInNewTab();
-
-    return static::applyCommonInfolistConfig($entry, $field);
-}
-
-protected static function applyCommonInfolistConfig($entry, FormField $field)
-{
-    $entry->label($field->label);
-
-    if (method_exists($entry, 'placeholder')) {
-        $entry->placeholder('—');
-    }
-
-    return $entry;
-}
-
-    protected static function isUploadField(FormField $field): bool
+    public static function getDynamicInfolistEntries(FormTemplate $template): array
     {
-        return in_array($field->type, ['file', 'image'], true);
+        $template = FormTemplate::with([
+            'activeVersion',
+
+            'activeVersion.sections' => fn ($q) => $q
+                ->where('is_active', 1)
+                ->orderBy('sort_order'),
+
+            'activeVersion.sections.fields' => fn ($q) => $q
+                ->where('is_active', 1)
+                ->orderBy('sort_order'),
+
+            'activeVersion.sections.fields.options' => fn ($q) => $q
+                ->orderBy('sort_order'),
+        ])
+        ->where('id', $template->id)
+        ->where('is_active', 1)
+        ->where('status', 'published')
+        ->whereHas('activeVersion')
+        ->whereHas('activeVersion.sections', fn ($q) => $q->where('is_active', 1))
+        ->whereHas('activeVersion.sections.fields', fn ($q) => $q->where('is_active', 1))
+        ->first();
+
+        if (! $template || ! $template->activeVersion) {
+            return [];
+        }
+
+        $entries = [];
+
+        foreach ($template->activeVersion->sections as $section) {
+            $normalEntries = [];
+            $mediaEntries = [];
+
+            foreach ($section->fields as $field) {
+                if ($field->type === 'file') {
+                    $mediaEntries[] = static::makeInfolistEntry($field);
+                } else {
+                    $normalEntries[] = static::makeTextInfolistEntry($field);
+                }
+            }
+
+            if (! empty($normalEntries)) {
+                $entries[] = Section::make($section->title)
+                    ->schema($normalEntries)
+                    ->columns(2)
+                    ->columnSpan([
+                        'default' => 1,
+                        'lg' => ! empty($mediaEntries) ? 2 : 3,
+                    ]);
+            }
+
+            if (! empty($mediaEntries)) {
+                $entries[] = Section::make($section->title . ' Files')
+                    ->schema($mediaEntries)
+                    ->columns(1)
+                    ->columnSpan([
+                        'default' => 1,
+                        'lg' => ! empty($normalEntries) ? 1 : 3,
+                    ]);
+            }
+        }
+
+        return $entries;
+    }
+
+    protected static function makeInfolistEntry(FormField $field)
+    {
+        $extensions = array_map(
+            'strtolower',
+            $field->settings['accept'] ?? []
+        );
+        
+        $imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'];
+
+        $isImageOnly = ! empty($extensions)
+            && empty(array_diff($extensions, $imageExtensions));
+
+        return $isImageOnly
+            ? static::makeImageInfolistEntry($field)
+            : static::makeFileInfolistEntry($field);
+    }
+
+    protected static function makeTextInfolistEntry(FormField $field)
+    {
+        $entry = TextEntry::make('form_data.' . static::fieldKey($field))
+            ->placeholder('—');
+
+        return static::applyCommonInfolistConfig($entry, $field);
+    }
+
+    protected static function makeImageInfolistEntry(FormField $field)
+    {
+        $settings = $field->settings ?? [];
+        $disk = $settings['disk'] ?? config('filament.default_filesystem_disk', config('filesystems.default'));
+        $visibility = $settings['visibility'] ?? 'public';
+        
+        $entry = ImageEntry::make('form_data.' . static::fieldKey($field))
+            ->disk($disk)
+            ->visibility($visibility)
+            ->imageHeight(120)
+            ->square(false)
+            ->placeholder('—')
+            ->columnSpanFull();
+
+        return static::applyCommonInfolistConfig($entry, $field);
+    }
+
+    protected static function makeFileInfolistEntry(FormField $field)
+    {
+        $settings = $field->settings ?? [];
+        $disk = $settings['disk'] ?? config('filament.default_filesystem_disk', config('filesystems.default'));
+
+        $entry = TextEntry::make('form_data.' . static::fieldKey($field))
+            ->formatStateUsing(function ($state) {
+                if (blank($state)) {
+                    return '—';
+                }
+
+                if (is_array($state)) {
+                    return collect($state)
+                        ->map(fn ($file) => basename($file))
+                        ->join(', ');
+                }
+
+                return basename($state);
+            })
+            ->url(function ($state) use ($disk) {
+                if (blank($state) || is_array($state)) {
+                    return null;
+                }
+
+                return Storage::disk($disk)->url($state);
+            })
+            ->openUrlInNewTab();
+
+        return static::applyCommonInfolistConfig($entry, $field);
+    }
+
+    protected static function applyCommonInfolistConfig($entry, FormField $field)
+    {
+        $entry->label($field->label);
+
+        if (method_exists($entry, 'placeholder')) {
+            $entry->placeholder('—');
+        }
+
+        return $entry;
     }
 
     protected static function makeFormField(FormField $field): Component
@@ -267,7 +263,6 @@ protected static function applyCommonInfolistConfig($entry, FormField $field)
             'select' => static::makeSelectField($field),
             'radio' => static::makeRadioField($field),
             'checkbox' => static::makeCheckboxField($field),
-            'file' => static::makeFileField($field),
             default => static::makeTextField($field),
         };
 
@@ -460,8 +455,23 @@ protected static function applyCommonInfolistConfig($entry, FormField $field)
             $component->visibility($settings['visibility']);
         }
 
-        if (! empty($settings['accepted_file_types'])) {
-            $component->acceptedFileTypes($settings['accepted_file_types']);
+        if (! empty($settings['accept'])) {
+            $mimeMap = [
+                'jpg'  => 'image/jpeg',
+                'jpeg' => 'image/jpeg',
+                'png'  => 'image/png',
+                'gif'  => 'image/gif',
+                'webp' => 'image/webp',
+                'svg'  => 'image/svg+xml',
+                'pdf'  => 'application/pdf',
+            ];
+
+            $acceptedTypes = collect($settings['accept'])
+                ->map(fn ($type) => $mimeMap[strtolower($type)] ?? $type)
+                ->values()
+                ->toArray();
+
+            $component->acceptedFileTypes($acceptedTypes);
         }
 
         if (! empty($settings['max_size'])) {
