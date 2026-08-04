@@ -2,8 +2,6 @@
 
 namespace App\Filament\Resources\FormTemplates\Tables;
 
-use App\Filament\Actions\Bulk\BulkExportFormsAction;
-use App\Filament\Actions\Bulk\BulkImportFormAction;
 use App\Filament\Actions\FormTemplateExportAction;
 use App\Filament\Actions\FormTemplateImportAction;
 use App\Filament\Exports\FormTemplateExporter;

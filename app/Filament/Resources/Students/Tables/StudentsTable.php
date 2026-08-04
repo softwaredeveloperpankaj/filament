@@ -2,18 +2,23 @@
 
 namespace App\Filament\Resources\Students\Tables;
 
+use App\Filament\Exports\StudentExporter;
+use App\Models\Student;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Actions\ExportBulkAction;
 use Filament\Actions\ForceDeleteAction;
 use Filament\Actions\RestoreAction;
 use Filament\Actions\RestoreBulkAction;
 use Filament\Actions\ViewAction;
+use Filament\Notifications\Notification;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
+use Illuminate\Support\Collection;
 
 class StudentsTable
 {
@@ -96,8 +101,25 @@ class StudentsTable
             ->recordActionsColumnLabel('Actions')
             ->toolbarActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make(),
+                    ExportBulkAction::make()
+                        ->exporter(StudentExporter::class)
+                        ->before(function (Collection $records, ExportBulkAction $action) {
+                            $students = Student::query()
+                                ->whereIn('id', $records->all())
+                                ->get();
+
+                            if ($students->pluck('branch_id')->unique()->count() > 1) {
+                                Notification::make()
+                                    ->title('Export failed')
+                                    ->body('All selected students must belong to the same branch to export.')
+                                    ->danger()
+                                    ->send();
+                                $action->cancel();
+                            }
+                        }),
+
                     RestoreBulkAction::make(),
+                    DeleteBulkAction::make(),
                 ]),
             ]);
     }

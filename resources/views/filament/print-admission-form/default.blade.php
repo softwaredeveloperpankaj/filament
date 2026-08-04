@@ -30,15 +30,7 @@
         }
     @endphp
 
-    <div class="max-w-[900px] mx-auto my-8 bg-white border border-slate-200 shadow-lg rounded-lg p-6 md:p-10 print:max-w-none print:mx-0 print:my-0 print:shadow-none print:rounded-none print:border-0 print:p-0">
-        <div class="print:hidden flex justify-center gap-3 mb-6">
-            <button onclick="window.print()" class="px-5 py-2.5 rounded-md bg-blue-600 text-white font-semibold hover:bg-blue-700 transition">
-                Print Form
-            </button>
-            <button onclick="window.close()" class="px-5 py-2.5 rounded-md bg-slate-600 text-white font-semibold hover:bg-slate-700 transition">
-                Close
-            </button>
-        </div>
+    <div class="bg-white border border-slate-200 shadow-lg rounded-lg p-6 md:p-10 print:max-w-none print:mx-0 print:my-0 print:shadow-none print:rounded-none print:border-0 print:p-0">
 
         <div class="flex items-start justify-between gap-4 border-b border-slate-200 pb-4 mb-4">
             <div class="w-28 shrink-0">
@@ -98,7 +90,7 @@
             </div>
         </div>
 
-        <div class="mb-5 rounded-md bg-indigo-900 px-3 py-2 text-center text-lg font-bold text-white">
+        <div class="mb-5 bg-indigo-900 px-3 py-2 text-center text-lg font-bold text-white">
             ADMISSION FORM
         </div>
 
