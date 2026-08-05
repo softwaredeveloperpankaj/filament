@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\DB;
 
 class Student extends Model
 {
@@ -92,35 +93,82 @@ class Student extends Model
         });
     }
     
+    // protected static function generateRegistrationNumber(Student $student): string
+    // {
+    //     // 1. Load the FormTemplate (already eager-loaded or fetch it)
+    //     $template = $student->formTemplate
+    //         ?? FormTemplate::find($student->form_template_id);
+
+    //     // 2. Count existing students in this branch (for incrementing)
+    //     $branchCount = static::withTrashed()
+    //         ->where('branch_id', $student->branch_id)
+    //         ->count();
+
+    //     // 3. Determine the next number
+    //     if ($template && !is_null($template->registration_serial)) {
+    //         // User-defined serial start → offset by how many already exist in this branch
+    //         $nextNumber = (int) $template->registration_serial + $branchCount;
+    //     } else {
+    //         // Fallback: auto-increment from 1 within this branch
+    //         $nextNumber = $branchCount + 1;
+    //     }
+
+    //     // 4. Build registration number
+    //     // Format: {BRANCH_CODE}-{YEAR}-{PADDED_NUMBER}
+    //     // e.g. "BR01-2026-00042"
+    //     $branchCode = str_pad($student->branch_id, 2, '0', STR_PAD_LEFT);
+    //     $year       = now()->year;
+    //     $paddedNum  = str_pad($nextNumber, 5, '0', STR_PAD_LEFT);
+
+    //     return "BR{$branchCode}-{$year}-{$paddedNum}";
+    // }
+
     protected static function generateRegistrationNumber(Student $student): string
     {
-        // 1. Load the FormTemplate (already eager-loaded or fetch it)
-        $template = $student->formTemplate
-            ?? FormTemplate::find($student->form_template_id);
+        $template = $student->formTemplate ?? FormTemplate::find($student->form_template_id);
 
-        // 2. Count existing students in this branch (for incrementing)
-        $branchCount = static::withTrashed()
-            ->where('branch_id', $student->branch_id)
-            ->count();
+        $serial = $template?->registration_serial;
 
-        // 3. Determine the next number
-        if ($template && !is_null($template->registration_serial)) {
-            // User-defined serial start → offset by how many already exist in this branch
-            $nextNumber = (int) $template->registration_serial + $branchCount;
-        } else {
-            // Fallback: auto-increment from 1 within this branch
-            $nextNumber = $branchCount + 1;
-        }
+        return DB::transaction(function () use ($student, $serial) {
 
-        // 4. Build registration number
-        // Format: {BRANCH_CODE}-{YEAR}-{PADDED_NUMBER}
-        // e.g. "BR01-2026-00042"
-        $branchCode = str_pad($student->branch_id, 2, '0', STR_PAD_LEFT);
-        $year       = now()->year;
-        $paddedNum  = str_pad($nextNumber, 5, '0', STR_PAD_LEFT);
+            $last = static::withTrashed()
+                ->where('branch_id', $student->branch_id)
+                ->whereNotNull('registration_number')
+                ->orderByDesc('id')
+                ->lockForUpdate()
+                ->first();
 
-        return "BR{$branchCode}-{$year}-{$paddedNum}";
+            // No previous student in this branch yet
+            if (!$last) {
+                return !empty($serial)
+                    ? $serial
+                    : static::buildDefaultRegistrationNumber($student, 1);
+            }
+
+            // Increment based on the last registration_number's trailing digits
+            if (preg_match('/^(.*?)(\d+)$/', $last->registration_number, $matches)) {
+                $prefix = $matches[1];
+                $number = (int) $matches[2];
+                $length = strlen($matches[2]);
+
+                return $prefix . str_pad((string) ($number + 1), $length, '0', STR_PAD_LEFT);
+            }
+
+            // Last value didn't match expected pattern — fall back
+            return !empty($serial)
+                ? $serial
+                : static::buildDefaultRegistrationNumber($student, 1);
+        });
     }
+
+    protected static function buildDefaultRegistrationNumber(Student $student, int $nextNumber): string
+    {
+        $branchCode = (string) $student->branch->code;
+        $year       = now()->year;
+        $paddedNum  = str_pad((string) $nextNumber, 5, '0', STR_PAD_LEFT);
+
+        return "REG{$branchCode}{$year}{$paddedNum}";
+    }    
 
     protected static function generateRollNo(Student $student): int
     {

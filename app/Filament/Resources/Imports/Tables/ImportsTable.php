@@ -19,7 +19,7 @@ class ImportsTable
 
                 TextColumn::make('importer')
                     ->label('Resource')
-                    ->formatStateUsing(fn ($s) => class_basename($s))
+                    ->formatStateUsing(fn ($state) => class_basename($state))
                     ->badge()->color('info')
                     ->searchable(),
 
@@ -28,7 +28,7 @@ class ImportsTable
 
                 TextColumn::make('file_name')
                     ->label('File')->searchable()->limit(30)
-                    ->tooltip(fn (Import $r) => $r->file_name),
+                    ->tooltip(fn (Import $record) => $record->file_name),
 
                 TextColumn::make('total_rows')->label('Total')->numeric()->alignCenter(),
                 TextColumn::make('processed_rows')->label('Processed')->numeric()->alignCenter(),
@@ -36,14 +36,14 @@ class ImportsTable
 
                 TextColumn::make('failed_rows_count')
                     ->label('Failed')
-                    ->getStateUsing(fn (Import $r) => $r->total_rows - $r->successful_rows)
+                    ->getStateUsing(fn (Import $record) => $record->total_rows - $record->successful_rows)
                     ->alignCenter()
-                    ->color(fn ($s) => $s > 0 ? 'danger' : 'success'),
+                    ->color(fn (int $state) => $state > 0 ? 'danger' : 'success'),
 
                 TextColumn::make('status')
                     ->label('Status')->badge()
-                    ->getStateUsing(fn (Import $r) => $r->status)
-                    ->color(fn (string $s) => match($s) {
+                    ->getStateUsing(fn (Import $record) => $record->status)
+                    ->color(fn (string $state) => match($state) {
                         'Completed' => 'success',
                         'In Progress' => 'warning',
                         default => 'gray',
@@ -51,7 +51,7 @@ class ImportsTable
 
                 TextColumn::make('duration')
                     ->label('Duration')
-                    ->getStateUsing(fn (Import $r) => $r->duration ?? '—')
+                    ->getStateUsing(fn (Import $record) => $record->duration ?? '—')
                     ->alignCenter(),
 
                 TextColumn::make('completed_at')
