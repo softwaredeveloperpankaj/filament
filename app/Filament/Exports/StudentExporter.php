@@ -16,32 +16,37 @@ class StudentExporter extends Exporter
     public static function getColumns(): array
     {
         $columns = [
-            ExportColumn::make('registration_number'),
-            ExportColumn::make('roll_no'),
+            // ExportColumn::make('registration_number'),
+            // ExportColumn::make('roll_no'),
             ExportColumn::make('academic_year'),
             ExportColumn::make('admission_date'),
             ExportColumn::make('status'),
+            ExportColumn::make('form_data')
+                ->label('Form Data (JSON)')
+                ->getStateUsing(fn (Student $record): ?string => 
+                    $record->form_data ? json_encode($record->form_data, JSON_UNESCAPED_UNICODE) : null
+                ),            
         ];
 
-        foreach (static::getDynamicFormKeys() as $key) {
-            $columns[] = ExportColumn::make($key)
-                ->label($key)
-                ->getStateUsing(fn (Student $record) => data_get($record->form_data, $key));
-        }
+        // foreach (static::getDynamicFormKeys() as $key) {
+        //     $columns[] = ExportColumn::make($key)
+        //         ->label($key)
+        //         ->getStateUsing(fn (Student $record) => data_get($record->form_data, $key));
+        // }
 
         return $columns;
     }
 
-    protected static function getDynamicFormKeys(): array
-    {
-        return DB::table('students')
-            ->whereNotNull('form_data')
-            ->pluck('form_data')
-            ->flatMap(fn ($json) => array_keys(json_decode($json, true) ?? []))
-            ->unique()
-            ->values()
-            ->all();
-    }
+    // protected static function getDynamicFormKeys(): array
+    // {
+    //     return DB::table('students')
+    //         ->whereNotNull('form_data')
+    //         ->pluck('form_data')
+    //         ->flatMap(fn ($json) => array_keys(json_decode($json, true) ?? []))
+    //         ->unique()
+    //         ->values()
+    //         ->all();
+    // }
 
     public static function getCompletedNotificationBody(Export $export): string
     {
