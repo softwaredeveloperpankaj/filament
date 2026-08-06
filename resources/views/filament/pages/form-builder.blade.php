@@ -210,32 +210,32 @@
         </div>
     </div>
 
-                    <x-filament::modal id="add-section-modal" width="md">
-                        <x-slot name="heading">{{ __('Add Section') }}</x-slot>
+    <x-filament::modal id="add-section-modal" width="md">
+        <x-slot name="heading">{{ __('Add Section') }}</x-slot>
 
-                        <div class="space-y-4">
-                            <x-filament::input.wrapper>
-                                <x-filament::input
-                                    wire:model.live="newSectionTitle"
-                                    type="text"
-                                    placeholder="{{ __('e.g. Student Information') }}"
-                                />
-                            </x-filament::input.wrapper>
-                        </div>
+        <div class="space-y-4">
+            <x-filament::input.wrapper>
+                <x-filament::input
+                    wire:model.live="newSectionTitle"
+                    type="text"
+                    placeholder="{{ __('e.g. Student Information') }}"
+                />
+            </x-filament::input.wrapper>
+        </div>
 
-                        <x-slot name="footerActions">
-                            <x-filament::button
-                                color="gray"
-                                x-on:click="$dispatch('close-modal', { id: 'add-section-modal' })"
-                            >
-                                {{ __('Cancel') }}
-                            </x-filament::button>
+        <x-slot name="footerActions">
+            <x-filament::button
+                color="gray"
+                x-on:click="$dispatch('close-modal', { id: 'add-section-modal' })"
+            >
+                {{ __('Cancel') }}
+            </x-filament::button>
 
-                            <x-filament::button wire:click="createSection">
-                                {{ __('Create Section') }}
-                            </x-filament::button>
-                        </x-slot>
-                    </x-filament::modal>
+            <x-filament::button wire:click="createSection">
+                {{ __('Create Section') }}
+            </x-filament::button>
+        </x-slot>
+    </x-filament::modal>
 
     <x-filament::modal
         id="delete-field-modal"
@@ -652,11 +652,11 @@
 
                 <div class="mt-2 space-y-2">
                     @foreach($templateVersions as $i => $ver)
-                        <div class="grid grid-cols-[2.5rem_1fr_1fr_5rem] items-center gap-3 rounded-xl border p-3 transition-all duration-150 {{ $ver['is_active'] ? 'border-success-300 bg-success-50 dark:border-success-700 dark:bg-success-950/20' : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800' }}">
+                        <div class="grid grid-cols-[2.5rem_1fr_1fr_5rem] items-center gap-3 rounded-xl border p-3 transition-all duration-150 {{ $ver['is_active'] ? 'border-green-300 bg-green-50 dark:border-green-700 dark:bg-green-950/20' : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800' }}">
                             <span class="text-center text-xs font-semibold text-gray-400 dark:text-gray-500">{{ $i + 1 }}</span>
 
                             <span>
-                                <x-filament::badge color="{{ $ver['is_active'] ? 'success' : 'gray' }}">
+                                <x-filament::badge color="{{ $ver['is_active'] ? 'green' : 'gray' }}">
                                     v{{ $ver['version'] }}
                                 </x-filament::badge>
                             </span>
@@ -670,7 +670,7 @@
                                     type="button"
                                     wire:click="toggleVersionActive({{ $ver['id'] }})"
                                     wire:loading.attr="disabled"
-                                    class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 {{ $ver['is_active'] ? 'bg-success-500' : 'bg-gray-300 dark:bg-gray-600' }}"
+                                    class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 {{ $ver['is_active'] ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600' }}"
                                     title="{{ $ver['is_active'] ? __('Deactivate') : __('Activate') }}"
                                 >
                                     <span class="inline-block h-5 w-5 transform rounded-full bg-white shadow transition duration-200 {{ $ver['is_active'] ? 'translate-x-5' : 'translate-x-1' }}"></span>

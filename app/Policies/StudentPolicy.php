@@ -72,4 +72,9 @@ class StudentPolicy
         return $authUser->can('Reorder:Student');
     }
 
+    public function approveStudent(AuthUser $authUser, Student $student): bool
+    {
+        return $authUser->can('ApproveStudent:Student');
+    }
+
 }

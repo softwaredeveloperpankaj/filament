@@ -15,6 +15,8 @@ use Filament\Actions\RestoreAction;
 use Filament\Actions\RestoreBulkAction;
 use Filament\Actions\ViewAction;
 use Filament\Notifications\Notification;
+use Filament\Tables\Columns\ImageColumn;
+use Filament\Tables\Columns\SelectColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
@@ -29,6 +31,12 @@ class StudentsTable
                 TextColumn::make('id')
                     ->label('ID')
                     ->sortable(),
+                    
+                ImageColumn::make('form_data.student_photo')
+                    ->label('Student Photo')
+                    ->toggleable()
+                    ->circular()
+                    ->imageSize(40),
 
                 TextColumn::make('branch.name')
                     ->label('Branch')
@@ -47,10 +55,10 @@ class StudentsTable
                     ->placeholder('—')
                     ->toggleable(),
 
-                // TextColumn::make('form_data.st_name')   // ← adjust to your field_key
-                //     ->label('Student Name')
-                //     ->searchable()
-                //     ->toggleable(),
+                TextColumn::make('form_data.student_name')   // ← adjust to your field_key
+                    ->label('Student Name')
+                    ->searchable()
+                    ->toggleable(),
 
 
                 TextColumn::make('class.name')
@@ -66,14 +74,17 @@ class StudentsTable
                     ->sortable()
                     ->toggleable(),
 
-                TextColumn::make('status')
-                    ->badge()
-                    ->colors([
-                        'warning' => 'pending',
-                        'success' => 'confirmed',
-                        'danger'  => 'rejected',
+                SelectColumn::make('status')
+                    ->options([
+                        'pending'   => 'Pending',
+                        'confirmed' => 'Confirmed',
+                        'rejected'  => 'Rejected',
                     ])
+                    ->default('pending')
+                    ->selectablePlaceholder(false)
+                    ->visible(fn () => auth()->user()->can('ApproveStudent:Student'))
                     ->toggleable(),
+
 
                 TextColumn::make('admission_date')
                     ->date()

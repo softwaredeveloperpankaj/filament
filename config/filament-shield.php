@@ -1,6 +1,8 @@
 <?php
 
 declare(strict_types=1);
+
+use App\Filament\Resources\Students\StudentResource;
 use BezhanSalleh\FilamentShield\Resources\Roles\RoleResource;
 use Filament\Pages\Dashboard;
 use Filament\Widgets\AccountWidget;
@@ -175,6 +177,9 @@ return [
                 'create',
                 'update',
                 'delete',
+            ],
+            StudentResource::class => [
+                'approve_student',
             ],
         ],
         'exclude' => [
