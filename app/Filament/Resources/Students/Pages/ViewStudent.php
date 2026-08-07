@@ -25,29 +25,8 @@ class ViewStudent extends ViewRecord
                 ->label('Print Admission Form')
                 ->icon('heroicon-o-printer')
                 ->color('primary')
-                ->modalHeading('Admission Form Preview')
-                ->modalWidth(Width::FourExtraLarge) // '4xl' — wide enough for a form
-                ->modalContent(function ($record) {
-                    $template_layout_name = $record->formTemplate?->form_layout ?? 'default';
-                    $view_path = "filament.print-admission-form.{$template_layout_name}";
-                    return view($view_path, [
-                        'student' => $record
-                    ]);
-                })
-                ->modalFooterActions([
-                    Action::make('print')
-                        ->label('Print')
-                        ->icon('heroicon-o-printer')
-                        ->color('primary')
-                        ->action(fn () => null) // actual print triggered by JS
-                        ->extraAttributes([
-                            'onclick' => 'window.print()',
-                        ]),
-                    Action::make('cancel')
-                        ->label('Close')
-                        ->color('gray')
-                        ->close(),
-                ]),
+                ->url(fn ($record) => route('students.admission-form-print', $record))
+                ->openUrlInNewTab(),            
 
             EditAction::make(),
             DeleteAction::make(),

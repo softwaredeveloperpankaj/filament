@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
+use App\Models\Student;
 
 Route::get('/filament/bulk-forms/download', function () {
     $path = decrypt(request('path'));
@@ -25,6 +26,13 @@ Route::middleware(['web', 'auth'])->get('/form-template-exports/download', funct
 
     return Storage::disk('local')->download($path, basename($path));
 })->name('form-template-exports.download');
+
+
+
+Route::get('/students/{student}/print', function (Student $student) {
+    $template_layout_name = $student->formTemplate?->form_layout ?? 'default';
+    return view("filament.print-admission-form.{$template_layout_name}", ['student' => $student]);
+})->name('students.admission-form-print')->middleware(['auth']);
 
 Route::get('/', function () {
     return view('welcome');
