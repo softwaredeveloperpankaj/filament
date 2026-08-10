@@ -45,34 +45,34 @@
         $admission_date_year = '';
     }
 
-    if(isset($student->submission_no)){
-        $sr_no = $student->submission_no;
+    if(isset($student->registration_number)){
+        $sr_no = $student->registration_number;
     }else{
         $sr_no = '';
     }
 
-    if(isset($student->grade)) {
-        $grade_name = $student->grade->name;
+    if(isset($student->branch_class_id)) {
+        $grade_name = $student->class->name;
     } else {
         $grade_name = '';
     }
 
-    if(isset($student->section)) {
+    if(isset($student->section_id)) {
         $section_name = $student->section->name;
     } else {
         $section_name = '';
     }
 
-    $student_session_year_from = $student->session_start ?? '';
-    $student_session_year_to = $student->session_end ?? '';
+    $student_session_year_from = explode('-', $student->academic_year)[0] ?? '';
+    $student_session_year_to = explode('-', $student->academic_year)[1] ?? '';
 
-    $answers = $student->answers_json;
+    $answers = $student->form_data;
 
     // Student Information
-    $student_name = $answers['Student Information']['student_name']['value'] ?? '';
-    $student_name_hindi = $answers['Student Information']['student_name_hindi']['value'] ?? '';
+    $student_name = $answers['student_name'] ?? '';
+    $student_name_hindi = $answers['student_name_hindi'] ?? '';
 
-    $student_dob = $answers['Student Information']['student_dob']['value'] ?? '';
+    $student_dob = $answers['student_dob'] ?? '';
     $student_dob_day = $student_dob ? date('d', strtotime($student_dob)) : '';
     $student_dob_month = $student_dob ? date('m', strtotime($student_dob)) : '';
     $student_dob_year = $student_dob ? date('Y', strtotime($student_dob)) : '';
@@ -89,32 +89,32 @@
         $dob_in_words = "{$day} {$month} {$year}";
     }
 
-    $student_gender = $answers['Student Information']['student_gender']['value'] ?? '';
-    $student_aadhar = $answers['Student Information']['student_aadhar']['value'] ?? '';
-    $student_nationality = $answers['Student Information']['student_nationality']['value'] ?? '';
-    $student_religion_caste = $answers['Student Information']['student_religion_caste']['value'] ?? '';
+    $student_gender = $answers['student_gender'] ?? '';
+    $student_aadhar = $answers['student_aadhar'] ?? '';
+    $student_nationality = $answers['student_nationality'] ?? '';
+    $student_religion_caste = $answers['student_religion_caste'] ?? '';
 
     // Academic Information
-    $academic_last_school = $answers['Academic Details']['academic_last_school']['value'] ?? '';
-    $academic_percentage = $answers['Academic Details']['academic_percentage']['value'] ?? '';
-    $academic_pen = $answers['Academic Details']['academic_pen']['value'] ?? '';
-    $academic_apaar_id = $answers['Academic Details']['academic_apaar_id']['value'] ?? '';
+    $academic_last_school = $answers['academic_last_school'] ?? '';
+    $academic_percentage = $answers['academic_percentage'] ?? '';
+    $academic_pen = $answers['academic_pen'] ?? '';
+    $academic_apaar_id = $answers['academic_apaar_id'] ?? '';
 
     // Parent Information
-    $parents_fathers_name = $answers["Parents / Guardian's Details"]['parents_fathers_name']['value'] ?? '';
-    $parents_fathers_name_hindi = $answers["Parents / Guardian's Details"]['parents_fathers_name_hindi']['value'] ?? '';
-    $parents_fathers_aadhar = $answers["Parents / Guardian's Details"]['parents_fathers_aadhar']['value'] ?? '';
+    $parents_fathers_name = $answers['parents_fathers_name'] ?? '';
+    $parents_fathers_name_hindi = $answers['parents_fathers_name_hindi'] ?? '';
+    $parents_fathers_aadhar = $answers['parents_fathers_aadhar'] ?? '';
 
-    $parents_mothers_name = $answers["Parents / Guardian's Details"]['parents_mothers_name']['value'] ?? '';
-    $parents_mothers_name_hindi = $answers["Parents / Guardian's Details"]['parents_mothers_name_hindi']['value'] ?? '';
-    $parents_mothers_aadhar = $answers["Parents / Guardian's Details"]['parents_mothers_aadhar']['value'] ?? '';
-    $parents_mobile_no_a = $answers["Parents / Guardian's Details"]['parents_mobile_no_a']['value'] ?? '';
-    $parents_mobile_no_b = $answers["Parents / Guardian's Details"]['parents_mobile_no_b']['value'] ?? '';
-    $guardian_name_relation = $answers["Parents / Guardian's Details"]['guardian_name_relation']['value'] ?? '';
-    $parents_address = $answers["Parents / Guardian's Details"]['parents_address']['value'] ?? '';
+    $parents_mothers_name = $answers['parents_mothers_name'] ?? '';
+    $parents_mothers_name_hindi = $answers['parents_mothers_name_hindi'] ?? '';
+    $parents_mothers_aadhar = $answers['parents_mothers_aadhar'] ?? '';
+    $parents_mobile_no_a = $answers['parents_mobile_no_a'] ?? '';
+    $parents_mobile_no_b = $answers['parents_mobile_no_b'] ?? '';
+    $guardian_name_relation = $answers['guardian_name_relation'] ?? '';
+    $parents_address = $answers['parents_address'] ?? '';
 
     // Documents
-    $doc_student_photo = $answers['Documents Attached']['doc_student_photo']['value'] ?? '';
+    $doc_student_photo = $answers['doc_student_photo'] ?? '';
 @endphp
 
 <!DOCTYPE html>
