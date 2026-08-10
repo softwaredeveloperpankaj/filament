@@ -1,7 +1,4 @@
 @php
-
-    $answers = $student->answers_json;
-
     if(isset($student->created_at)) {
         $admission_date_day = date('d', strtotime($student->created_at));
         $admission_date_month = date('m', strtotime($student->created_at));
@@ -12,11 +9,7 @@
         $admission_date_year = '';
     }
 
-    if(isset($student->grade)) {
-        $grade_name = $student->grade->name;
-    } else {
-        $grade_name = '';
-    }
+    $grade_name = $student->class->name ?? '';
 
     if(isset($student->section)) {
         $section_name = $student->section->name;
@@ -24,41 +17,42 @@
         $section_name = '';
     }
 
-    $student_session_year_from = $student->session_start ?? '';
-    $student_session_year_to = $student->session_end ?? '';
+    $student_session_year_from = explode('-', $student->academic_year)[0] ?? '';
+    $student_session_year_to = explode('-', $student->academic_year)[1] ?? '';
 
     // Student Information
-    $student_name = $answers['Student Information']['student_name']['value'] ?? '';
+    $student_name = $student->form_data['student_name'] ?? '';
 
-    $student_dob = $answers['Student Information']['student_dob']['value'] ?? '';
+    $student_dob = $student->form_data['student_dob'] ?? '';
     $student_dob_day = $student_dob ? date('d', strtotime($student_dob)) : '';
     $student_dob_month = $student_dob ? date('F', strtotime($student_dob)) : '';
     $student_dob_year = $student_dob ? date('Y', strtotime($student_dob)) : '';
 
-    $student_gender = $answers['Student Information']['student_gender']['value'] ?? '';
-    $student_aadhar = $answers['Student Information']['student_aadhar']['value'] ?? '';
-    $student_category = $answers['Student Information']['student_category']['value'] ?? '';
+    $student_gender = $student->form_data['student_gender'] ?? '';
+    $student_aadhar = $student->form_data['student_aadhar'] ?? '';
+    $student_category = $student->form_data['student_cast'] ?? '';
 
     // Academic Information
-    $academic_last_class = $answers['Academic Details']['academic_last_class']['value'] ?? '';
-    $academic_last_school = $answers['Academic Details']['academic_last_school']['value'] ?? '';
-    $academic_percentage = $answers['Academic Details']['academic_percentage']['value'] ?? '';
-    $academic_pen = $answers['Academic Details']['academic_pen']['value'] ?? '';
-    $academic_apaar_id = $answers['Academic Details']['academic_apaar_id']['value'] ?? '';
+    $academic_last_class = $student->form_data['academic_last_class'] ?? '';
+    $academic_last_school = $student->form_data['academic_last_school'] ?? '';
+    $academic_percentage = $student->form_data['academic_percentage'] ?? '';
+    $academic_pen = $student->form_data['academic_pen'] ?? '';
+    $academic_apaar_id = $student->form_data['academic_apaar_id'] ?? '';
 
     // Parent Information
-    $parents_fathers_name = $answers["Parents / Guardian's Details"]['parents_fathers_name']['value'] ?? '';
-    $parents_fathers_occupation = $answers["Parents / Guardian's Details"]['parents_fathers_occupation']['value'] ?? '';
-    $parents_mothers_name = $answers["Parents / Guardian's Details"]['parents_mothers_name']['value'] ?? '';
-    $parents_fathers_mobile_no = $answers["Parents / Guardian's Details"]['parents_fathers_mobile_no']['value'] ?? '';
-    $parents_address_village = $answers["Parents / Guardian's Details"]['parents_address_village']['value'] ?? '';
-    $parents_address_post_office = $answers["Parents / Guardian's Details"]['parents_address_post_office']['value'] ?? '';
-    $parents_address_district = $answers["Parents / Guardian's Details"]['parents_address_district']['value'] ?? '';
-    $parents_address_state = $answers["Parents / Guardian's Details"]['parents_address_state']['value'] ?? '';
-    $parents_address_pin_code = $answers["Parents / Guardian's Details"]['parents_address_pin_code']['value'] ?? '';
+    $parents_fathers_name = $student->form_data['parents_fathers_name'] ?? '';
+    $parents_fathers_occupation = $student->form_data['parents_fathers_occupation'] ?? '';
+    $parents_mothers_name = $student->form_data['parents_mothers_name'] ?? '';
+    $parents_fathers_mobile_no = $student->form_data['parents_fathers_mobile_no'] ?? '';
+    $parents_address_village = $student->form_data['parents_address_village'] ?? '';
+    $parents_address_post_office = $student->form_data['parents_address_post_office'] ?? '';
+    $parents_address_district = $student->form_data['parents_address_district'] ?? '';
+    $parents_address_state = $student->form_data['parents_address_state'] ?? '';
+    $parents_address_pin_code = $student->form_data['parents_address_pin_code'] ?? '';
 
     // Documents
-    $doc_student_photo = $answers['Documents Attached']['doc_student_photo']['value'] ?? '';
+    $student_photo = $student->form_data['student_photo'] ?? '';\
+    
 @endphp
 <!DOCTYPE html>
 <html lang="en">
@@ -306,8 +300,8 @@
                 <!-- Student Photo -->
                 <td style="width: 25%;">
                     <div class="photo-box">
-                        @if(!empty($doc_student_photo))
-                            <img src="{{ asset('/storage/' . $doc_student_photo) }}" alt="Affix a Passport Size Photo">
+                        @if(!empty($student_photo))
+                            <img src="{{ asset('/storage/' . $student_photo) }}" alt="Affix a Passport Size Photo">
                         @else
                             Affix a Passport Size Photo
                         @endif
