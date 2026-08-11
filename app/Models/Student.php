@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\DB;
 
@@ -92,36 +93,6 @@ class Student extends Model
             }            
         });
     }
-    
-    // protected static function generateRegistrationNumber(Student $student): string
-    // {
-    //     // 1. Load the FormTemplate (already eager-loaded or fetch it)
-    //     $template = $student->formTemplate
-    //         ?? FormTemplate::find($student->form_template_id);
-
-    //     // 2. Count existing students in this branch (for incrementing)
-    //     $branchCount = static::withTrashed()
-    //         ->where('branch_id', $student->branch_id)
-    //         ->count();
-
-    //     // 3. Determine the next number
-    //     if ($template && !is_null($template->registration_serial)) {
-    //         // User-defined serial start → offset by how many already exist in this branch
-    //         $nextNumber = (int) $template->registration_serial + $branchCount;
-    //     } else {
-    //         // Fallback: auto-increment from 1 within this branch
-    //         $nextNumber = $branchCount + 1;
-    //     }
-
-    //     // 4. Build registration number
-    //     // Format: {BRANCH_CODE}-{YEAR}-{PADDED_NUMBER}
-    //     // e.g. "BR01-2026-00042"
-    //     $branchCode = str_pad($student->branch_id, 2, '0', STR_PAD_LEFT);
-    //     $year       = now()->year;
-    //     $paddedNum  = str_pad($nextNumber, 5, '0', STR_PAD_LEFT);
-
-    //     return "BR{$branchCode}-{$year}-{$paddedNum}";
-    // }
 
     protected static function generateRegistrationNumber(Student $student): string
     {
@@ -209,4 +180,22 @@ class Student extends Model
 
         return $startFrom + $count;
     }    
+
+    // ─── ADD THIS MISSING RELATIONSHIP ───
+    public function examEntries(): HasMany
+    {
+        return $this->hasMany(ExamStudentEntry::class, 'student_id');
+    }
+
+    // ─── Optional: Helper scopes ───
+    public function scopeForBranch($query, int $branchId)
+    {
+        return $query->where('branch_id', $branchId);
+    }
+
+    public function scopeForClassAndSection($query, int $branchClassId, int $sectionId)
+    {
+        return $query->where('branch_class_id', $branchClassId)
+                     ->where('section_id', $sectionId);
+    }
 }

@@ -2,10 +2,24 @@
 
 namespace App\Filament\Resources\Exams\Schemas;
 
+use App\Enums\ExamMode;
+use App\Enums\ExamStatus;
+use App\Models\AcademicYear;
+use App\Models\BranchClass;
+use App\Models\ClassSection;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Hidden;
+use Filament\Forms\Components\KeyValue;
 use Filament\Forms\Components\Select;
-use Filament\Schemas\Components\Grid;
-use Filament\Schemas\Components\Section;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\TimePicker;
+use Filament\Forms\Components\Toggle;
+use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 
 class ExamForm
 {
@@ -13,10 +27,6 @@ class ExamForm
     {
         return $schema
             ->components([
-            Section::make('Exam Information')
-                ->schema([
-                    Grid::make(2)->schema([
-
                         // ── Branch & Class ──
                         Select::make('branch_id')
                             ->label('Branch')
@@ -25,27 +35,33 @@ class ExamForm
                             ->preload()
                             ->required()
                             ->reactive()
-                            ->afterStateUpdated(fn(HasSchemaComponents $set) => $set('branch_class_id', null))
-                            ->visible(fn() => auth()->user()?->hasRole('super_admin') ?? false)
-                            ->default(fn() => auth()->user()?->branch_id),
+                            ->afterStateUpdated(fn(Set $set) => $set('branch_class_id', null))
+                            ->visible(fn() => Auth::user()?->hasRole('super_admin') ?? false)
+                            ->default(fn() => Auth::user()?->branch_id),
 
                         Select::make('branch_class_id')
                             ->label('Class')
-                            ->options(fn(HasSchemaComponents $get) => BranchClass::query()
-                                ->where('branch_id', $get('branch_id') ?? auth()->user()?->branch_id)
+                            ->options(fn(Get $get) => BranchClass::query()
+                                ->where('branch_id', $get('branch_id') ?? Auth::user()?->branch_id)
                                 ->pluck('name', 'id'))
                             ->searchable()
                             ->preload()
                             ->required()
                             ->reactive()
-                            ->afterStateUpdated(fn(HasSchemaComponents $set) => $set('section_id', null)),
+                            ->afterStateUpdated(fn(Set $set) => $set('section_id', null)),
 
                         // ── Section & Academic Year ──
                         Select::make('section_id')
                             ->label('Section')
-                            ->options(fn(HasSchemaComponents $get) => Section::query()
-                                ->where('branch_class_id', $get('branch_class_id'))
-                                ->pluck('name', 'id'))
+                            ->options(
+                                fn($get) =>
+                                $get('branch_class_id')
+                                    ? ClassSection::where('branch_class_id', $get('branch_class_id'))
+                                    ->with('section')
+                                    ->get()
+                                    ->pluck('section.name', 'section_id')
+                                    : []
+                            )
                             ->searchable()
                             ->preload()
                             ->required(),
@@ -65,7 +81,7 @@ class ExamForm
                             ->required()
                             ->maxLength(100)
                             ->live(onBlur: true)
-                            ->afterStateUpdated(fn(?string $state, HasSchemaComponents $set) => $set('slug', \Str::slug($state) . '-' . now()->format('YmdHis'))),
+                            ->afterStateUpdated(fn(?string $state, Set $set) => $set('slug', Str::slug($state) . '-' . now()->format('YmdHis'))),
 
                         TextInput::make('slug')
                             ->label('Slug')
@@ -79,8 +95,8 @@ class ExamForm
                             ->options(ExamMode::class)
                             ->required()
                             ->default(ExamMode::OFFLINE)
-                            ->reactive()
-                            ->afterStateUpdated(fn($state, HasSchemaComponents $set) => $set('settings', [
+                            ->live()
+                            ->afterStateUpdated(fn($state, Set $set) => $set('settings', [
                                 'shuffle_questions' => false,
                                 'negative_marking' => 0,
                                 'show_result_immediately' => false,
@@ -101,8 +117,8 @@ class ExamForm
                             ->required()
                             ->native(false)
                             ->displayFormat('d M Y')
-                            ->minDate(fn(HasSchemaComponents $get) => $get('academic_year_id') ? AcademicYear::find($get('academic_year_id'))?->start_date : null)
-                            ->maxDate(fn(HasSchemaComponents $get) => $get('academic_year_id') ? AcademicYear::find($get('academic_year_id'))?->end_date : null),
+                            ->minDate(fn(Get $get) => $get('academic_year_id') ? AcademicYear::query()->find($get('academic_year_id'))?->start_date : null)
+                            ->maxDate(fn(Get $get) => $get('academic_year_id') ? AcademicYear::query()->find($get('academic_year_id'))?->end_date : null),
 
                         DatePicker::make('end_date')
                             ->label('End Date')
@@ -124,7 +140,7 @@ class ExamForm
                         // ── Online Settings (conditional) ──
                         KeyValue::make('settings')
                             ->label('Online Exam Settings')
-                            ->visible(fn(HasSchemaComponents $get) => $get('mode') === ExamMode::ONLINE->value)
+                            ->visible(fn (Get $get) => in_array($get('mode'), [ExamMode::ONLINE, ExamMode::ONLINE?->value]))                            
                             ->keyLabel('Setting')
                             ->valueLabel('Value')
                             ->addActionLabel('Add Setting')
@@ -149,9 +165,8 @@ class ExamForm
                             ->placeholder('General instructions printed on admit card and question paper...'),
 
                         Hidden::make('created_by')
-                            ->default(auth()->id()),
-                    ]),
-                ]),
+                            ->default(Auth::id()),
+
             ]);
     }
 }

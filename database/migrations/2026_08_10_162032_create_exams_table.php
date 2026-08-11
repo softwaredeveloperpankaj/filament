@@ -32,7 +32,7 @@ return new class extends Migration
             $table->timestamps();
             $table->softDeletes();
 
-            $table->index(['branch_id', 'branch_class_id', 'section_id', 'academic_year_id']);
+            $table->index(['branch_id', 'branch_class_id', 'section_id', 'academic_year_id'], 'exams_branch_composite_idx');
         });
     }
 

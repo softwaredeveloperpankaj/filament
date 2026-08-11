@@ -3,6 +3,8 @@
 namespace App\Filament\Resources\Exams\RelationManagers;
 
 use App\Enums\ExamEntryStatus;
+use App\Filament\Resources\Students\StudentResource;
+use App\Models\ClassSection;
 use App\Models\ExamStudentEntry;
 use App\Models\Section;
 use App\Models\Student;
@@ -17,6 +19,7 @@ use Filament\Actions\EditAction;
 use Filament\Schemas\Components\Grid;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
+use Filament\Notifications\Notification;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
 use Filament\Tables\Columns\TextColumn;
@@ -70,9 +73,11 @@ class ExamStudentEntriesRelationManager extends RelationManager
                         // Section (auto-filled but editable)
                         Select::make('section_id')
                             ->label('Section')
-                            ->options(fn() => Section::query()
+                            ->options(fn() => ClassSection::query()
                                 ->where('branch_class_id', $this->getOwnerRecord()->branch_class_id)
-                                ->pluck('name', 'id'))
+                                ->with('section')
+                                ->get()
+                                ->pluck('section.name', 'section_id'))
                             ->searchable()
                             ->preload()
                             ->required(),
@@ -93,12 +98,23 @@ class ExamStudentEntriesRelationManager extends RelationManager
         return $table
             ->recordTitleAttribute('student.name')
             ->columns([
-                TextColumn::make('student.name')
+                TextColumn::make('student_name')
                     ->label('Student')
-                    ->searchable()
-                    ->sortable()
+                    ->getStateUsing(fn (ExamStudentEntry $record) => $record->student?->getFormValue('student_name'))
+                    ->searchable(query: function ($query, $search) {
+                        return $query->whereHas('student', function ($q) use ($search) {
+                            $q->where('form_data->student_name', 'like', "%{$search}%");
+                        });
+                    })
+                    ->sortable(query: function ($query, $direction) {
+                        return $query->orderBy(
+                            Student::select('form_data->student_name')
+                                ->whereColumn('students.id', 'exam_student_entries.student_id'),
+                            $direction
+                        );
+                    })
                     ->weight('medium')
-                    ->url(fn(ExamStudentEntry $record) => \App\Filament\Resources\Students\StudentResource::getUrl('view', ['record' => $record->student])),
+                    ->url(fn(ExamStudentEntry $record) => StudentResource::getUrl('view', ['record' => $record->student])),
 
                 TextColumn::make('roll_no')
                     ->label('Roll No')
@@ -144,12 +160,14 @@ class ExamStudentEntriesRelationManager extends RelationManager
                     ->label('Bulk Enroll Section')
                     ->icon('heroicon-o-user-group')
                     ->color('info')
-                    ->form([
+                    ->schema([
                         Select::make('section_id')
                             ->label('Section')
-                            ->options(fn() => Section::query()
+                            ->options(fn() => ClassSection::query()
                                 ->where('branch_class_id', $this->getOwnerRecord()->branch_class_id)
-                                ->pluck('name', 'id'))
+                                ->with('section')
+                                ->get()
+                                ->pluck('section.name', 'section_id'))
                             ->required(),
                     ])
                     ->action(function (array $data) {
@@ -172,7 +190,7 @@ class ExamStudentEntriesRelationManager extends RelationManager
                             $count++;
                         }
 
-                        \Filament\Notifications\Notification::make()
+                        Notification::make()
                             ->title("Enrolled {$count} students")
                             ->success()
                             ->send();
@@ -194,7 +212,7 @@ class ExamStudentEntriesRelationManager extends RelationManager
                             $entry->markAdmitCardPrinted();
                         }
 
-                        \Filament\Notifications\Notification::make()
+                        Notification::make()
                             ->title("Generated admit cards for {$entries->count()} students")
                             ->success()
                             ->send();

@@ -26,11 +26,11 @@ return new class extends Migration
             $table->unsignedInteger('total_maximum')->default(0);
             $table->decimal('percentage', 5, 2)->default(0);
             $table->json('time_spent_per_question')->nullable(); // analytics
-            $table->ip_address('ip_address')->nullable();
+            $table->ipAddress('ip_address')->nullable();
             $table->string('user_agent')->nullable();
             $table->timestamps();
 
-            $table->unique(['exam_student_entry_id', 'exam_subject_id']);
+            $table->unique(['exam_student_entry_id', 'exam_subject_id'], 'exam_attempts_student_subject_unique');
             $table->index(['exam_id', 'status']);
         });
     }

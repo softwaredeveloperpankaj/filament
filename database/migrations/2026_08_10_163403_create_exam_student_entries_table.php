@@ -22,7 +22,8 @@ return new class extends Migration
             $table->timestamp('admit_card_printed_at')->nullable();
             $table->json('admit_card_data')->nullable();     // cached data for reprint
             $table->timestamps();
-
+            $table->softDeletes();
+            
             $table->unique(['exam_id', 'student_id']);
             $table->index(['exam_id', 'section_id', 'status']);
         });

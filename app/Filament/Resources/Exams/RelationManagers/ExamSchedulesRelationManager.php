@@ -6,6 +6,7 @@ use App\Models\User;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteAction;
+use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
@@ -18,6 +19,7 @@ use Filament\Tables\Table;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Components\Grid;
+use Filament\Tables\Columns\IconColumn;
 
 class ExamSchedulesRelationManager extends RelationManager
 {
@@ -137,11 +139,9 @@ class ExamSchedulesRelationManager extends RelationManager
                     ->placeholder('—')
                     ->toggleable(isToggledHiddenByDefault: true),
 
-                TextColumn::make('examSubject.is_graded')
+                IconColumn::make('examSubject.is_graded')
                     ->label('Graded')
-                    ->badge()
-                    ->trueLabel('Yes')
-                    ->falseLabel('No'),
+                    ->boolean(),
             ])
             ->defaultSort('exam_date')
             ->headerActions([
@@ -154,7 +154,7 @@ class ExamSchedulesRelationManager extends RelationManager
                 ])
             ])
             ->toolbarActions([
-                DeleteAction::make(),
+                DeleteBulkAction::make(),
             ]);
     }
 }

@@ -18,6 +18,7 @@ use Filament\Tables\Table;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Components\Grid;
+use Filament\Tables\Columns\IconColumn;
 
 class ExamSubjectsRelationManager extends RelationManager
 {
@@ -158,12 +159,9 @@ class ExamSubjectsRelationManager extends RelationManager
                     ->suffix(' min')
                     ->badge(),
 
-                TextColumn::make('is_graded')
+                IconColumn::make('is_graded')
                     ->label('Graded')
-                    ->badge()
-                    ->trueLabel('Yes')
-                    ->falseLabel('No')
-                    ->colors(['success', 'gray']),
+                    ->boolean(),
 
                 TextColumn::make('display_order')
                     ->label('Order')
