@@ -3,13 +3,15 @@
 namespace App\Models;
 
 use App\Enums\ResultStatus;
+use App\Models\Concerns\HasBranchScope;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Auth;
 
 class ExamResult extends Model
 {
-    use HasFactory;
+    use HasFactory, HasBranchScope;
 
     protected $fillable = [
         'exam_id',
@@ -66,7 +68,7 @@ class ExamResult extends Model
 
         static::updated(function (ExamResult $result) {
             if ($result->wasChanged('status') && $result->status === ResultStatus::PUBLISHED) {
-                $result->published_by = auth()->id();
+                $result->published_by = Auth::id();
                 $result->published_at = now();
                 $result->saveQuietly();
 

@@ -3,13 +3,15 @@
 namespace App\Models;
 
 use App\Enums\MarksSource;
+use App\Models\Concerns\HasBranchScope;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Auth;
 
 class ExamMark extends Model
 {
-    use HasFactory;
+    use HasFactory, HasBranchScope;
 
     protected $fillable = [
         'exam_id',
@@ -88,7 +90,7 @@ class ExamMark extends Model
 
             // Set grader if not set
             if ($mark->isDirty(['theory_obtained', 'practical_obtained', 'internal_obtained']) && !$mark->graded_by) {
-                $mark->graded_by = auth()->id();
+                $mark->graded_by = Auth::id();
                 $mark->graded_at = now();
             }
         });

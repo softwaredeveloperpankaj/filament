@@ -83,6 +83,10 @@ public function boot(): void
                     ->collapsed(),
 
                 NavigationGroup::make()
+                    ->label('Examinations')
+                    ->collapsed(),
+
+                NavigationGroup::make()
                     ->label('Security')
                     ->collapsed()
             ])

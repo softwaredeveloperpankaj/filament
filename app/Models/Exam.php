@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 
 class Exam extends Model
@@ -155,7 +156,7 @@ class Exam extends Model
     {
         static::creating(function (Exam $exam) {
             $exam->slug ??= Str::slug($exam->name) . '-' . now()->format('YmdHis');
-            $exam->created_by ??= auth()->id();
+            $exam->created_by ??= Auth::id();
             $exam->status ??= ExamStatus::DRAFT;
         });
 

@@ -4,13 +4,14 @@ namespace App\Models;
 
 use App\Enums\QuestionType;
 use App\Enums\DifficultyLevel;
+use App\Models\Concerns\HasBranchScope;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class QuestionBankItem extends Model
 {
-    use HasFactory;
+    use HasFactory, HasBranchScope;
 
     protected $fillable = [
         'question_bank_id',
