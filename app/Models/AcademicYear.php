@@ -43,6 +43,11 @@ class AcademicYear extends Model
         return $this->hasMany(Student::class);
     }
 
+    public static function current(): ?self
+    {
+        return static::where('is_current', true)->first();
+    }
+
     // public function feeStructures(): HasMany
     // {
     //     return $this->hasMany(FeeStructure::class);

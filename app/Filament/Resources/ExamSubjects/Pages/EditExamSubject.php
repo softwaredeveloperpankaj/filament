@@ -1,14 +1,16 @@
 <?php
 
-namespace App\Filament\Resources\AcademicYears\Pages;
+namespace App\Filament\Resources\ExamSubjects\Pages;
 
-use App\Filament\Resources\AcademicYears\AcademicYearResource;
+use App\Filament\Resources\ExamSubjects\ExamSubjectResource;
 use Filament\Actions\Action;
-use Filament\Resources\Pages\CreateRecord;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\ViewAction;
+use Filament\Resources\Pages\EditRecord;
 
-class CreateAcademicYear extends CreateRecord
+class EditExamSubject extends EditRecord
 {
-    protected static string $resource = AcademicYearResource::class;
+    protected static string $resource = ExamSubjectResource::class;
 
     protected function getCancelFormAction(): Action
     {
@@ -22,6 +24,8 @@ class CreateAcademicYear extends CreateRecord
                 ->label('Back')
                 ->url($this->getResource()::getUrl('index'))
                 ->icon('heroicon-o-arrow-left'),
+            ViewAction::make(),
+            DeleteAction::make(),
         ];
     }
 }

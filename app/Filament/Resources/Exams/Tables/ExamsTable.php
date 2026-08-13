@@ -5,7 +5,9 @@ namespace App\Filament\Resources\Exams\Tables;
 use App\Enums\ExamMode;
 use App\Enums\ExamStatus;
 use App\Filament\Resources\Exams\ExamResource;
+use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ForceDeleteBulkAction;
@@ -91,7 +93,7 @@ class ExamsTable
                     ->badge()
                     ->color('gray'),
 
-                TextColumn::make('entries_count')
+                TextColumn::make('studentEntries_count')
                     ->label('Students')
                     ->counts('studentEntries')
                     ->badge()
@@ -114,9 +116,13 @@ class ExamsTable
                 TrashedFilter::make(),
             ])
             ->recordActions([
-                ViewAction::make(),
-                EditAction::make(),
+                ActionGroup::make([
+                    ViewAction::make(),
+                    EditAction::make(),
+                    DeleteAction::make(),
+                ]),
             ])
+            ->recordActionsColumnLabel('Actions')
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),

@@ -1,14 +1,15 @@
 <?php
 
-namespace App\Filament\Resources\AcademicYears\Pages;
+namespace App\Filament\Resources\ExamSubjects\Pages;
 
-use App\Filament\Resources\AcademicYears\AcademicYearResource;
+use App\Filament\Resources\ExamSubjects\ExamSubjectResource;
 use Filament\Actions\Action;
+use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\CreateRecord;
 
-class CreateAcademicYear extends CreateRecord
+class CreateExamSubject extends CreateRecord
 {
-    protected static string $resource = AcademicYearResource::class;
+    protected static string $resource = ExamSubjectResource::class;
 
     protected function getCancelFormAction(): Action
     {
@@ -23,5 +24,5 @@ class CreateAcademicYear extends CreateRecord
                 ->url($this->getResource()::getUrl('index'))
                 ->icon('heroicon-o-arrow-left'),
         ];
-    }
+    }    
 }

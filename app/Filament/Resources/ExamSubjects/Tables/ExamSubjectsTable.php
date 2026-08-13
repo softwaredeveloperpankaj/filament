@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Resources\AcademicYears\Tables;
+namespace App\Filament\Resources\ExamSubjects\Tables;
 
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
@@ -12,35 +12,41 @@ use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
-class AcademicYearsTable
+class ExamSubjectsTable
 {
     public static function configure(Table $table): Table
     {
         return $table
             ->columns([
-                TextColumn::make('name')
+                TextColumn::make('exam.name')
                     ->searchable(),
-                TextColumn::make('start_date')
-                    ->date()
+                TextColumn::make('subject.name')
+                    ->searchable(),
+                TextColumn::make('max_marks')
+                    ->numeric()
                     ->sortable(),
-                TextColumn::make('end_date')
-                    ->date()
+                TextColumn::make('pass_marks')
+                    ->numeric()
                     ->sortable(),
-                IconColumn::make('is_current')
+                TextColumn::make('theory_marks')
+                    ->numeric()
+                    ->sortable(),
+                TextColumn::make('practical_marks')
+                    ->numeric()
+                    ->sortable(),
+                TextColumn::make('duration_minutes')
+                    ->numeric()
+                    ->sortable(),
+                IconColumn::make('is_graded')
                     ->boolean(),
-                TextColumn::make('status')
-                    ->badge(),
-                TextColumn::make('term_type')
-                    ->badge(),
+                TextColumn::make('display_order')
+                    ->numeric()
+                    ->sortable(),
                 TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('updated_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('deleted_at')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),

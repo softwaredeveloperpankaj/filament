@@ -3,6 +3,7 @@
 namespace App\Models\Concerns;
 
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Auth;
 
 trait HasBranchScope
 {
@@ -13,6 +14,6 @@ trait HasBranchScope
 
     public function scopeForCurrentUserBranch(Builder $query): Builder
     {
-        return $query->where('branch_id', auth()->user()?->branch_id);
+        return $query->where('branch_id', Auth::user()?->branch_id);
     }
 }

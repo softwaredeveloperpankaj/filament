@@ -117,8 +117,8 @@ class ExamForm
                             ->required()
                             ->native(false)
                             ->displayFormat('d M Y')
-                            ->minDate(fn(Get $get) => $get('academic_year_id') ? AcademicYear::query()->find($get('academic_year_id'))?->start_date : null)
-                            ->maxDate(fn(Get $get) => $get('academic_year_id') ? AcademicYear::query()->find($get('academic_year_id'))?->end_date : null),
+                            ->minDate(fn(Get $get) => $get('academic_year_id') ? AcademicYear::find($get('academic_year_id'))?->start_date : null)
+                            ->maxDate(fn(Get $get) => $get('academic_year_id') ? AcademicYear::find($get('academic_year_id'))?->end_date : null),
 
                         DatePicker::make('end_date')
                             ->label('End Date')
