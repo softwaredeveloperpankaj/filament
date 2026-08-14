@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 
 class QuestionBank extends Model
 {
@@ -61,4 +63,30 @@ class QuestionBank extends Model
     {
         return $query->where('branch_id', $branchId)->where('subject_id', $subjectId);
     }
+
+    // ─── Boot Logic (auto-generate slug) ───
+    protected static function booted(): void
+    {
+        static::creating(function (QuestionBank $bank) {
+            $bank->slug ??= Str::slug($bank->name);
+            $bank->created_by ??= Auth::id();
+        });
+
+        static::updating(function (QuestionBank $bank) {
+            if ($bank->isDirty('name') && !$bank->isDirty('slug')) {
+                $bank->slug = Str::slug($bank->name);
+            }
+        });
+    }
+
+    // ─── Accessors ───
+    public function getRouteKeyName(): string
+    {
+        return 'slug';
+    }
+
+    public function getItemsActiveCountAttribute(): int
+    {
+        return $this->items()->where('is_active', true)->count();
+    }    
 }

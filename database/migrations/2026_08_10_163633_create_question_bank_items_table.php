@@ -27,6 +27,7 @@ return new class extends Migration
             $table->text('explanation')->nullable();         // shown after attempt if configured
             $table->foreignId('created_by')->constrained('users');
             $table->boolean('is_active')->default(true);
+            $table->unsignedInteger('display_order')->default(0);
             $table->timestamps();
 
             $table->index(['question_bank_id', 'question_type']);

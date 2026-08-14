@@ -16,6 +16,7 @@ return new class extends Migration
             $table->foreignId('branch_id')->constrained()->cascadeOnDelete();
             $table->foreignId('subject_id')->constrained()->cascadeOnDelete();
             $table->string('name');
+             $table->string('slug')->unique();
             $table->text('description')->nullable();
             $table->enum('type', ['objective', 'subjective', 'mixed'])->default('mixed');
             $table->foreignId('created_by')->constrained('users');
@@ -24,6 +25,7 @@ return new class extends Migration
             $table->softDeletes();
 
             $table->index(['branch_id', 'subject_id']);
+            $table->index(['branch_id', 'is_active']);
         });
     }
 

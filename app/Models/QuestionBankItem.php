@@ -8,6 +8,7 @@ use App\Models\Concerns\HasBranchScope;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Auth;
 
 class QuestionBankItem extends Model
 {
@@ -77,5 +78,13 @@ class QuestionBankItem extends Model
             QuestionType::FILL_BLANK,
             QuestionType::MATCHING,
         ]);
+    }
+
+    protected static function booted(): void
+    {
+        static::creating(function (QuestionBankItem $item) {
+            $item->created_by ??= Auth::id();
+            $item->display_order ??= static::where('question_bank_id', $item->question_bank_id)->max('display_order') + 1;
+        });
     }
 }
