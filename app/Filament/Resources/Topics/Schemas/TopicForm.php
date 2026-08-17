@@ -73,7 +73,8 @@ class TopicForm
                 Toggle::make('is_active')
                     ->label('Active')
                     ->default(true)
-                    ->helperText('Inactive topics are hidden from question creation dropdowns.'),
+                    ->helperText('Inactive topics are hidden from question creation dropdowns.')
+                    ->columnSpanFull(),
             ]);
     }
 }

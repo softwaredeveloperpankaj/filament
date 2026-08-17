@@ -2,14 +2,14 @@
 
 namespace App\Models;
 
-use App\Models\Concerns\HasBranchScope;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Auth;
 
 class ExamQuestionPaper extends Model
 {
-    use HasFactory, HasBranchScope;
+    use HasFactory;
 
     protected $fillable = [
         'exam_id',
@@ -69,6 +69,10 @@ class ExamQuestionPaper extends Model
     {
         static::saving(function (ExamQuestionPaper $paper) {
             $paper->total_marks = collect($paper->selected_questions ?? [])->sum();
+        });
+
+        static::creating(function (ExamQuestionPaper $paper) {
+            $paper->generated_by ??= Auth::id();
         });
     }
 }

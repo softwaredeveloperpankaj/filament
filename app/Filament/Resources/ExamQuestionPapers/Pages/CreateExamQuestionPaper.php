@@ -1,14 +1,14 @@
 <?php
 
-namespace App\Filament\Resources\Topics\Pages;
+namespace App\Filament\Resources\ExamQuestionPapers\Pages;
 
-use App\Filament\Resources\Topics\TopicResource;
+use App\Filament\Resources\ExamQuestionPapers\ExamQuestionPaperResource;
 use Filament\Actions\Action;
 use Filament\Resources\Pages\CreateRecord;
 
-class CreateTopic extends CreateRecord
+class CreateExamQuestionPaper extends CreateRecord
 {
-    protected static string $resource = TopicResource::class;
+    protected static string $resource = ExamQuestionPaperResource::class;
 
     protected function getCancelFormAction(): Action
     {

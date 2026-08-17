@@ -27,7 +27,7 @@ class TopicResource extends Resource
 
     protected static string|\UnitEnum|null $navigationGroup = 'Examinations';
 
-    protected static ?int $navigationSort = 5;
+    protected static ?int $navigationSort = 3;
 
     protected static ?string $recordTitleAttribute = 'name';
 
@@ -79,5 +79,10 @@ class TopicResource extends Resource
     public static function getGloballySearchableAttributes(): array
     {
         return ['name'];
-    }    
+    }
+    
+    public static function getNavigationBadge(): ?string
+    {
+        return static::getModel()::count();
+    }
 }

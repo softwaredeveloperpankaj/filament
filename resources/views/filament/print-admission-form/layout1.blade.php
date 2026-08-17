@@ -51,7 +51,7 @@
     $parents_address_pin_code = $student->form_data['parents_address_pin_code'] ?? '';
 
     // Documents
-    $student_photo = $student->form_data['student_photo'] ?? '';\
+    $student_photo = $student->form_data['student_photo'] ?? '';
     
 @endphp
 <!DOCTYPE html>

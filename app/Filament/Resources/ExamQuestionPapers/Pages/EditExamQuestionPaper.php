@@ -1,18 +1,16 @@
 <?php
 
-namespace App\Filament\Resources\Topics\Pages;
+namespace App\Filament\Resources\ExamQuestionPapers\Pages;
 
-use App\Filament\Resources\Topics\TopicResource;
+use App\Filament\Resources\ExamQuestionPapers\ExamQuestionPaperResource;
 use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
-use Filament\Actions\ForceDeleteAction;
-use Filament\Actions\RestoreAction;
 use Filament\Actions\ViewAction;
 use Filament\Resources\Pages\EditRecord;
 
-class EditTopic extends EditRecord
+class EditExamQuestionPaper extends EditRecord
 {
-    protected static string $resource = TopicResource::class;
+    protected static string $resource = ExamQuestionPaperResource::class;
 
     protected function getCancelFormAction(): Action
     {
@@ -28,8 +26,6 @@ class EditTopic extends EditRecord
                 ->icon('heroicon-o-arrow-left'),
             ViewAction::make(),
             DeleteAction::make(),
-            ForceDeleteAction::make(),
-            RestoreAction::make(),
         ];
-    }    
+    }
 }
