@@ -5,16 +5,21 @@ namespace App\Filament\Resources\ExamQuestionPapers\Schemas;
 use App\Models\ExamSubject;
 use App\Models\QuestionBank;
 use App\Models\QuestionBankItem;
+
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\KeyValue;
-use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
-use Filament\Forms\Components\Toggle;
+
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
+
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rules\Unique;
 
 class ExamQuestionPaperForm
 {
@@ -33,14 +38,14 @@ class ExamQuestionPaperForm
                             ->searchable()
                             ->preload()
                             ->required()
-                            ->reactive()
-                            ->afterStateUpdated(fn(callable $set) => $set('exam_subject_id', null))
-                            ->disabled(fn($record) => $record !== null),
+                            ->live()
+                            ->afterStateUpdated(fn (Set $set) => $set('exam_subject_id', null))
+                            ->disabled(fn ($record) => $record !== null),
 
-                        // Exam Subject (scoped to selected exam, online mode only makes sense here)
+                        // Exam Subject with unique validation scoped to exam_id
                         Select::make('exam_subject_id')
                             ->label('Exam Subject')
-                            ->options(fn(Get $get) => $get('exam_id')
+                            ->options(fn (Get $get) => $get('exam_id')
                                 ? ExamSubject::query()
                                     ->where('exam_id', $get('exam_id'))
                                     ->with('subject')
@@ -50,18 +55,28 @@ class ExamQuestionPaperForm
                             ->searchable()
                             ->preload()
                             ->required()
-                            ->reactive()
-                            ->disabled(fn($record) => $record !== null)
-                            ->afterStateUpdated(fn(callable $set) => $set('question_bank_id', null)),
+                            ->live()
+                            ->disabled(fn ($record) => $record !== null)
+                            ->afterStateUpdated(fn (Set $set) => $set('question_bank_id', null))
+                            ->unique(
+                                table: 'exam_question_papers',
+                                column: 'exam_subject_id',
+                                modifyRuleUsing: fn (Unique $rule, Get $get) => $rule->where('exam_id', $get('exam_id')),
+                                ignoreRecord: true
+                            )
+                            ->validationMessages([
+                                'unique' => 'A question paper already exists for this exam and subject combination.',
+                            ]),
 
                         // Question Bank (scoped to exam subject's subject + branch)
                         Select::make('question_bank_id')
                             ->label('Question Bank')
                             ->options(function (Get $get) {
                                 $examSubject = ExamSubject::find($get('exam_subject_id'));
-                                if (!$examSubject) {
+                                if (! $examSubject) {
                                     return [];
                                 }
+
                                 return QuestionBank::query()
                                     ->where('branch_id', $examSubject->exam->branch_id)
                                     ->where('subject_id', $examSubject->subject_id)
@@ -71,7 +86,7 @@ class ExamQuestionPaperForm
                             ->searchable()
                             ->preload()
                             ->required()
-                            ->reactive()
+                            ->live()
                             ->helperText('Only active banks matching this subject and branch are shown.'),
 
                         // Shuffle Questions
@@ -88,25 +103,33 @@ class ExamQuestionPaperForm
                     Select::make('selected_question_ids')
                         ->label('Questions')
                         ->multiple()
-                        ->options(fn(Get $get) => $get('question_bank_id')
+                        ->options(fn (Get $get) => $get('question_bank_id')
                             ? QuestionBankItem::query()
                                 ->where('question_bank_id', $get('question_bank_id'))
                                 ->where('is_active', true)
                                 ->get()
-                                ->mapWithKeys(fn($q) => [$q->id => str($q->question_text)->limit(80) . " ({$q->marks} marks)"])
+                                ->mapWithKeys(fn ($q) => [$q->id => str($q->question_text)->limit(80) . " ({$q->marks} marks)"])
                             : [])
                         ->searchable()
                         ->preload()
                         ->required()
-                        ->reactive()
+                        ->live()
                         ->columnSpanFull()
                         ->helperText('Select at least 5 questions to generate a valid paper.')
-                        ->dehydrated(false) // not saved directly, transformed into selected_questions JSON below
-                        ->afterStateUpdated(function ($state, callable $set) {
+                        ->dehydrated(false)
+                        ->formatStateUsing(function ($record) {
+                            if (! $record || empty($record->selected_questions)) {
+                                return [];
+                            }
+
+                            return array_keys($record->selected_questions);
+                        })
+                        ->afterStateUpdated(function ($state, Set $set) {
                             if (is_array($state)) {
                                 $marksMap = QuestionBankItem::whereIn('id', $state)
                                     ->pluck('marks', 'id')
                                     ->toArray();
+                                
                                 $set('selected_questions', $marksMap);
                             }
                         }),
@@ -115,6 +138,9 @@ class ExamQuestionPaperForm
                         ->label('Assigned Marks per Question')
                         ->keyLabel('Question ID')
                         ->valueLabel('Marks')
+                        ->addable(false)
+                        ->deletable(false)
+                        ->editableKeys(false)
                         ->columnSpanFull()
                         ->helperText('Auto-populated from selection above. Adjust marks per question if needed.'),
                 ]),
@@ -140,11 +166,11 @@ class ExamQuestionPaperForm
                         ->placeholder('General instructions printed at the top of the paper...'),
 
                     Hidden::make('generated_by')
-                        ->default(Auth::id()),
+                        ->default(fn () => Auth::id()),
 
                     Hidden::make('total_marks')
-                        ->default(0), // recalculated in model boot via selected_questions sum
+                        ->default(0),
                 ]),
-        ]);        
+        ]);
     }
 }

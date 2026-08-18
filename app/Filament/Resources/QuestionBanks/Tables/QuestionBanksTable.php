@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\QuestionBanks\Tables;
 
+use App\Filament\Resources\ExamQuestionPapers\ExamQuestionPaperResource;
 use App\Models\QuestionBank;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
@@ -144,13 +145,23 @@ class QuestionBanksTable
                         ->icon('heroicon-o-pencil')
                         ->color('primary'),
 
+                    // Action::make('generate_paper')
+                    //     ->label('Generate Paper')
+                    //     ->icon('heroicon-o-document-plus')
+                    //     ->color('success')
+                    //     ->visible(fn(QuestionBank $record) => $record->items()->where('is_active', true)->count() >= 5)
+                    //     ->url(fn(QuestionBank $record) => route('exams.papers.generate', ['bank' => $record]))
+                    //     ->openUrlInNewTab()
+                    //     ->requiresConfirmation(),
+
                     Action::make('generate_paper')
                         ->label('Generate Paper')
                         ->icon('heroicon-o-document-plus')
                         ->color('success')
                         ->visible(fn(QuestionBank $record) => $record->items()->where('is_active', true)->count() >= 5)
-                        ->url(fn(QuestionBank $record) => route('exams.papers.generate', ['bank' => $record]))
-                        ->openUrlInNewTab()
+                        ->url(fn(QuestionBank $record) => ExamQuestionPaperResource::getUrl('create', [
+                            'question_bank_id' => $record->id,
+                        ]))
                         ->requiresConfirmation(),
 
                     DeleteAction::make()
