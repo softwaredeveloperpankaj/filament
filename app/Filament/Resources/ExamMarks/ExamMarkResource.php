@@ -15,6 +15,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class ExamMarkResource extends Resource
 {
@@ -56,6 +57,12 @@ class ExamMarkResource extends Resource
             'view' => ViewExamMark::route('/{record}'),
             'edit' => EditExamMark::route('/{record}/edit'),
         ];
+    }
+    
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()
+            ->with(['entry.student', 'exam', 'examSubject.subject', 'grader']);
     }
 
     public static function getNavigationBadge(): ?string

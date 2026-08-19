@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Users\Tables;
 
 use App\Filament\Exports\TeacherProfileExporter;
 use App\Filament\Exports\UserExporter;
+use App\Filament\Imports\TeacherProfileImporter;
 use App\Filament\Imports\UserImporter;
 use App\Models\User;
 use Filament\Actions\ActionGroup;
@@ -77,9 +78,11 @@ class UsersTable
                 BulkActionGroup::make([
                     ExportBulkAction::make()
                         ->label('Export users')
+                        ->icon('heroicon-o-arrow-up-tray')
                         ->exporter(UserExporter::class),
                     ExportBulkAction::make()
                         ->label('Export teachers')
+                        ->icon('heroicon-o-arrow-up-tray')
                         ->exporter(TeacherProfileExporter::class)
                         ->before(function (ExportBulkAction $action) {
                             $selectedIds = collect($action->getSelectedRecords());
@@ -110,7 +113,12 @@ class UsersTable
             ])
             ->headerActions([
                 ImportAction::make()
-                    ->importer(UserImporter::class)
+                    ->icon('heroicon-o-arrow-down-tray')
+                    ->importer(UserImporter::class),
+                ImportAction::make()
+                    ->label('Import teachers')
+                    ->icon('heroicon-o-arrow-down-tray')
+                    ->importer(TeacherProfileImporter::class),
             ]);
     }
 }

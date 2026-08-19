@@ -25,43 +25,43 @@ class TeacherProfileExporter extends Exporter
             ExportColumn::make('email')
                 ->label('Email'),
 
-            ExportColumn::make('teacher_profile.employee_id')
+            ExportColumn::make('teacherProfile.employee_id')
                 ->label('Employee ID'),
 
-            ExportColumn::make('teacher_profile.phone')
+            ExportColumn::make('teacherProfile.phone')
                 ->label('Phone'),
 
-            ExportColumn::make('teacher_profile.date_of_birth')
+            ExportColumn::make('teacherProfile.date_of_birth')
                 ->label('Date of Birth'),
 
-            ExportColumn::make('teacher_profile.gender')
+            ExportColumn::make('teacherProfile.gender')
                 ->label('Gender'),
 
-            ExportColumn::make('teacher_profile.profile_photo')
+            ExportColumn::make('teacherProfile.profile_photo')
                 ->label('Profile Photo'),
 
-            ExportColumn::make('teacher_profile.qualification')
+            ExportColumn::make('teacherProfile.qualification')
                 ->label('Qualification'),
 
-            ExportColumn::make('teacher_profile.specialization')
+            ExportColumn::make('teacherProfile.specialization')
                 ->label('Specialization'),
 
-            ExportColumn::make('teacher_profile.joining_date')
+            ExportColumn::make('teacherProfile.joining_date')
                 ->label('Joining Date'),
 
-            ExportColumn::make('teacher_profile.address')
+            ExportColumn::make('teacherProfile.address')
                 ->label('Address'),
 
-            ExportColumn::make('teacher_profile.status')
+            ExportColumn::make('teacherProfile.status')
                 ->label('Status'),
 
-            ExportColumn::make('teacher_profile.salary')
+            ExportColumn::make('teacherProfile.salary')
                 ->label('Salary'),
 
-            ExportColumn::make('teacher_profile.branch.name')
+            ExportColumn::make('teacherProfile.branch.name')
                 ->label('Branch'),
 
-            ExportColumn::make('teacher_profile.subject.name')
+            ExportColumn::make('teacherProfile.subject.name')
                 ->label('Subject'),
 
             ExportColumn::make('created_at')
