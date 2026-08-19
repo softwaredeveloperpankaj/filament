@@ -72,4 +72,14 @@ class SectionPolicy
         return $authUser->can('Reorder:Section');
     }
 
+    public function import(AuthUser $authUser): bool
+    {
+        return $authUser->can('Import:Section');
+    }
+
+    public function export(AuthUser $authUser): bool
+    {
+        return $authUser->can('Export:Section');
+    }
+
 }

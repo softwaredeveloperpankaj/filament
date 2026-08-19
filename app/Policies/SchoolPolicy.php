@@ -72,4 +72,14 @@ class SchoolPolicy
         return $authUser->can('Reorder:School');
     }
 
+    public function import(AuthUser $authUser): bool
+    {
+        return $authUser->can('Import:School');
+    }
+
+    public function export(AuthUser $authUser): bool
+    {
+        return $authUser->can('Export:School');
+    }
+
 }

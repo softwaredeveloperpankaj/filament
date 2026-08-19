@@ -57,7 +57,11 @@ class SectionSubjectForm
                 Select::make('subject_id')
                     ->label('Subject')
                     ->options(fn (Get $get) => Subject::where('branch_id', $get('branch_id'))
-                        ->pluck('name', 'id'))
+                        ->get()
+                        ->mapWithKeys(fn ($subject) => [
+                            $subject->id => "{$subject->name} ({$subject->code})",
+                        ])
+                    )
                     ->live()
                     ->afterStateUpdated(fn (Set $set) => $set('teacher_profile_id', null))
                     ->required()

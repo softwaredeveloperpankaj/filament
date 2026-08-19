@@ -72,4 +72,14 @@ class ExportPolicy
         return $authUser->can('Reorder:Export');
     }
 
+    public function import(AuthUser $authUser): bool
+    {
+        return $authUser->can('Import:Export');
+    }
+
+    public function export(AuthUser $authUser): bool
+    {
+        return $authUser->can('Export:Export');
+    }
+
 }

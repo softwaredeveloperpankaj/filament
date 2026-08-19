@@ -130,6 +130,8 @@ return [
         'methods' => [
             'viewAny', 'view', 'create', 'update', 'delete', 'deleteAny', 'restore',
             'forceDelete', 'forceDeleteAny', 'restoreAny', 'replicate', 'reorder',
+            'import',
+            'export',
         ],
         'single_parameter_methods' => [
             'viewAny',
@@ -138,6 +140,8 @@ return [
             'forceDeleteAny',
             'restoreAny',
             'reorder',
+            'import',
+            'export',
         ],
     ],
 

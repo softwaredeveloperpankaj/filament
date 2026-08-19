@@ -43,7 +43,7 @@ class ExamMark extends Model
         'graded_at'            => 'datetime',
         'sub_question_marks'   => 'array',
         'is_locked'            => 'boolean',
-        'is_passed'            => 'boolean', // ✅ added
+        'is_passed'            => 'boolean',
         'source'               => MarksSource::class,
     ];
 

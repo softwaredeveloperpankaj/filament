@@ -72,4 +72,14 @@ class QuestionBankPolicy
         return $authUser->can('Reorder:QuestionBank');
     }
 
+    public function import(AuthUser $authUser): bool
+    {
+        return $authUser->can('Import:QuestionBank');
+    }
+
+    public function export(AuthUser $authUser): bool
+    {
+        return $authUser->can('Export:QuestionBank');
+    }
+
 }

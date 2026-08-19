@@ -72,6 +72,16 @@ class StudentPolicy
         return $authUser->can('Reorder:Student');
     }
 
+    public function import(AuthUser $authUser): bool
+    {
+        return $authUser->can('Import:Student');
+    }
+
+    public function export(AuthUser $authUser): bool
+    {
+        return $authUser->can('Export:Student');
+    }
+
     public function approveStudent(AuthUser $authUser, Student $student): bool
     {
         return $authUser->can('ApproveStudent:Student');

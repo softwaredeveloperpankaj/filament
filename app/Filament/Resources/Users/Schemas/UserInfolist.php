@@ -77,8 +77,12 @@ class UserInfolist
                                         ->label('Subject')
                                         ->weight('bold')
                                         ->color('primary')
-                                        ->placeholder('-'),
-
+                                        ->placeholder('-')
+                                        ->formatStateUsing(fn ($record) => $record?->teacherProfile?->subject 
+                                            ? "{$record->teacherProfile->subject->name} ({$record->teacherProfile->subject->code})"
+                                            : '-'
+                                        ),
+                                        
                                     TextEntry::make('teacherProfile.phone')
                                         ->label('Phone Number')
                                         ->icon('heroicon-m-phone')
@@ -144,7 +148,6 @@ class UserInfolist
                                 ->schema([
                                     TextEntry::make('teacherProfile.status')
                                         ->badge()
-                                        ->extraAttributes(['class' => 'w-full flex justify-center text-center'])
                                         ->color(fn ($state) => match ($state) {
                                             'active' => 'success',
                                             'inactive' => 'danger',

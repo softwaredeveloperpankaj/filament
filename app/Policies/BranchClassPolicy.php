@@ -72,4 +72,14 @@ class BranchClassPolicy
         return $authUser->can('Reorder:BranchClass');
     }
 
+    public function import(AuthUser $authUser): bool
+    {
+        return $authUser->can('Import:BranchClass');
+    }
+
+    public function export(AuthUser $authUser): bool
+    {
+        return $authUser->can('Export:BranchClass');
+    }
+
 }

@@ -72,4 +72,14 @@ class AcademicYearPolicy
         return $authUser->can('Reorder:AcademicYear');
     }
 
+    public function import(AuthUser $authUser): bool
+    {
+        return $authUser->can('Import:AcademicYear');
+    }
+
+    public function export(AuthUser $authUser): bool
+    {
+        return $authUser->can('Export:AcademicYear');
+    }
+
 }

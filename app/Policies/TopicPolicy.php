@@ -72,4 +72,14 @@ class TopicPolicy
         return $authUser->can('Reorder:Topic');
     }
 
+    public function import(AuthUser $authUser): bool
+    {
+        return $authUser->can('Import:Topic');
+    }
+
+    public function export(AuthUser $authUser): bool
+    {
+        return $authUser->can('Export:Topic');
+    }
+
 }

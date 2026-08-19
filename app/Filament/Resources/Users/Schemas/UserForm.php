@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Users\Schemas;
 
+use App\Models\Subject;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\FileUpload;
@@ -70,15 +71,16 @@ class UserForm
 
                         Select::make('teacherProfile.subject_id')
                             ->label('Assigned Subject')
-                            ->relationship(
-                                name: 'teacherProfile.subject',
-                                titleAttribute: 'name',
-                                modifyQueryUsing: fn (Builder $query, Get $get) => $query
-                                    ->when(
-                                        $get('teacherProfile.branch_id'),
-                                        fn (Builder $query, $branchId) => $query->where('branch_id', $branchId),
-                                        fn (Builder $query) => $query->whereRaw('1 = 0')
-                                    )
+                            ->options(fn (Get $get) => Subject::query()
+                                ->when(
+                                    $get('teacherProfile.branch_id'),
+                                    fn ($query) => $query->where('branch_id', $get('teacherProfile.branch_id')),
+                                    fn ($query) => $query->whereRaw('1 = 0') // Show no options if no branch selected
+                                )
+                                ->get()
+                                ->mapWithKeys(fn ($subject) => [
+                                    $subject->id => "{$subject->name} ({$subject->code})",
+                                ])
                             )
                             ->searchable()
                             ->preload()

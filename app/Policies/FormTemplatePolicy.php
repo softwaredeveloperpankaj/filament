@@ -72,4 +72,14 @@ class FormTemplatePolicy
         return $authUser->can('Reorder:FormTemplate');
     }
 
+    public function import(AuthUser $authUser): bool
+    {
+        return $authUser->can('Import:FormTemplate');
+    }
+
+    public function export(AuthUser $authUser): bool
+    {
+        return $authUser->can('Export:FormTemplate');
+    }
+
 }

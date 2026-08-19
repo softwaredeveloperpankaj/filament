@@ -72,4 +72,14 @@ class SubjectPolicy
         return $authUser->can('Reorder:Subject');
     }
 
+    public function import(AuthUser $authUser): bool
+    {
+        return $authUser->can('Import:Subject');
+    }
+
+    public function export(AuthUser $authUser): bool
+    {
+        return $authUser->can('Export:Subject');
+    }
+
 }

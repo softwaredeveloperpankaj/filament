@@ -72,4 +72,14 @@ class ExamPolicy
         return $authUser->can('Reorder:Exam');
     }
 
+    public function import(AuthUser $authUser): bool
+    {
+        return $authUser->can('Import:Exam');
+    }
+
+    public function export(AuthUser $authUser): bool
+    {
+        return $authUser->can('Export:Exam');
+    }
+
 }

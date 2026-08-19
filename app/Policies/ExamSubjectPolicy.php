@@ -72,4 +72,14 @@ class ExamSubjectPolicy
         return $authUser->can('Reorder:ExamSubject');
     }
 
+    public function import(AuthUser $authUser): bool
+    {
+        return $authUser->can('Import:ExamSubject');
+    }
+
+    public function export(AuthUser $authUser): bool
+    {
+        return $authUser->can('Export:ExamSubject');
+    }
+
 }

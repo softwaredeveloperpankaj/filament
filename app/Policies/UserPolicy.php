@@ -69,4 +69,14 @@ class UserPolicy
         return $authUser->can('Reorder:User');
     }
 
+    public function import(AuthUser $authUser): bool
+    {
+        return $authUser->can('Import:User');
+    }
+
+    public function export(AuthUser $authUser): bool
+    {
+        return $authUser->can('Export:User');
+    }
+
 }

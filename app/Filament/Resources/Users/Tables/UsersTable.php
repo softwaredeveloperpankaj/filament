@@ -2,12 +2,19 @@
 
 namespace App\Filament\Resources\Users\Tables;
 
+use App\Filament\Exports\TeacherProfileExporter;
+use App\Filament\Exports\UserExporter;
+use App\Filament\Imports\UserImporter;
+use App\Models\User;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Actions\ExportBulkAction;
+use Filament\Actions\ImportAction;
 use Filament\Actions\ViewAction;
+use Filament\Notifications\Notification;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
@@ -68,8 +75,42 @@ class UsersTable
             ->recordActionsColumnLabel('Actions')
             ->toolbarActions([
                 BulkActionGroup::make([
+                    ExportBulkAction::make()
+                        ->label('Export users')
+                        ->exporter(UserExporter::class),
+                    ExportBulkAction::make()
+                        ->label('Export teachers')
+                        ->exporter(TeacherProfileExporter::class)
+                        ->before(function (ExportBulkAction $action) {
+                            $selectedIds = collect($action->getSelectedRecords());
+
+                            $users = User::query()
+                                ->whereIn('id', $selectedIds)
+                                ->with('teacherProfile')
+                                ->get();
+
+                            $invalidUsers = $users->filter(
+                                fn (User $user) =>
+                                    ! $user->hasRole('teacher') ||
+                                    ! $user->teacherProfile
+                            );
+
+                            if ($invalidUsers->isNotEmpty()) {
+                                Notification::make()
+                                    ->danger()
+                                    ->title('Invalid selection')
+                                    ->body('Please select only users who have the Teacher role.')
+                                    ->send();
+
+                                $action->halt();
+                            }
+                        }),
                     DeleteBulkAction::make(),
                 ]),
+            ])
+            ->headerActions([
+                ImportAction::make()
+                    ->importer(UserImporter::class)
             ]);
     }
 }
