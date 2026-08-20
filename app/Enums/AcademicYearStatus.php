@@ -2,14 +2,17 @@
 
 namespace App\Enums;
 
-enum AcademicYearStatus: string
+use Filament\Support\Contracts\HasColor;
+use Filament\Support\Contracts\HasLabel;
+
+enum AcademicYearStatus: string implements HasLabel, HasColor
 {
     case UPCOMING  = 'upcoming';
     case ACTIVE    = 'active';
     case COMPLETED = 'completed';
     case ARCHIVED  = 'archived';
 
-    public function label(): string
+    public function getLabel(): string
     {
         return match ($this) {
             self::UPCOMING  => 'Upcoming',
@@ -19,7 +22,7 @@ enum AcademicYearStatus: string
         };
     }
 
-    public function color(): string
+    public function getColor(): string
     {
         return match ($this) {
             self::UPCOMING  => 'info',
@@ -32,7 +35,7 @@ enum AcademicYearStatus: string
     public static function forFilamentSelect(): array
     {
         return collect(self::cases())
-            ->mapWithKeys(fn($c) => [$c->value => $c->label()])
+            ->mapWithKeys(fn($c) => [$c->value => $c->getLabel()])
             ->toArray();
     }
 }

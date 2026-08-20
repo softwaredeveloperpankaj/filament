@@ -23,46 +23,6 @@ class QuestionBankItemForm
 {
     public static function configure(Schema $schema): Schema
     {
-        // return $schema
-        //     ->components([
-        //         Select::make('question_bank_id')
-        //             ->relationship('questionBank', 'name')
-        //             ->required(),
-        //         Select::make('subject_id')
-        //             ->relationship('subject', 'name')
-        //             ->required(),
-        //         Select::make('topic_id')
-        //             ->relationship('topic', 'name'),
-        //         Select::make('question_type')
-        //             ->options(QuestionType::class)
-        //             ->required(),
-        //         Textarea::make('question_text')
-        //             ->required()
-        //             ->columnSpanFull(),
-        //         TextInput::make('options'),
-        //         TextInput::make('correct_answer'),
-        //         TextInput::make('marks')
-        //             ->required()
-        //             ->numeric()
-        //             ->default(1),
-        //         TextInput::make('negative_marks')
-        //             ->required()
-        //             ->numeric()
-        //             ->default(0),
-        //         Select::make('difficulty')
-        //             ->options(DifficultyLevel::class)
-        //             ->default('medium')
-        //             ->required(),
-        //         TextInput::make('tags'),
-        //         Textarea::make('explanation')
-        //             ->columnSpanFull(),
-        //         TextInput::make('created_by')
-        //             ->required()
-        //             ->numeric(),
-        //         Toggle::make('is_active')
-        //             ->required(),
-        //     ]);
-
         return $schema->components([
             Section::make('Question Location')
                 ->schema([

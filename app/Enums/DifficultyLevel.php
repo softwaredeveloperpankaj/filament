@@ -2,21 +2,37 @@
 
 namespace App\Enums;
 
-enum DifficultyLevel: string
+use Filament\Support\Contracts\HasColor;
+use Filament\Support\Contracts\HasLabel;
+
+enum DifficultyLevel: string implements HasLabel, HasColor
 {
     case EASY = 'easy';
     case MEDIUM = 'medium';
     case HARD = 'hard';
 
-    public function label(): string
+    public function getLabel(): string
     {
-        return ucfirst($this->value);
+        return match ($this) {
+            self::EASY   => 'Easy',
+            self::MEDIUM => 'Medium',
+            self::HARD   => 'Hard',
+        };
+    }
+
+    public function getColor(): string
+    {
+        return match ($this) {
+            self::EASY   => 'success',
+            self::MEDIUM => 'warning',
+            self::HARD   => 'danger',
+        };
     }
 
     public static function forFilamentSelect(): array
     {
         return collect(self::cases())
-            ->mapWithKeys(fn($c) => [$c->value => $c->label()])
+            ->mapWithKeys(fn ($c) => [$c->value => $c->getLabel()])
             ->toArray();
     }
 }

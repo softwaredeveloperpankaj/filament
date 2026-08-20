@@ -3,7 +3,6 @@
 namespace App\Filament\Resources\Exams\Tables;
 
 use App\Enums\ExamMode;
-use App\Enums\ExamStatus;
 use App\Filament\Resources\Exams\ExamResource;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
@@ -55,10 +54,6 @@ class ExamsTable
                 TextColumn::make('mode')
                     ->label('Mode')
                     ->badge()
-                    ->colors([
-                        'info' => ExamMode::ONLINE->value,
-                        'success' => ExamMode::OFFLINE->value,
-                    ])
                     ->icons([
                         ExamMode::ONLINE->value => 'heroicon-o-cpu-chip',
                         ExamMode::OFFLINE->value => 'heroicon-o-document-text',
@@ -67,14 +62,6 @@ class ExamsTable
                 TextColumn::make('status')
                     ->label('Status')
                     ->badge()
-                    ->colors([
-                        'gray' => ExamStatus::DRAFT->value,
-                        'info' => ExamStatus::SCHEDULED->value,
-                        'warning' => ExamStatus::ONGOING->value,
-                        'success' => ExamStatus::COMPLETED->value,
-                        'primary' => ExamStatus::RESULTS_PUBLISHED->value,
-                        'danger' => ExamStatus::CANCELLED->value,
-                    ])
                     ->sortable(),
 
                 TextColumn::make('start_date')

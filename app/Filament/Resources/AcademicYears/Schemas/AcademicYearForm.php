@@ -30,12 +30,12 @@ class AcademicYearForm
                     ->required(),
                 Select::make('status')
                     ->label('Status')
-                    ->options(AcademicYearStatus::class)
+                    ->options(AcademicYearStatus::forFilamentSelect())
                     ->default('upcoming')
                     ->required(),
                 Select::make('term_type')
                     ->label('Term Type')
-                    ->options(AcademicTermType::class)
+                    ->options(AcademicTermType::forFilamentSelect())
                     ->default('annual')
                     ->required(),
                 Toggle::make('is_current')

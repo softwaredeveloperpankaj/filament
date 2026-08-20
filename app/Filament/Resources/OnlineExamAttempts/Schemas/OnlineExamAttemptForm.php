@@ -38,7 +38,7 @@ class OnlineExamAttemptForm
 
                                 Select::make('status')
                                     ->label('Status')
-                                    ->options(AttemptStatus::class)
+                                    ->options(AttemptStatus::forFilamentSelect())
                                     ->required()
                                     ->helperText('Changing status manually should be logged/audited.'),
 

@@ -58,13 +58,13 @@ class ExamResultsRelationManager extends RelationManager
                         // Overall Grade (read-only, set by service)
                         Select::make('overall_grade')
                             ->label('Overall Grade')
-                            ->options(GradeScale::class)
+                            ->options(GradeScale::forFilamentSelect())
                             ->disabled(),
 
                         // Status (editable by principal/admin)
                         Select::make('status')
                             ->label('Status')
-                            ->options(ResultStatus::class)
+                            ->options(ResultStatus::forFilamentSelect())
                             ->required(),
 
                         // Rank in Section (read-only)
@@ -125,24 +125,11 @@ class ExamResultsRelationManager extends RelationManager
 
                 TextColumn::make('overall_grade')
                     ->label('Grade')
-                    ->badge()
-                    ->colors([
-                        'success' => ['A+', 'A'],
-                        'info' => ['B+', 'B'],
-                        'warning' => ['C+', 'C'],
-                        'gray' => ['D'],
-                        'danger' => ['F'],
-                    ]),
+                    ->badge(),
 
                 TextColumn::make('status')
                     ->label('Status')
-                    ->badge()
-                    ->colors([
-                        'gray' => ResultStatus::DRAFT->value,
-                        'success' => ResultStatus::PUBLISHED->value,
-                        'warning' => ResultStatus::WITHHELD->value,
-                        'danger' => ResultStatus::CANCELLED->value,
-                    ]),
+                    ->badge(),
 
                 TextColumn::make('rank_in_section')
                     ->label('Section Rank')

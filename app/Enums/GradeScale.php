@@ -2,7 +2,10 @@
 
 namespace App\Enums;
 
-enum GradeScale: string
+use Filament\Support\Contracts\HasColor;
+use Filament\Support\Contracts\HasLabel;
+
+enum GradeScale: string implements HasLabel, HasColor
 {
     case A_PLUS  = 'A+';
     case A       = 'A';
@@ -13,17 +16,29 @@ enum GradeScale: string
     case D       = 'D';
     case F       = 'F';
 
-    // ─── Labels ───
-    public function label(): string
+    // ─── Filament HasLabel Contract ───
+    public function getLabel(): string
     {
         return $this->value;
+    }
+
+    // ─── Filament HasColor Contract ───
+    public function getColor(): string
+    {
+        return match ($this) {
+            self::A_PLUS, self::A => 'success',
+            self::B_PLUS, self::B => 'info',
+            self::C_PLUS, self::C => 'warning',
+            self::D               => 'gray',
+            self::F               => 'danger',
+        };
     }
 
     // ─── Filament Select Options ───
     public static function forFilamentSelect(): array
     {
         return collect(self::cases())
-            ->mapWithKeys(fn($grade) => [$grade->value => $grade->value])
+            ->mapWithKeys(fn ($grade) => [$grade->value => $grade->getLabel()])
             ->toArray();
     }
 
@@ -76,19 +91,7 @@ enum GradeScale: string
     public static function fromPercentage(float $percentage): self
     {
         return collect(self::cases())
-            ->filter(fn($g) => $percentage >= $g->minPercentage() && $percentage <= $g->maxPercentage())
+            ->filter(fn ($g) => $percentage >= $g->minPercentage() && $percentage <= $g->maxPercentage())
             ->first() ?? self::F;
-    }
-
-    // ─── Color for BadgeColumn ───
-    public function color(): string
-    {
-        return match ($this) {
-            self::A_PLUS, self::A => 'success',
-            self::B_PLUS, self::B => 'info',
-            self::C_PLUS, self::C => 'warning',
-            self::D                => 'gray',
-            self::F                => 'danger',
-        };
     }
 }

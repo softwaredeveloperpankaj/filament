@@ -50,7 +50,7 @@ class QuestionBankItemsRelationManager extends RelationManager
 
                         Select::make('question_type')
                             ->label('Question Type')
-                            ->options(QuestionType::class)
+                            ->options(QuestionType::forFilamentSelect())
                             ->required()
                             ->reactive()
                             ->afterStateUpdated(fn($state, callable $set) => $this->toggleFieldsByType($state, $set))
@@ -71,7 +71,7 @@ class QuestionBankItemsRelationManager extends RelationManager
 
                         Select::make('difficulty')
                             ->label('Difficulty')
-                            ->options(DifficultyLevel::class)
+                            ->options(DifficultyLevel::forFilamentSelect())
                             ->required()
                             ->default(DifficultyLevel::MEDIUM->value),
 
@@ -171,11 +171,6 @@ class QuestionBankItemsRelationManager extends RelationManager
                 TextColumn::make('question_type')
                     ->badge()
                     ->label('Type')
-                    ->colors([
-                        'info' => [QuestionType::MCQ->value, QuestionType::TRUE_FALSE->value],
-                        'warning' => [QuestionType::FILL_BLANK->value, QuestionType::MATCHING->value],
-                        'primary' => [QuestionType::SHORT_ANSWER->value, QuestionType::LONG_ANSWER->value],
-                    ])
                     ->icons([
                         QuestionType::MCQ->value => 'heroicon-o-square-3-stack-3d',
                         QuestionType::TRUE_FALSE->value => 'heroicon-o-check-circle',

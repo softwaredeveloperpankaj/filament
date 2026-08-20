@@ -3,7 +3,6 @@
 namespace App\Filament\Resources\ExamMarks\Tables;
 
 use App\Enums\GradeScale;
-use App\Enums\MarksSource;
 use App\Models\ExamMark;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
@@ -73,12 +72,7 @@ class ExamMarksTable
 
                 TextColumn::make('source')
                     ->label('Source')
-                    ->badge()
-                    ->colors([
-                        'info'    => MarksSource::ONLINE_AUTO->value,
-                        'warning' => MarksSource::ONLINE_MANUAL->value,
-                        'gray'    => MarksSource::OFFLINE_MANUAL->value,
-                    ]),
+                    ->badge(),
 
                 IconColumn::make('is_locked')
                     ->label('Locked')

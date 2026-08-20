@@ -88,19 +88,6 @@ class QuestionBankItemsTable
                     ->label('Type')
                     ->badge()
                     ->sortable()
-                    ->formatStateUsing(fn (QuestionType $state): string => ucfirst(str_replace('_', ' ', $state->value)))
-                    ->color(fn (QuestionType $state): string => match ($state) {
-                        QuestionType::MCQ->value,
-                        QuestionType::TRUE_FALSE->value => 'info',
-
-                        QuestionType::FILL_BLANK->value,
-                        QuestionType::MATCHING->value => 'warning',
-
-                        QuestionType::SHORT_ANSWER->value,
-                        QuestionType::LONG_ANSWER->value => 'primary',
-                        
-                        default => 'gray',
-                    })
                     ->icon(fn (QuestionType $state): string => match ($state) {                       
                         QuestionType::MCQ->value => 'heroicon-o-list-bullet',
                         QuestionType::TRUE_FALSE->value => 'heroicon-o-check-badge',
@@ -113,14 +100,7 @@ class QuestionBankItemsTable
                 TextColumn::make('difficulty')
                     ->label('Difficulty')
                     ->badge()
-                    ->sortable()
-                    ->formatStateUsing(fn (DifficultyLevel $state): string => ucfirst($state->value))
-                    ->color(fn (DifficultyLevel $state): string => match ($state) {
-                        DifficultyLevel::EASY->value => 'success',
-                        DifficultyLevel::MEDIUM->value => 'warning',
-                        DifficultyLevel::HARD->value => 'danger',
-                        default => 'gray',
-                    }),
+                    ->sortable(),
                 TextColumn::make('marks')
                     ->label('Marks')
                     ->badge()

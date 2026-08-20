@@ -105,11 +105,9 @@ class OnlineExamAttemptsTable
 
                 SelectFilter::make('status')
                     ->label('Status')
-                    ->options(AttemptStatus::class),
+                    ->options(AttemptStatus::forFilamentSelect()),
             ])
             ->recordActions([
-                // ViewAction::make(),
-                // EditAction::make(),
                 ActionGroup::make([
                     ViewAction::make()
                         ->icon('heroicon-o-eye')

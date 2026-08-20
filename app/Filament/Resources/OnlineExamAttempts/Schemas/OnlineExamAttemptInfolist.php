@@ -39,14 +39,7 @@ class OnlineExamAttemptInfolist
 
                             TextEntry::make('status')
                                 ->label('Status')
-                                ->badge()
-                                ->color(fn(AttemptStatus $state) => match ($state) {
-                                    AttemptStatus::NOT_STARTED => 'gray',
-                                    AttemptStatus::IN_PROGRESS => 'info',
-                                    AttemptStatus::SUBMITTED => 'success',
-                                    AttemptStatus::AUTO_SUBMITTED => 'warning',
-                                    AttemptStatus::TERMINATED => 'danger',
-                                }),
+                                ->badge(),
 
                             TextEntry::make('ip_address')
                                 ->label('IP Address')

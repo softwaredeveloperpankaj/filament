@@ -49,17 +49,6 @@ class QuestionBankItemInfolist
                             TextEntry::make('question_type')
                                 ->label('Question Type')
                                 ->badge()
-                                ->formatStateUsing(fn (QuestionType $state): string => $state->label())
-                                ->color(fn (QuestionType $state): string => match ($state) {
-                                    QuestionType::MCQ,
-                                    QuestionType::TRUE_FALSE => 'info',
-
-                                    QuestionType::FILL_BLANK,
-                                    QuestionType::MATCHING => 'warning',
-
-                                    QuestionType::SHORT_ANSWER,
-                                    QuestionType::LONG_ANSWER => 'primary',
-                                })
                                 ->icon(fn (QuestionType $state): string => match ($state) {
                                     QuestionType::MCQ => 'heroicon-o-list-bullet',
                                     QuestionType::TRUE_FALSE => 'heroicon-o-check-badge',
@@ -71,13 +60,7 @@ class QuestionBankItemInfolist
 
                             TextEntry::make('difficulty')
                                 ->label('Difficulty')
-                                ->badge()
-                                ->formatStateUsing(fn (DifficultyLevel $state): string => $state->label())
-                                ->color(fn (DifficultyLevel $state): string => match ($state) {
-                                    DifficultyLevel::EASY => 'success',
-                                    DifficultyLevel::MEDIUM => 'warning',
-                                    DifficultyLevel::HARD => 'danger',
-                                }),
+                                ->badge(),
 
                             TextEntry::make('marks')
                                 ->label('Marks')

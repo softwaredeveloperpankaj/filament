@@ -92,7 +92,7 @@ class ExamForm
                         // ── Mode & Status ──
                         Select::make('mode')
                             ->label('Exam Mode')
-                            ->options(ExamMode::class)
+                            ->options(ExamMode::forFilamentSelect())
                             ->required()
                             ->default(ExamMode::OFFLINE)
                             ->live()
@@ -106,7 +106,7 @@ class ExamForm
 
                         Select::make('status')
                             ->label('Status')
-                            ->options(ExamStatus::class)
+                            ->options(ExamStatus::forFilamentSelect())
                             ->default(ExamStatus::DRAFT)
                             ->required()
                             ->disabled(fn($record) => $record && $record->status !== ExamStatus::DRAFT->value),

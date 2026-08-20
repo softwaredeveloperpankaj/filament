@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources\ExamMarks\Schemas;
 
-use App\Enums\MarksSource;
 use Filament\Schemas\Components\Grid;
 use Filament\Infolists\Components\IconEntry;
 use Filament\Schemas\Components\Section;
@@ -75,13 +74,8 @@ class ExamMarkInfolist
                             ->badge(),
 
                         TextEntry::make('source')
-                            ->label('Source')
-                            ->badge()
-                            ->color(fn(MarksSource $state) => match ($state) {
-                                MarksSource::ONLINE_AUTO => 'info',
-                                MarksSource::ONLINE_MANUAL => 'warning',
-                                MarksSource::OFFLINE_MANUAL => 'gray',
-                            }),
+                            ->label('Marks Source')
+                            ->badge(),
 
                         IconEntry::make('is_locked')
                             ->label('Locked')

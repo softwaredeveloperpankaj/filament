@@ -85,7 +85,7 @@ class ExamStudentEntriesRelationManager extends RelationManager
                         // Status
                         Select::make('status')
                             ->label('Status')
-                            ->options(ExamEntryStatus::class)
+                            ->options(ExamEntryStatus::forFilamentSelect())
                             ->default(ExamEntryStatus::ENROLLED)
                             ->required(),
                     ]),
@@ -129,15 +129,7 @@ class ExamStudentEntriesRelationManager extends RelationManager
 
                 TextColumn::make('status')
                     ->label('Status')
-                    ->badge()
-                    ->colors([
-                        'gray' => ExamEntryStatus::ENROLLED->value,
-                        'info' => ExamEntryStatus::ADMIT_CARD_GENERATED->value,
-                        'success' => ExamEntryStatus::APPEARED->value,
-                        'warning' => ExamEntryStatus::ABSENT->value,
-                        'danger' => ExamEntryStatus::DEBARRED->value,
-                        'secondary' => ExamEntryStatus::WITHDRAWN->value,
-                    ]),
+                    ->badge(),
 
                 TextColumn::make('marks_count')
                     ->label('Marks Entered')

@@ -2,7 +2,10 @@
 
 namespace App\Enums;
 
-enum AcademicTermType: string
+use Filament\Support\Contracts\HasColor;
+use Filament\Support\Contracts\HasLabel;
+
+enum AcademicTermType: string implements HasLabel, HasColor
 {
     case ANNUAL      = 'annual';
     case SEMESTER    = 'semester';    // 2 terms
@@ -10,7 +13,7 @@ enum AcademicTermType: string
     case QUARTER     = 'quarter';     // 4 terms
     case MONTHLY     = 'monthly';     // 12 terms
 
-    public function label(): string
+    public function getLabel(): string
     {
         return match ($this) {
             self::ANNUAL    => 'Annual',
@@ -21,6 +24,17 @@ enum AcademicTermType: string
         };
     }
 
+    public function getColor(): string|array|null
+    {
+        return match ($this) {
+            self::ANNUAL    => 'indigo',
+            self::SEMESTER  => 'indigo',
+            self::TRIMESTER => 'indigo',
+            self::QUARTER   => 'indigo',
+            self::MONTHLY   => 'indigo',
+        };
+    }     
+
     public function count(): int
     {
         return match ($this) {
@@ -30,5 +44,12 @@ enum AcademicTermType: string
             self::QUARTER   => 4,
             self::MONTHLY   => 12,
         };
+    }
+
+    public static function forFilamentSelect(): array
+    {
+        return collect(self::cases())
+            ->mapWithKeys(fn($c) => [$c->value => $c->getLabel()])
+            ->toArray();
     }
 }

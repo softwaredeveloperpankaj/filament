@@ -24,69 +24,6 @@ class ExamMarkForm
     {
         return $schema
             ->components([
-                // Select::make('exam_id')
-                //     ->relationship('exam', 'name')
-                //     ->required(),
-                // TextInput::make('exam_student_entry_id')
-                //     ->required()
-                //     ->numeric(),
-                // Select::make('exam_subject_id')
-                //     ->relationship('examSubject', 'id')
-                //     ->required(),
-                // TextInput::make('exam_schedule_id')
-                //     ->numeric(),
-                // TextInput::make('theory_obtained')
-                //     ->required()
-                //     ->numeric()
-                //     ->default(0),
-                // TextInput::make('theory_maximum')
-                //     ->required()
-                //     ->numeric()
-                //     ->default(0),
-                // TextInput::make('practical_obtained')
-                //     ->required()
-                //     ->numeric()
-                //     ->default(0),
-                // TextInput::make('practical_maximum')
-                //     ->required()
-                //     ->numeric()
-                //     ->default(0),
-                // TextInput::make('internal_obtained')
-                //     ->required()
-                //     ->numeric()
-                //     ->default(0),
-                // TextInput::make('internal_maximum')
-                //     ->required()
-                //     ->numeric()
-                //     ->default(0),
-                // TextInput::make('total_obtained')
-                //     ->required()
-                //     ->numeric()
-                //     ->default(0),
-                // TextInput::make('total_maximum')
-                //     ->required()
-                //     ->numeric()
-                //     ->default(0),
-                // TextInput::make('percentage')
-                //     ->required()
-                //     ->numeric()
-                //     ->default(0.0),
-                // Toggle::make('is_passed')
-                //     ->required(),
-                // TextInput::make('grade'),
-                // Textarea::make('grade_remarks')
-                //     ->columnSpanFull(),
-                // TextInput::make('graded_by')
-                //     ->numeric(),
-                // DateTimePicker::make('graded_at'),
-                // Select::make('source')
-                //     ->options(MarksSource::class)
-                //     ->default('offline_manual')
-                //     ->required(),
-                // TextInput::make('sub_question_marks'),
-                // Toggle::make('is_locked')
-                //     ->required(),
-
                 Section::make('Reference')
                     ->schema([
                         Grid::make(3)->schema([
@@ -117,20 +54,6 @@ class ExamMarkForm
                                 ->reactive()
                                 ->disabled(fn($record) => $record !== null)
                                 ->afterStateUpdated(fn(callable $set) => $set('exam_student_entry_id', null)),
-
-                            // Select::make('exam_student_entry_id')
-                            //     ->label('Student')
-                            //     ->options(fn(Get $get) => $get('exam_id')
-                            //         ? ExamStudentEntry::query()
-                            //             ->where('exam_id', $get('exam_id'))
-                            //             ->with('student')
-                            //             ->get()
-                            //             ->mapWithKeys(fn($e) => [$e->id => "{$e->student->name} ({$e->roll_no})"])
-                            //         : [])
-                            //     ->searchable()
-                            //     ->preload()
-                            //     ->required()
-                            //     ->disabled(fn($record) => $record !== null),
 
                             Select::make('exam_student_entry_id')
                                 ->label('Student')
@@ -239,7 +162,7 @@ class ExamMarkForm
 
                             Select::make('source')
                                 ->label('Marks Source')
-                                ->options(MarksSource::class)
+                                ->options(MarksSource::forFilamentSelect())
                                 ->default(MarksSource::OFFLINE_MANUAL->value)
                                 ->required()
                                 ->disabled(fn($record) => $record?->is_locked ?? false),
