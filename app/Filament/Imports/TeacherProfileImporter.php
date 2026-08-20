@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Filament\Imports;
 
 use App\Models\Branch;
@@ -24,6 +26,7 @@ class TeacherProfileImporter extends Importer
     public static function getColumns(): array
     {
         return [
+            // User fields — these fill the User model normally.
             ImportColumn::make('name')
                 ->requiredMapping()
                 ->rules([
@@ -46,15 +49,20 @@ class TeacherProfileImporter extends Importer
                     'date',
                 ]),
 
+            // TeacherProfile fields — fillRecordUsing(fn () => null)
+            // prevents Filament from writing these to the users table.
+            // They are still available in $this->data for afterSave().
+
             ImportColumn::make('employee_id')
-                ->requiredMapping()
-                    ->rules([
-                        'nullable',
-                        'string',
-                        'max:100',
-                    ]),
+                ->fillRecordUsing(fn () => null)
+                ->rules([
+                    'nullable',
+                    'string',
+                    'max:100',
+                ]),
 
             ImportColumn::make('phone')
+                ->fillRecordUsing(fn () => null)
                 ->rules([
                     'nullable',
                     'string',
@@ -62,12 +70,14 @@ class TeacherProfileImporter extends Importer
                 ]),
 
             ImportColumn::make('date_of_birth')
+                ->fillRecordUsing(fn () => null)
                 ->rules([
                     'nullable',
                     'date',
                 ]),
 
             ImportColumn::make('gender')
+                ->fillRecordUsing(fn () => null)
                 ->rules([
                     'nullable',
                     'string',
@@ -75,6 +85,7 @@ class TeacherProfileImporter extends Importer
                 ]),
 
             ImportColumn::make('profile_photo')
+                ->fillRecordUsing(fn () => null)
                 ->rules([
                     'nullable',
                     'string',
@@ -82,6 +93,7 @@ class TeacherProfileImporter extends Importer
                 ]),
 
             ImportColumn::make('qualification')
+                ->fillRecordUsing(fn () => null)
                 ->rules([
                     'nullable',
                     'string',
@@ -89,6 +101,7 @@ class TeacherProfileImporter extends Importer
                 ]),
 
             ImportColumn::make('specialization')
+                ->fillRecordUsing(fn () => null)
                 ->rules([
                     'nullable',
                     'string',
@@ -96,19 +109,21 @@ class TeacherProfileImporter extends Importer
                 ]),
 
             ImportColumn::make('joining_date')
+                ->fillRecordUsing(fn () => null)
                 ->rules([
                     'nullable',
                     'date',
                 ]),
 
             ImportColumn::make('address')
+                ->fillRecordUsing(fn () => null)
                 ->rules([
                     'nullable',
                     'string',
                 ]),
 
             ImportColumn::make('status')
-                ->requiredMapping()
+                ->fillRecordUsing(fn () => null)
                 ->rules([
                     'required',
                     'string',
@@ -116,6 +131,7 @@ class TeacherProfileImporter extends Importer
                 ]),
 
             ImportColumn::make('salary')
+                ->fillRecordUsing(fn () => null)
                 ->rules([
                     'nullable',
                     'numeric',
@@ -123,6 +139,7 @@ class TeacherProfileImporter extends Importer
                 ]),
 
             ImportColumn::make('branch')
+                ->fillRecordUsing(fn () => null)
                 ->rules([
                     'nullable',
                     'string',
@@ -130,6 +147,7 @@ class TeacherProfileImporter extends Importer
                 ]),
 
             ImportColumn::make('subject')
+                ->fillRecordUsing(fn () => null)
                 ->rules([
                     'nullable',
                     'string',
@@ -140,12 +158,9 @@ class TeacherProfileImporter extends Importer
 
     public function resolveRecord(): User
     {
-        $employeeId = trim((string) ($this->data['employee_id'] ?? ''));
+        $employeeId = $this->nullableString('employee_id');
 
-        /*
-        * First priority: employee_id.
-        */
-        if ($employeeId !== '') {
+        if ($employeeId !== null) {
             $teacherProfile = TeacherProfile::query()
                 ->where('employee_id', $employeeId)
                 ->with('user')
@@ -157,11 +172,6 @@ class TeacherProfileImporter extends Importer
                 return $teacherProfile->user;
             }
 
-            /*
-            * Employee ID was provided but not found.
-            * If the email already belongs to a user, fail rather than
-            * attaching the teacher profile to the wrong account.
-            */
             $existingUser = User::query()
                 ->where('email', $this->data['email'])
                 ->first();
@@ -178,9 +188,6 @@ class TeacherProfileImporter extends Importer
             return new User();
         }
 
-        /*
-        * Second priority: email.
-        */
         $existingUser = User::query()
             ->where('email', $this->data['email'])
             ->first();
@@ -191,10 +198,6 @@ class TeacherProfileImporter extends Importer
             return $existingUser;
         }
 
-        /*
-        * No employee_id and no matching email:
-        * create a new user and teacher profile.
-        */
         $this->createdNewUser = true;
 
         return new User();
@@ -202,20 +205,12 @@ class TeacherProfileImporter extends Importer
 
     protected function beforeSave(): void
     {
-        /*
-         * Never accept password data from the import file.
-         */
         $this->record->name = $this->data['name'];
         $this->record->email = $this->data['email'];
-
         $this->record->email_verified_at =
             $this->data['email_verified_at'] ?? null;
 
         if ($this->createdNewUser) {
-            /*
-             * The password is random and is never sent by email.
-             * The user receives a password reset link instead.
-             */
             $this->record->password = Hash::make(
                 Str::random(64),
             );
@@ -226,18 +221,26 @@ class TeacherProfileImporter extends Importer
     {
         $this->record->syncRoles(['teacher']);
 
+        $employeeId = $this->nullableString('employee_id');
+
+        if ($employeeId === null) {
+            $employeeId = (string) (
+                ((int) TeacherProfile::query()->max('employee_id')) + 1
+            );
+        }
+
         $this->record->teacherProfile()->updateOrCreate(
             [],
             [
-                'employee_id' => $this->nullableValue('employee_id'),
-                'phone' => $this->nullableValue('phone'),
-                'date_of_birth' => $this->nullableValue('date_of_birth'),
-                'gender' => $this->nullableValue('gender'),
-                'profile_photo' => $this->nullableValue('profile_photo'),
-                'qualification' => $this->nullableValue('qualification'),
-                'specialization' => $this->nullableValue('specialization'),
-                'joining_date' => $this->nullableValue('joining_date'),
-                'address' => $this->nullableValue('address'),
+                'employee_id' => $employeeId,
+                'phone' => $this->nullableString('phone'),
+                'date_of_birth' => $this->parseDate('date_of_birth'),
+                'gender' => $this->nullableString('gender'),
+                'profile_photo' => $this->nullableString('profile_photo'),
+                'qualification' => $this->nullableString('qualification'),
+                'specialization' => $this->nullableString('specialization'),
+                'joining_date' => $this->parseDate('joining_date'),
+                'address' => $this->nullableString('address'),
                 'status' => $this->data['status'],
                 'salary' => $this->nullableNumber('salary'),
                 'branch_id' => $this->resolveBranchId(),
@@ -250,7 +253,7 @@ class TeacherProfileImporter extends Importer
         }
     }
 
-    private function nullableValue(string $key): ?string
+    private function nullableString(string $key): ?string
     {
         $value = $this->data[$key] ?? null;
 
@@ -268,13 +271,13 @@ class TeacherProfileImporter extends Importer
         $value = $this->data[$key] ?? null;
 
         return filled($value) ? (float) $value : null;
-    }    
+    }
 
     private function resolveBranchId(): ?int
     {
-        $branchName = trim((string) ($this->data['branch'] ?? ''));
+        $branchName = $this->nullableString('branch');
 
-        if ($branchName === '') {
+        if ($branchName === null) {
             return null;
         }
 
@@ -293,9 +296,9 @@ class TeacherProfileImporter extends Importer
 
     private function resolveSubjectId(): ?int
     {
-        $subjectName = trim((string) ($this->data['subject'] ?? ''));
+        $subjectName = $this->nullableString('subject');
 
-        if ($subjectName === '') {
+        if ($subjectName === null) {
             return null;
         }
 
@@ -324,6 +327,41 @@ class TeacherProfileImporter extends Importer
             ]);
         }
     }
+
+    private function parseDate(string $key): ?string
+    {
+        $value = $this->nullableString($key);
+
+        if ($value === null) {
+            return null;
+        }
+
+        $formats = [
+            'Y-m-d',
+            'd-m-Y',
+            'd/m/Y',
+            'm/d/Y',
+            'Y-m-d H:i:s',
+            'd-m-Y H:i:s',
+        ];
+
+        foreach ($formats as $format) {
+            $date = \DateTimeImmutable::createFromFormat($format, $value);
+
+            if ($date !== false) {
+                return $date->format('Y-m-d');
+            }
+        }
+
+        try {
+            return \Carbon\Carbon::parse($value)->format('Y-m-d');
+        } catch (\Throwable) {
+            throw ValidationException::withMessages([
+                $key => "Invalid date [{$value}] for {$key}. "
+                    .'Expected YYYY-MM-DD or DD-MM-YYYY.',
+            ]);
+        }
+    }    
 
     public static function getCompletedNotificationBody(Import $import): string
     {
