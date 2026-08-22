@@ -115,6 +115,7 @@ class ExamMarksTable
                     ->trueLabel('Passed')
                     ->falseLabel('Failed'),
             ])
+            ->recordActionsColumnLabel('Actions')
             ->recordActions([
                 ActionGroup::make([
                     ViewAction::make()

@@ -87,6 +87,7 @@ class ExamQuestionPapersTable
                     ->searchable()
                     ->preload(),
             ])
+            ->recordActionsColumnLabel('Actions')
             ->recordActions([
                 ActionGroup::make([
                     ViewAction::make()

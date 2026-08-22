@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\ExamEntryStatus;
 use App\Enums\ResultStatus;
 use App\Models\Concerns\HasBranchScope;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -11,7 +12,7 @@ use Illuminate\Support\Facades\Auth;
 
 class ExamResult extends Model
 {
-    use HasFactory, HasBranchScope;
+    use HasFactory;
 
     protected $fillable = [
         'exam_id',
@@ -73,7 +74,7 @@ class ExamResult extends Model
                 $result->saveQuietly();
 
                 // Update entry status
-                $result->entry->update(['status' => \App\Enums\ExamEntryStatus::APPEARED]);
+                $result->entry->update(['status' => ExamEntryStatus::APPEARED]);
             }
         });
     }
