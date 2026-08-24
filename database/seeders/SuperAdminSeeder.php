@@ -6,6 +6,7 @@ use Spatie\Permission\Models\Role;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
+use Spatie\Permission\Models\Permission;
 
 class SuperAdminSeeder extends Seeder
 {
@@ -17,6 +18,9 @@ class SuperAdminSeeder extends Seeder
         // 1. Ensure the Shield super_admin role exists first
         $roleName = 'super_admin';
         $role = Role::firstOrCreate(['name' => $roleName, 'guard_name' => 'web']);
+        
+        // Assign all permissions to super admin role
+        $role->syncPermissions(Permission::where('guard_name', 'web')->get());
 
         // 2. Create or find the Super Admin user account
         $user = User::firstOrCreate(

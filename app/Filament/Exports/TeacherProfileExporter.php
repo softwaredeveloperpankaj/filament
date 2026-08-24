@@ -19,26 +19,28 @@ class TeacherProfileExporter extends Exporter
             ExportColumn::make('id')
                 ->label('User ID'),
 
+            ExportColumn::make('employee_id')
+                ->label('Employee ID'),
+
             ExportColumn::make('name')
                 ->label('Name'),
 
             ExportColumn::make('email')
                 ->label('Email'),
 
-            ExportColumn::make('teacherProfile.employee_id')
-                ->label('Employee ID'),
+            ExportColumn::make('teacherProfile.branch.name')
+                ->label('Branch'),
 
             ExportColumn::make('teacherProfile.phone')
                 ->label('Phone'),
 
             ExportColumn::make('teacherProfile.date_of_birth')
-                ->label('Date of Birth'),
+                ->label('Date of Birth')
+                ->formatStateUsing(fn ($state) => $state ? \Carbon\Carbon::parse($state)->format('d M Y') : '-'),
 
             ExportColumn::make('teacherProfile.gender')
-                ->label('Gender'),
-
-            ExportColumn::make('teacherProfile.profile_photo')
-                ->label('Profile Photo'),
+                ->label('Gender')
+                ->formatStateUsing(fn ($state) => filled($state) ? ucfirst($state) : '-'),
 
             ExportColumn::make('teacherProfile.qualification')
                 ->label('Qualification'),
@@ -47,25 +49,40 @@ class TeacherProfileExporter extends Exporter
                 ->label('Specialization'),
 
             ExportColumn::make('teacherProfile.joining_date')
-                ->label('Joining Date'),
+                ->label('Joining Date')
+                ->formatStateUsing(fn ($state) => $state ? \Carbon\Carbon::parse($state)->format('d M Y') : '-'),
 
             ExportColumn::make('teacherProfile.address')
                 ->label('Address'),
 
             ExportColumn::make('teacherProfile.status')
-                ->label('Status'),
+                ->label('Status')
+                ->formatStateUsing(fn ($state) => filled($state) ? str($state)->replace('_', ' ')->title()->toString() : '-'),
 
             ExportColumn::make('teacherProfile.salary')
-                ->label('Salary'),
+                ->label('Salary')
+                ->formatStateUsing(fn ($state) => filled($state) ? Number::format($state, 2) : '-'),
 
-            ExportColumn::make('teacherProfile.branch.name')
-                ->label('Branch'),
+            ExportColumn::make('teacherProfile.profile_photo')
+                ->label('Profile Photo'),
 
-            ExportColumn::make('teacherProfile.subject.name')
-                ->label('Subject'),
+            ExportColumn::make('teacherProfile.subjects')
+                ->label('Subjects')
+                ->state(function (User $record): string {
+                    $subjects = $record->teacherProfile?->subjects;
+
+                    if (! $subjects || $subjects->isEmpty()) {
+                        return '-';
+                    }
+
+                    return $subjects
+                        ->map(fn ($subject) => "{$subject->name} ({$subject->code})")
+                        ->join(', ');
+                }),
 
             ExportColumn::make('created_at')
-                ->label('User Created At'),
+                ->label('User Created At')
+                ->formatStateUsing(fn ($state) => $state ? \Carbon\Carbon::parse($state)->format('d M Y, h:i A') : '-'),
         ];
     }
 
@@ -74,9 +91,10 @@ class TeacherProfileExporter extends Exporter
         return $query
             ->with([
                 'teacherProfile.branch',
-                'teacherProfile.subject',
+                'teacherProfile.subjects',
+                'roles',
             ])
-            ->whereHas('roles', function (Builder $query) {
+            ->whereHas('roles', function (Builder $query): void {
                 $query->where('name', 'teacher');
             })
             ->whereHas('teacherProfile');

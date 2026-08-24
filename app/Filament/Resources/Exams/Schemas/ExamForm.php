@@ -36,7 +36,7 @@ class ExamForm
                             ->required()
                             ->reactive()
                             ->afterStateUpdated(fn(Set $set) => $set('branch_class_id', null))
-                            ->visible(fn() => Auth::user()?->hasRole('super_admin') ?? false)
+                            // ->visible(fn() => Auth::user()?->hasRole('super_admin') ?? false)
                             ->default(fn() => Auth::user()?->branch_id),
 
                         Select::make('branch_class_id')

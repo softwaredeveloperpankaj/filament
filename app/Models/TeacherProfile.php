@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class TeacherProfile extends Model
 {
@@ -13,8 +14,6 @@ class TeacherProfile extends Model
     protected $fillable = [
         'user_id',
         'branch_id',
-        'subject_id',
-        'employee_id',
         'phone',
         'date_of_birth',
         'gender',
@@ -37,8 +36,8 @@ class TeacherProfile extends Model
         return $this->belongsTo(Branch::class);
     }
 
-    public function subject(): BelongsTo
+    public function subjects(): BelongsToMany
     {
-        return $this->belongsTo(Subject::class);
+        return $this->belongsToMany(Subject::class, 'teacher_profile_subjects', 'teacher_profile_id', 'subject_id')->withTimestamps();
     }
 }

@@ -2,11 +2,15 @@
 
 namespace App\Filament\Resources\SectionSubjects\Tables;
 
+use App\Filament\Exports\SectionSubjectExporter;
+use App\Filament\Imports\SectionSubjectImporter;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Actions\ExportBulkAction;
+use Filament\Actions\ImportAction;
 use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
@@ -18,6 +22,10 @@ class SectionSubjectsTable
     {
         return $table
             ->columns([
+                TextColumn::make('id')
+                    ->label('ID')
+                    ->sortable()
+                    ->searchable(),
                 TextColumn::make('branch.name')
                     ->label('Branch')
                     ->sortable()
@@ -89,8 +97,16 @@ class SectionSubjectsTable
             ->recordActionsColumnLabel('Actions')
             ->toolbarActions([
                 BulkActionGroup::make([
+                    ExportBulkAction::make()
+                        ->label('Export Record')
+                        ->exporter(SectionSubjectExporter::class),
                     DeleteBulkAction::make(),
                 ]),
+            ])
+            ->headerActions([
+                ImportAction::make()
+                    ->label('Import Records')
+                    ->importer(SectionSubjectImporter::class)
             ]);
     }
 }

@@ -29,10 +29,10 @@ class TopicForm
 
                 // Subject (scoped to branch)
                 Select::make('subject_id')
-                    ->label('Subject')
-                    ->options(fn(Get $get) => Subject::query()
-                        ->where('branch_id', $get('branch_id') ?? Auth::user()?->branch_id)
-                        ->pluck('name', 'id'))
+                    ->relationship('subject', 'name')
+                    ->getOptionLabelFromRecordUsing(
+                        fn ($record) => "{$record->name} ({$record->code})"
+                    )
                     ->searchable()
                     ->preload()
                     ->required()

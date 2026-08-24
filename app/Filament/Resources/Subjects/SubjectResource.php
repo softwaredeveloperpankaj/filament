@@ -6,6 +6,7 @@ use App\Filament\Resources\Subjects\Pages\CreateSubject;
 use App\Filament\Resources\Subjects\Pages\EditSubject;
 use App\Filament\Resources\Subjects\Pages\ListSubjects;
 use App\Filament\Resources\Subjects\Pages\ViewSubject;
+use App\Filament\Resources\Subjects\RelationManagers\SectionSubjectsRelationManager;
 use App\Filament\Resources\Subjects\Schemas\SubjectForm;
 use App\Filament\Resources\Subjects\Schemas\SubjectInfolist;
 use App\Filament\Resources\Subjects\Tables\SubjectsTable;
@@ -23,7 +24,7 @@ class SubjectResource extends Resource
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
     protected static string|\UnitEnum|null $navigationGroup = 'Academics';
-    protected static ?int $navigationSort = 4;
+    protected static ?int $navigationSort = 3;
 
     public static function form(Schema $schema): Schema
     {
@@ -43,7 +44,7 @@ class SubjectResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            SectionSubjectsRelationManager::class
         ];
     }
 

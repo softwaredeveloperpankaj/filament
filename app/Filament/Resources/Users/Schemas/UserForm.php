@@ -69,19 +69,18 @@ class UserForm
                             ->afterStateUpdated(fn (Set $set) => $set('teacherProfile.subject_id', null))
                             ->required(),
 
-                        Select::make('teacherProfile.subject_id')
-                            ->label('Assigned Subject')
+                        Select::make('teacherProfile.subjects')
+                            ->label('Assigned Subjects')
                             ->options(fn (Get $get) => Subject::query()
                                 ->when(
                                     $get('teacherProfile.branch_id'),
-                                    fn ($query) => $query->where('branch_id', $get('teacherProfile.branch_id')),
-                                    fn ($query) => $query->whereRaw('1 = 0') // Show no options if no branch selected
+                                    fn ($q) => $q->where('branch_id', $get('teacherProfile.branch_id')),
+                                    fn ($q) => $q->whereRaw('1 = 0')
                                 )
                                 ->get()
-                                ->mapWithKeys(fn ($subject) => [
-                                    $subject->id => "{$subject->name} ({$subject->code})",
-                                ])
+                                ->mapWithKeys(fn ($s) => [$s->id => "{$s->name} ({$s->code})"])
                             )
+                            ->multiple()
                             ->searchable()
                             ->preload()
                             ->disabled(fn (Get $get) => blank($get('teacherProfile.branch_id')))

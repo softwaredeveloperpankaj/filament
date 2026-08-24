@@ -6,7 +6,6 @@ namespace App\Filament\Imports;
 
 use App\Models\Branch;
 use App\Models\Subject;
-use App\Models\TeacherProfile;
 use App\Models\User;
 use Filament\Actions\Imports\ImportColumn;
 use Filament\Actions\Imports\Importer;
@@ -26,161 +25,101 @@ class TeacherProfileImporter extends Importer
     public static function getColumns(): array
     {
         return [
-            // User fields — these fill the User model normally.
             ImportColumn::make('name')
                 ->requiredMapping()
-                ->rules([
-                    'required',
-                    'string',
-                    'max:255',
-                ]),
+                ->example('Anita Sharma')
+                ->rules(['required', 'string', 'max:255']),
 
             ImportColumn::make('email')
                 ->requiredMapping()
-                ->rules([
-                    'required',
-                    'email',
-                    'max:255',
-                ]),
+                ->example('anita.sharma@mailinator.com')                
+                ->rules(['required', 'email', 'max:255']),
 
             ImportColumn::make('email_verified_at')
-                ->rules([
-                    'nullable',
-                    'date',
-                ]),
-
-            // TeacherProfile fields — fillRecordUsing(fn () => null)
-            // prevents Filament from writing these to the users table.
-            // They are still available in $this->data for afterSave().
+                ->rules(['nullable', 'date']),
 
             ImportColumn::make('employee_id')
                 ->fillRecordUsing(fn () => null)
-                ->rules([
-                    'nullable',
-                    'string',
-                    'max:100',
-                ]),
+                ->rules(['nullable', 'string', 'max:100']),
 
             ImportColumn::make('phone')
                 ->fillRecordUsing(fn () => null)
-                ->rules([
-                    'nullable',
-                    'string',
-                    'max:30',
-                ]),
+                ->example('9881234567')
+                ->rules(['nullable', 'string', 'max:30']),
 
             ImportColumn::make('date_of_birth')
                 ->fillRecordUsing(fn () => null)
-                ->rules([
-                    'nullable',
-                    'date',
-                ]),
+                ->example('1984-07-19')
+                ->rules(['nullable', 'date']),
 
             ImportColumn::make('gender')
                 ->fillRecordUsing(fn () => null)
-                ->rules([
-                    'nullable',
-                    'string',
-                    'max:30',
-                ]),
+                ->rules(['nullable', 'string', 'max:30']),
 
             ImportColumn::make('profile_photo')
                 ->fillRecordUsing(fn () => null)
-                ->rules([
-                    'nullable',
-                    'string',
-                    'max:255',
-                ]),
+                ->rules(['nullable', 'string', 'max:255']),
 
             ImportColumn::make('qualification')
                 ->fillRecordUsing(fn () => null)
-                ->rules([
-                    'nullable',
-                    'string',
-                    'max:255',
-                ]),
+                ->example('M.A. B.Ed.')
+                ->rules(['nullable', 'string', 'max:255']),
 
             ImportColumn::make('specialization')
                 ->fillRecordUsing(fn () => null)
-                ->rules([
-                    'nullable',
-                    'string',
-                    'max:255',
-                ]),
+                ->example('Early Childhood Education')
+                ->rules(['nullable', 'string', 'max:255']),
 
             ImportColumn::make('joining_date')
                 ->fillRecordUsing(fn () => null)
-                ->rules([
-                    'nullable',
-                    'date',
-                ]),
+                ->rules(['nullable', 'date']),
 
             ImportColumn::make('address')
                 ->fillRecordUsing(fn () => null)
-                ->rules([
-                    'nullable',
-                    'string',
-                ]),
+                ->rules(['nullable', 'string']),
 
             ImportColumn::make('status')
                 ->fillRecordUsing(fn () => null)
-                ->rules([
-                    'required',
-                    'string',
-                    'max:30',
-                ]),
+                ->rules(['required', 'string', 'max:30']),
 
             ImportColumn::make('salary')
                 ->fillRecordUsing(fn () => null)
-                ->rules([
-                    'nullable',
-                    'numeric',
-                    'min:0',
-                ]),
+                ->rules(['nullable', 'numeric', 'min:0']),
 
             ImportColumn::make('branch')
                 ->fillRecordUsing(fn () => null)
-                ->rules([
-                    'nullable',
-                    'string',
-                    'max:255',
-                ]),
+                ->rules(['nullable', 'string', 'max:255']),
 
-            ImportColumn::make('subject')
+            ImportColumn::make('subjects')
                 ->fillRecordUsing(fn () => null)
-                ->rules([
-                    'nullable',
-                    'string',
-                    'max:255',
-                ]),
+                ->rules(['nullable', 'string']),
         ];
     }
 
     public function resolveRecord(): User
     {
+        $email = $this->nullableString('email');
         $employeeId = $this->nullableString('employee_id');
 
         if ($employeeId !== null) {
-            $teacherProfile = TeacherProfile::query()
-                ->where('employee_id', $employeeId)
-                ->with('user')
-                ->first();
-
-            if ($teacherProfile?->user) {
-                $this->createdNewUser = false;
-
-                return $teacherProfile->user;
-            }
-
             $existingUser = User::query()
-                ->where('email', $this->data['email'])
+                ->where('employee_id', $employeeId)
                 ->first();
 
             if ($existingUser) {
-                throw ValidationException::withMessages([
-                    'employee_id' => "Employee ID [{$employeeId}] was not found, "
-                        .'but this email already belongs to another user.',
-                ]);
+                $this->createdNewUser = false;
+
+                return $existingUser;
+            }
+
+            $userWithSameEmail = User::query()
+                ->where('email', $email)
+                ->first();
+
+            if ($userWithSameEmail) {
+                $this->createdNewUser = false;
+
+                return $userWithSameEmail;
             }
 
             $this->createdNewUser = true;
@@ -189,7 +128,7 @@ class TeacherProfileImporter extends Importer
         }
 
         $existingUser = User::query()
-            ->where('email', $this->data['email'])
+            ->where('email', $email)
             ->first();
 
         if ($existingUser) {
@@ -205,15 +144,23 @@ class TeacherProfileImporter extends Importer
 
     protected function beforeSave(): void
     {
+        $branchId = $this->resolveBranchId();
+
         $this->record->name = $this->data['name'];
         $this->record->email = $this->data['email'];
-        $this->record->email_verified_at =
-            $this->data['email_verified_at'] ?? null;
+        $this->record->email_verified_at = $this->data['email_verified_at'] ?? null;
+        $this->record->branch_id = $branchId;
+
+        $employeeId = $this->nullableString('employee_id');
+
+        if ($employeeId === null && $branchId !== null) {
+            $employeeId = User::generateEmployeeId('teacher', $branchId);
+        }
+
+        $this->record->employee_id = $employeeId;
 
         if ($this->createdNewUser) {
-            $this->record->password = Hash::make(
-                Str::random(64),
-            );
+            $this->record->password = Hash::make(Str::random(64));
         }
     }
 
@@ -221,18 +168,12 @@ class TeacherProfileImporter extends Importer
     {
         $this->record->syncRoles(['teacher']);
 
-        $employeeId = $this->nullableString('employee_id');
+        $branchId = $this->resolveBranchId();
 
-        if ($employeeId === null) {
-            $employeeId = (string) (
-                ((int) TeacherProfile::query()->max('employee_id')) + 1
-            );
-        }
-
-        $this->record->teacherProfile()->updateOrCreate(
-            [],
+        $profile = $this->record->teacherProfile()->updateOrCreate(
+            ['user_id' => $this->record->id],
             [
-                'employee_id' => $employeeId,
+                'branch_id' => $branchId,
                 'phone' => $this->nullableString('phone'),
                 'date_of_birth' => $this->parseDate('date_of_birth'),
                 'gender' => $this->nullableString('gender'),
@@ -241,12 +182,12 @@ class TeacherProfileImporter extends Importer
                 'specialization' => $this->nullableString('specialization'),
                 'joining_date' => $this->parseDate('joining_date'),
                 'address' => $this->nullableString('address'),
-                'status' => $this->data['status'],
+                'status' => $this->nullableString('status') ?? 'inactive',
                 'salary' => $this->nullableNumber('salary'),
-                'branch_id' => $this->resolveBranchId(),
-                'subject_id' => $this->resolveSubjectId(),
             ],
         );
+
+        $profile->subjects()->sync($this->resolveSubjectIds($branchId));
 
         if ($this->createdNewUser) {
             $this->sendPasswordResetLink();
@@ -294,25 +235,77 @@ class TeacherProfileImporter extends Importer
         return (int) $branch->getKey();
     }
 
-    private function resolveSubjectId(): ?int
+    private function resolveSubjectIds(?int $branchId = null): array
     {
-        $subjectName = $this->nullableString('subject');
+        $subjectsValue = $this->nullableString('subjects');
 
-        if ($subjectName === null) {
-            return null;
+        if ($subjectsValue === null) {
+            return [];
         }
 
-        $subject = Subject::query()
-            ->where('name', $subjectName)
-            ->first();
+        $items = collect(explode(',', $subjectsValue))
+            ->map(fn (string $value) => trim($value))
+            ->filter()
+            ->values();
 
-        if (! $subject) {
+        if ($items->isEmpty()) {
+            return [];
+        }
+
+        $resolvedIds = [];
+        $missing = [];
+
+        foreach ($items as $item) {
+            $name = null;
+            $code = null;
+
+            if (preg_match('/^(.*?)\s*\((.*?)\)$/', $item, $matches)) {
+                $name = trim($matches[1]);
+                $code = trim($matches[2]);
+            } else {
+                $name = $item;
+            }
+
+            $subject = Subject::query()
+                ->when(
+                    $branchId,
+                    fn ($query) => $query->where('branch_id', $branchId)
+                )
+                ->when(
+                    $code,
+                    fn ($query) => $query->where('code', $code),
+                    fn ($query) => $query->where('name', $name)
+                )
+                ->first();
+
+            if (! $subject && $name && $code) {
+                $subject = Subject::query()
+                    ->when(
+                        $branchId,
+                        fn ($query) => $query->where('branch_id', $branchId)
+                    )
+                    ->where('name', $name)
+                    ->where('code', $code)
+                    ->first();
+            }
+
+            if (! $subject) {
+                $missing[] = $item;
+                continue;
+            }
+
+            $resolvedIds[] = (int) $subject->getKey();
+        }
+
+        if (! empty($missing)) {
             throw ValidationException::withMessages([
-                'subject' => "Subject [{$subjectName}] was not found.",
+                'subjects' => 'These subjects were not found'
+                    . ($branchId ? ' in the selected branch' : '')
+                    . ': ' . implode(', ', $missing),
             ]);
         }
 
-        return (int) $subject->getKey();
+        return array_values(array_unique($resolvedIds));
     }
 
     private function sendPasswordResetLink(): void
@@ -357,26 +350,25 @@ class TeacherProfileImporter extends Importer
             return \Carbon\Carbon::parse($value)->format('Y-m-d');
         } catch (\Throwable) {
             throw ValidationException::withMessages([
-                $key => "Invalid date [{$value}] for {$key}. "
-                    .'Expected YYYY-MM-DD or DD-MM-YYYY.',
+                $key => "Invalid date [{$value}] for {$key}. Expected YYYY-MM-DD or DD-MM-YYYY.",
             ]);
         }
-    }    
+    }
 
     public static function getCompletedNotificationBody(Import $import): string
     {
         $body = 'Your teacher import has completed and '
-            .Number::format($import->successful_rows)
-            .' '
-            .str('row')->plural($import->successful_rows)
-            .' imported.';
+            . Number::format($import->successful_rows)
+            . ' '
+            . str('row')->plural($import->successful_rows)
+            . ' imported.';
 
         if ($failedRowsCount = $import->getFailedRowsCount()) {
             $body .= ' '
-                .Number::format($failedRowsCount)
-                .' '
-                .str('row')->plural($failedRowsCount)
-                .' failed to import.';
+                . Number::format($failedRowsCount)
+                . ' '
+                . str('row')->plural($failedRowsCount)
+                . ' failed to import.';
         }
 
         return $body;

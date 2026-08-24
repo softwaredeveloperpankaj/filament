@@ -12,7 +12,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
 
-#[Fillable(['name', 'email', 'password'])]
+#[Fillable(['name', 'email', 'password', 'employee_id', 'branch_id'])]
 #[Hidden(['password', 'remember_token'])]
 
 class User extends Authenticatable
@@ -42,4 +42,18 @@ class User extends Authenticatable
     {
         return $this->hasMany(Branch::class, 'user_id');
     }
+
+    public static function generateEmployeeId(string $roleSlug, int $branchId): string
+    {
+        // Format: TEACHER-2-0001, PRINCIPAL-1-0003, CLASS-TEACHER-1-0002
+        $prefix = strtoupper(str_replace(' ', '-', $roleSlug));
+
+        $count = self::where('branch_id', $branchId)
+            ->whereHas('roles', fn ($q) => $q->where('name', $roleSlug))
+            ->whereNotNull('employee_id')
+            ->where('employee_id', 'like', "{$prefix}-{$branchId}-%")
+            ->count();
+
+        return sprintf('%s-%d-%04d', $prefix, $branchId, $count + 1);
+    }    
 }

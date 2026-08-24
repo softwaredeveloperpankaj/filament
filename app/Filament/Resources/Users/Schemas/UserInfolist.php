@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Users\Schemas;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Infolists\Components\ImageEntry;
+use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Schema;
 
@@ -59,12 +60,13 @@ class UserInfolist
                                 ->columns(3)
                                 ->visible(fn ($record) => $record?->hasRole('teacher') ?? false)
                                 ->schema([
-                                    TextEntry::make('teacherProfile.employee_id')
+                                    TextEntry::make('employee_id')
                                         ->label('Employee ID')
                                         ->icon('heroicon-m-identification')
-                                        ->weight('bold')
+                                        ->badge()
                                         ->color('primary')
                                         ->iconColor('primary')
+                                        ->copyable()
                                         ->placeholder('-'),
 
                                     TextEntry::make('teacherProfile.branch.name')
@@ -72,16 +74,6 @@ class UserInfolist
                                         ->weight('bold')
                                         ->color('primary')
                                         ->placeholder('-'),
-
-                                    TextEntry::make('teacherProfile.subject.name')
-                                        ->label('Subject')
-                                        ->weight('bold')
-                                        ->color('primary')
-                                        ->placeholder('-')
-                                        ->formatStateUsing(fn ($record) => $record?->teacherProfile?->subject 
-                                            ? "{$record->teacherProfile->subject->name} ({$record->teacherProfile->subject->code})"
-                                            : '-'
-                                        ),
                                         
                                     TextEntry::make('teacherProfile.phone')
                                         ->label('Phone Number')
@@ -116,6 +108,35 @@ class UserInfolist
                                         ->money('INR')
                                         ->placeholder('-'),
                                 ]),
+
+                            Section::make('Subjects Asssigned to Teacher')
+                                ->columns(3)
+                                ->schema([
+                                    // RepeatableEntry::make('teacherProfile.subjects')
+                                    //     ->label('Subjects')
+                                    //     ->schema([
+                                    //         TextEntry::make('name')
+                                    //             ->weight('bold')
+                                    //             ->color('primary'),
+                                    //         TextEntry::make('code')
+                                    //             ->label('Code'),
+                                    //     ])
+                                    //     ->columns(2),
+
+                                    TextEntry::make('teacherProfile.subjects')
+                                        ->label('Subjects')
+                                        ->placeholder('-')
+                                        ->weight('bold')
+                                        ->color('primary')
+                                        ->state(fn ($record) => $record?->teacherProfile?->subjects
+                                            ? $record->teacherProfile->subjects
+                                                ->map(fn ($subject) => "{$subject->name} ({$subject->code})")
+                                                ->toArray()
+                                            : []
+                                        )
+                                        ->listWithLineBreaks()
+                                        ->bulleted()                                    
+                                ])
                         ])
                         ->columnSpan(['md' => 9]),
 

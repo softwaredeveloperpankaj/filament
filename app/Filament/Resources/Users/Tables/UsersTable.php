@@ -37,6 +37,10 @@ class UsersTable
                     ->label('Email')
                     ->toggleable()
                     ->searchable(),
+                TextColumn::make('employee_id')
+                    ->label('Employee ID')
+                    ->toggleable()
+                    ->searchable(),
                 TextColumn::make('roles')
                     ->label('Role')
                     ->getStateUsing(fn ($record) => $record->getRoleNames()->first() ?? 'User')
@@ -76,11 +80,11 @@ class UsersTable
             ->recordActionsColumnLabel('Actions')
             ->toolbarActions([
                 BulkActionGroup::make([
-                    ExportBulkAction::make()
+                    ExportBulkAction::make('bulk_export_user')
                         ->label('Export users')
                         ->icon('heroicon-o-arrow-up-tray')
                         ->exporter(UserExporter::class),
-                    ExportBulkAction::make()
+                    ExportBulkAction::make('bulk_export_teacher')
                         ->label('Export teachers')
                         ->icon('heroicon-o-arrow-up-tray')
                         ->exporter(TeacherProfileExporter::class)
@@ -112,10 +116,10 @@ class UsersTable
                 ]),
             ])
             ->headerActions([
-                ImportAction::make()
+                ImportAction::make('user_import')
                     ->icon('heroicon-o-arrow-down-tray')
                     ->importer(UserImporter::class),
-                ImportAction::make()
+                ImportAction::make('teacher_import')
                     ->label('Import teachers')
                     ->icon('heroicon-o-arrow-down-tray')
                     ->importer(TeacherProfileImporter::class),

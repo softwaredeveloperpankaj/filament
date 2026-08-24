@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class ClassSection extends Model
@@ -29,4 +30,21 @@ class ClassSection extends Model
     {
         return $this->hasMany(SectionSubject::class, 'class_section_id');
     }
+
+    public function subjects(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            Subject::class,
+            'section_subjects',
+            'class_section_id',
+            'subject_id',
+        )->using(SectionSubject::class)
+         ->withPivot(['teacher_profile_id', 'weekly_periods', 'is_elective', 'is_active'])
+         ->withTimestamps();
+    }
+
+    public function teacherAssignments(): HasMany
+    {
+        return $this->hasMany(SectionSubject::class);
+    }    
 }

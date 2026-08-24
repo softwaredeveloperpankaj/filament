@@ -18,6 +18,11 @@ class ExamSubjectForm
                     ->required(),
                 Select::make('subject_id')
                     ->relationship('subject', 'name')
+                    ->getOptionLabelFromRecordUsing(
+                        fn ($record) => "{$record->name} ({$record->code})"
+                    )
+                    ->searchable()
+                    ->preload()
                     ->required(),
                 TextInput::make('max_marks')
                     ->required()

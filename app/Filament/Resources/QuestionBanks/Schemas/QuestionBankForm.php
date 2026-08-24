@@ -29,10 +29,10 @@ class QuestionBankForm
                     ->afterStateUpdated(fn($state, callable $set) => $set('subject_id', null)),
 
                 Select::make('subject_id')
-                    ->label('Subject')
-                    ->options(fn(Get $get) => Subject::query()
-                        ->where('branch_id', $get('branch_id') ?? Auth::user()?->branch_id)
-                        ->pluck('name', 'id'))
+                    ->relationship('subject', 'name')
+                    ->getOptionLabelFromRecordUsing(
+                        fn ($record) => "{$record->name} ({$record->code})"
+                    )
                     ->searchable()
                     ->preload()
                     ->required()
