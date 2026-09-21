@@ -13,8 +13,7 @@ class QuestionPaperController extends Controller
     {
         // Authorization: same branch only
         abort_unless(
-            Auth::user()->hasRole('super_admin') || Auth::user()->branch_id === $exam->branch_id,
-            403
+            Auth::user()->hasRole(['super_admin', 'admin', 'teacher']), 403
         );
 
         $paper = $examSubject->questionPaper()->firstOrFail();

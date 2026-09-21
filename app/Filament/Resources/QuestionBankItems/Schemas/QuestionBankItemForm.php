@@ -65,11 +65,7 @@ class QuestionBankItemForm
     
                             Select::make('topic_id')
                                 ->label('Topic / Chapter')
-                                ->relationship(
-                                    name: 'topic', 
-                                    titleAttribute: 'name', 
-                                    modifyQueryUsing: fn (Builder $query, Get $get) => $query->where('subject_id', $get('subject_id'))
-                                )
+                                ->relationship( 'topic', 'name', fn (Builder $query, Get $get) => $query->where('subject_id', $get('subject_id')))
                                 ->searchable()
                                 ->preload()
                                 ->live()
