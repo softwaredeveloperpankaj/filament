@@ -16,10 +16,10 @@ use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
-use Filament\Schemas\Components\Grid;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
+use Filament\Schemas\Components\Section as FilamentSection;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
 use Filament\Tables\Columns\TextColumn;
@@ -32,63 +32,58 @@ class ExamStudentEntriesRelationManager extends RelationManager
     protected static ?string $recordTitleAttribute = 'student.name';
     protected static ?string $permissionPrefix = 'exam_student_entry';
 
-    public function schema(Schema $schema): Schema
+    public function form(Schema $schema): Schema
     {
         return $schema->components([
-            Section::make('Student Enrollment')
+            FilamentSection::make('Student Enrollment')
                 ->schema([
-                    Grid::make(2)->schema([
+                    Select::make('student_id')
+                        ->label('Student')
+                        ->options(fn() => Student::query()
+                            ->where('branch_id', $this->getOwnerRecord()->branch_id)
+                            ->where('branch_class_id', $this->getOwnerRecord()->branch_class_id)
+                            ->where('section_id', $this->getOwnerRecord()->section_id)
+                            ->whereDoesntHave('examEntries', fn($query) => $query->where('exam_id', $this->getOwnerRecord()->id))
+                            ->get()
+                            ->mapWithKeys(fn(Student $student) => [$student->id => $student->name])
+                            ->all())
+                        ->searchable()
+                        ->preload()
+                        ->required()
+                        ->reactive()
+                        ->afterStateUpdated(function ($state, callable $set) {
+                            if (blank($state)) {
+                                return;
+                            }
 
-                        // Student (scoped to exam's class/section, not already enrolled)
-                        Select::make('student_id')
-                            ->label('Student')
-                            ->options(fn() => Student::query()
-                                ->where('branch_id', $this->getOwnerRecord()->branch_id)
-                                ->where('branch_class_id', $this->getOwnerRecord()->branch_class_id)
-                                ->where('section_id', $this->getOwnerRecord()->section_id)
-                                ->whereDoesntHave('examEntries', fn($query) => $query->where('exam_id', $this->getOwnerRecord()->id))
-                                ->pluck('name', 'id'))
-                            ->searchable()
-                            ->preload()
-                            ->required()
-                            ->reactive()
-                            ->afterStateUpdated(function ($state, callable $set) {
-                                if (blank($state)) {
-                                    return;
-                                }
+                            $student = Student::query()->find($state);
+                            if ($student) {
+                                $set('roll_no', $student->roll_no);
+                                $set('section_id', $student->section_id);
+                            }
+                        }),
 
-                                $student = Student::query()->find($state);
-                                if ($student) {
-                                    $set('roll_no', $student->roll_no);
-                                    $set('section_id', $student->section_id);
-                                }
-                            }),
+                    TextInput::make('roll_no')
+                        ->label('Roll No')
+                        ->required()
+                        ->maxLength(20),
 
-                        // Roll Number (auto-filled from student)
-                        TextInput::make('roll_no')
-                            ->label('Roll No')
-                            ->required()
-                            ->maxLength(20),
+                    Select::make('section_id')
+                        ->label('Section')
+                        ->options(fn() => ClassSection::query()
+                            ->where('branch_class_id', $this->getOwnerRecord()->branch_class_id)
+                            ->with('section')
+                            ->get()
+                            ->pluck('section.name', 'section_id'))
+                        ->searchable()
+                        ->preload()
+                        ->required(),
 
-                        // Section (auto-filled but editable)
-                        Select::make('section_id')
-                            ->label('Section')
-                            ->options(fn() => ClassSection::query()
-                                ->where('branch_class_id', $this->getOwnerRecord()->branch_class_id)
-                                ->with('section')
-                                ->get()
-                                ->pluck('section.name', 'section_id'))
-                            ->searchable()
-                            ->preload()
-                            ->required(),
-
-                        // Status
-                        Select::make('status')
-                            ->label('Status')
-                            ->options(ExamEntryStatus::forFilamentSelect())
-                            ->default(ExamEntryStatus::ENROLLED)
-                            ->required(),
-                    ]),
+                    Select::make('status')
+                        ->label('Status')
+                        ->options(ExamEntryStatus::forFilamentSelect())
+                        ->default(ExamEntryStatus::ENROLLED)
+                        ->required(),
                 ]),
         ]);
     }

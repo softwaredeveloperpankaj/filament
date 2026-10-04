@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\ExamEntryStatus;
 use App\Models\Concerns\HasBranchScope;
+use App\Services\ResultGenerationService;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -80,6 +81,19 @@ class ExamStudentEntry extends Model
                 $entry->student->increment('exams_appeared_count');
             }
         });
+    }
+
+    public function recalculateResult(): ?ExamResult
+    {
+        if (!$this->relationLoaded('exam') && !$this->exam) {
+            $this->load('exam');
+        }
+
+        if (!$this->exam) {
+            return null;
+        }
+
+        return app(ResultGenerationService::class)->generateResultForStudent($this->exam, $this);
     }
 
     public function generateAdmitCardData(): array

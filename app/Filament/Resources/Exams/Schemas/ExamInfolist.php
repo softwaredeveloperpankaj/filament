@@ -134,6 +134,32 @@ class ExamInfolist
                                     ->time('h:i A')
                                     ->icon('heroicon-o-clock'),
                             ]),
+
+                        TextEntry::make('schedule_summary')
+                            ->label('Subject Schedule')
+                            ->state(function (Exam $record): string {
+                                if ($record->schedules()->count() === 0) {
+                                    return 'No subject schedule is configured yet.';
+                                }
+
+                                return $record->schedules()
+                                    ->with(['examSubject.subject'])
+                                    ->orderBy('exam_date')
+                                    ->orderBy('start_time')
+                                    ->get()
+                                    ->map(function ($schedule) {
+                                        $subjectName = $schedule->examSubject?->subject?->name ?? 'Unknown subject';
+                                        $date = $schedule->exam_date?->format('d M Y');
+                                        $start = $schedule->start_time?->format('h:i A');
+                                        $end = $schedule->end_time?->format('h:i A');
+                                        $room = $schedule->room_number ?: 'Room not assigned';
+
+                                        return "• {$date} — {$subjectName} — {$start} to {$end} — {$room}";
+                                    })
+                                    ->implode("\n");
+                            })
+                            ->prose()
+                            ->columnSpanFull(),
                     ]),
 
                 /*

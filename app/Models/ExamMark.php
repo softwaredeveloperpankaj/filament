@@ -36,6 +36,9 @@ class ExamMark extends Model
         'source',
         'sub_question_marks',
         'is_locked',
+        'absent',
+        'exempted',
+        'remarks',
     ];
 
     protected $casts = [
@@ -45,6 +48,8 @@ class ExamMark extends Model
         'is_locked'            => 'boolean',
         'is_passed'            => 'boolean',
         'source'               => MarksSource::class,
+        'absent'               => 'boolean',
+        'exempted'             => 'boolean',
     ];
 
     /* ────────────────────────────────────────
@@ -124,6 +129,13 @@ class ExamMark extends Model
     protected static function booted(): void
     {
         static::saving(function (ExamMark $mark) {
+            // Handle absent/exempted - if absent or exempted, zero out obtained marks
+            if ($mark->absent || $mark->exempted) {
+                $mark->theory_obtained = 0;
+                $mark->practical_obtained = 0;
+                $mark->internal_obtained = 0;
+            }
+
             // Auto-calculate totals
             $mark->total_obtained = $mark->theory_obtained + $mark->practical_obtained + $mark->internal_obtained;
             $mark->total_maximum  = $mark->theory_maximum + $mark->practical_maximum + $mark->internal_maximum;
@@ -132,8 +144,13 @@ class ExamMark extends Model
                 : 0;
 
             // Auto-set pass/fail based on subject pass marks
-            $passMarks = $mark->examSubject?->pass_marks ?? 0;
-            $mark->is_passed = $mark->total_obtained >= $passMarks;
+            // Absent/exempted students are not considered passed
+            if ($mark->absent || $mark->exempted) {
+                $mark->is_passed = false;
+            } else {
+                $passMarks = $mark->examSubject?->pass_marks ?? 0;
+                $mark->is_passed = $mark->total_obtained >= $passMarks;
+            }
 
             // Set grader if not already set
             if ($mark->isDirty(['theory_obtained', 'practical_obtained', 'internal_obtained']) && !$mark->graded_by) {
@@ -143,6 +160,9 @@ class ExamMark extends Model
         });
 
         static::saved(function (ExamMark $mark) {
+            // Fire MarksEntered event
+            event(new \App\Events\MarksEntered($mark));
+
             // ✅ Guarded — recalculateResult() must exist on ExamStudentEntry
             if (method_exists($mark->entry, 'recalculateResult')) {
                 $mark->entry->recalculateResult();

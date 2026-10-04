@@ -5,6 +5,7 @@ namespace App\Filament\Resources\ExamResults;
 use App\Filament\Resources\ExamResults\Pages\CreateExamResult;
 use App\Filament\Resources\ExamResults\Pages\EditExamResult;
 use App\Filament\Resources\ExamResults\Pages\ListExamResults;
+use App\Filament\Resources\ExamResults\Pages\PublishResults;
 use App\Filament\Resources\ExamResults\Pages\ViewExamResult;
 use App\Filament\Resources\ExamResults\Schemas\ExamResultForm;
 use App\Filament\Resources\ExamResults\Schemas\ExamResultInfolist;
@@ -52,7 +53,7 @@ class ExamResultResource extends Resource
     {
         return [
             'index' => ListExamResults::route('/'),
-            // 'create' => CreateExamResult::route('/create'),
+            'publish' => PublishResults::route('/publish'),
             'view' => ViewExamResult::route('/{record}'),
             'edit' => EditExamResult::route('/{record}/edit'),
         ];

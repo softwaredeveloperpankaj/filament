@@ -148,17 +148,20 @@ class ExamMarkForm
                         ]),
                     ]),
 
-                Section::make('Grading')
-                    ->description('Grade is entered manually by the teacher/principal — it is not auto-calculated from percentage.')
+                Section::make('Status & Notes')
+                    ->description('Mark the student as absent or exempted, and record any teacher notes for the subject.')
                     ->schema([
-                        Grid::make(2)->schema([
+                        Grid::make(3)->schema([
 
-                            Select::make('grade')
-                                ->label('Grade')
-                                ->options(GradeScale::forFilamentSelect())
-                                ->required()
-                                ->disabled(fn($record) => $record?->is_locked ?? false)
-                                ->visible(fn() => Auth::user()?->hasAnyRole(['super_admin', 'admin', 'principal', 'teacher']) ?? false),
+                            Toggle::make('absent')
+                                ->label('Absent')
+                                ->helperText('Zeroes obtained marks for this subject and marks the student as failed for this subject.')
+                                ->disabled(fn($record) => $record?->is_locked ?? false),
+
+                            Toggle::make('exempted')
+                                ->label('Exempted')
+                                ->helperText('Treats this subject as exempted and excludes it from pass status.')
+                                ->disabled(fn($record) => $record?->is_locked ?? false),
 
                             Select::make('source')
                                 ->label('Marks Source')
@@ -166,9 +169,18 @@ class ExamMarkForm
                                 ->default(MarksSource::OFFLINE_MANUAL->value)
                                 ->required()
                                 ->disabled(fn($record) => $record?->is_locked ?? false),
+                        ]),
 
-                            Textarea::make('grade_remarks')
-                                ->label('Remarks')
+                        Grid::make(2)->schema([
+                            Select::make('grade')
+                                ->label('Grade')
+                                ->options(GradeScale::forFilamentSelect())
+                                ->required()
+                                ->disabled(fn($record) => $record?->is_locked ?? false)
+                                ->visible(fn() => Auth::user()?->hasAnyRole(['super_admin', 'admin', 'principal', 'teacher']) ?? false),
+
+                            Textarea::make('remarks')
+                                ->label('Teacher Remarks')
                                 ->rows(2)
                                 ->columnSpanFull()
                                 ->placeholder('Optional remarks from the grader...')

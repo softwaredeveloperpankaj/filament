@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Resources\ExamSubject\RelationManagers;
+namespace App\Filament\Resources\ExamSubjects\RelationManagers;
 
 use App\Models\User;
 use Filament\Actions\ActionGroup;

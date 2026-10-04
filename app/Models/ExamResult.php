@@ -79,13 +79,77 @@ class ExamResult extends Model
         });
     }
 
-    public function publish(User $user): void
+    public function canBeEditedBy(User $user): bool
     {
+        if ($this->status === ResultStatus::PUBLISHED) {
+            return $user->hasRole('super_admin');
+        }
+
+        return $user->hasAnyRole(['super_admin', 'admin', 'principal'])
+            && $user->branch_id === $this->exam->branch_id;
+    }
+
+    public function canTransitionTo(ResultStatus $status): bool
+    {
+        $current = $this->status instanceof ResultStatus ? $this->status : ResultStatus::tryFrom((string) $this->status ?? 'draft');
+
+        if ($current === null) {
+            return $status === ResultStatus::DRAFT;
+        }
+
+        return match ($current) {
+            ResultStatus::DRAFT => in_array($status, [ResultStatus::PUBLISHED, ResultStatus::WITHHELD, ResultStatus::CANCELLED], true),
+            ResultStatus::PUBLISHED => in_array($status, [ResultStatus::WITHHELD, ResultStatus::CANCELLED], true),
+            ResultStatus::WITHHELD => in_array($status, [ResultStatus::PUBLISHED, ResultStatus::CANCELLED], true),
+            ResultStatus::CANCELLED => false,
+        };
+    }
+
+    public function publish(User $user): bool
+    {
+        if (!$this->canTransitionTo(ResultStatus::PUBLISHED)) {
+            return false;
+        }
+
         $this->update([
             'status'        => ResultStatus::PUBLISHED,
             'published_by'  => $user->id,
             'published_at'  => now(),
         ]);
+
+        event(new \App\Events\ResultPublished($this->exam));
+
+        return true;
+    }
+
+    public function withhold(User $user): bool
+    {
+        if (!$this->canTransitionTo(ResultStatus::WITHHELD)) {
+            return false;
+        }
+
+        $this->update([
+            'status'       => ResultStatus::WITHHELD,
+            'published_by' => $user->id,
+            'published_at' => now(),
+        ]);
+
+        return true;
+    }
+
+    public function cancel(User $user): bool
+    {
+        if (!$this->canTransitionTo(ResultStatus::CANCELLED)) {
+            return false;
+        }
+
+        $this->update([
+            'status'       => ResultStatus::CANCELLED,
+            'published_by' => $user->id,
+            'published_at' => now(),
+        ]);
+
+        return true;
     }
 
     public function getResultUrlAttribute(): string

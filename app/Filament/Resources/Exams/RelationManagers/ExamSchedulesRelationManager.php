@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Exams\RelationManagers;
 
+use App\Models\ExamSchedule;
 use App\Models\User;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\CreateAction;
@@ -9,17 +10,18 @@ use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\TimePicker;
-use Filament\Schemas\Components\Section;
-use Filament\Schemas\Schema;
-use Filament\Tables\Table;
-use Filament\Tables\Columns\TextColumn;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
 use Filament\Tables\Columns\IconColumn;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Table;
 
 class ExamSchedulesRelationManager extends RelationManager
 {
@@ -28,81 +30,70 @@ class ExamSchedulesRelationManager extends RelationManager
     protected static ?string $recordTitleAttribute = 'examSubject.subject.name';
     protected static ?string $permissionPrefix = 'exam_schedule';
 
-    public function schema(Schema $schema): Schema
+    public function form(Schema $schema): Schema
     {
         return $schema->components([
-            Section::make('Schedule Details')
-                ->schema([
-                    Grid::make(2)->schema([
+            Select::make('exam_subject_id')
+                ->label('Subject')
+                ->columnSpan(1)
+                ->options(fn() => $this->getOwnerRecord()->subjects()->with('subject')->get()->pluck('subject.name', 'id'))
+                ->searchable()
+                ->preload()
+                ->required()
+                ->reactive()
+                ->afterStateUpdated(function ($state, callable $set) {
+                    $subject = $this->getOwnerRecord()->subjects()->find($state);
+                    if ($subject) {
+                        $set('exam_date', $this->getOwnerRecord()->start_date);
+                        $set('start_time', $this->getOwnerRecord()->start_time);
+                        $set('end_time', $this->getOwnerRecord()->start_time?->copy()->addMinutes($subject->duration_minutes));
+                    }
+                }),
 
-                        // Subject (scoped to exam's subjects)
-                        Select::make('exam_subject_id')
-                            ->label('Subject')
-                            ->options(fn() => $this->getOwnerRecord()
-                                ->subjects()
-                                ->with('subject')
-                                ->get()
-                                ->pluck('subject.name', 'id'))
-                            ->searchable()
-                            ->preload()
-                            ->required()
-                            ->reactive()
-                            ->afterStateUpdated(function ($state, callable $set) {
-                                $subject = $this->getOwnerRecord()->subjects()->find($state);
-                                if ($subject) {
-                                    $set('exam_date', $this->getOwnerRecord()->start_date);
-                                    $set('start_time', $this->getOwnerRecord()->start_time);
-                                    $set('end_time', $this->getOwnerRecord()->start_time?->addMinutes($subject->duration_minutes));
-                                }
-                            }),
+            DatePicker::make('exam_date')
+                ->label('Exam Date')
+                ->columnSpan(1)
+                ->required()
+                ->native(false)
+                ->displayFormat('d M Y')
+                ->minDate(fn() => $this->getOwnerRecord()->start_date)
+                ->maxDate(fn() => $this->getOwnerRecord()->end_date),
 
-                        // Exam Date (within exam date range)
-                        DatePicker::make('exam_date')
-                            ->label('Exam Date')
-                            ->required()
-                            ->native(false)
-                            ->displayFormat('d M Y')
-                            ->minDate($this->getOwnerRecord()->start_date)
-                            ->maxDate($this->getOwnerRecord()->end_date),
+            TimePicker::make('start_time')
+                ->label('Start Time')
+                ->columnSpan(1)
+                ->required()
+                ->seconds(false),
 
-                        // Start Time
-                        TimePicker::make('start_time')
-                            ->label('Start Time')
-                            ->required()
-                            ->seconds(false),
+            TimePicker::make('end_time')
+                ->label('End Time')
+                ->columnSpan(1)
+                ->required()
+                ->seconds(false)
+                ->after('start_time'),
 
-                        // End Time
-                        TimePicker::make('end_time')
-                            ->label('End Time')
-                            ->required()
-                            ->seconds(false)
-                            ->after('start_time'),
+            TextInput::make('room_number')
+                ->label('Room Number')
+                ->columnSpan(1)
+                ->placeholder('e.g. A-101, Hall B, Lab 3')
+                ->maxLength(50),
 
-                        // Room Number
-                        TextInput::make('room_number')
-                            ->label('Room Number')
-                            ->placeholder('e.g. A-101, Hall B, Lab 3')
-                            ->maxLength(50),
+            Select::make('invigilator_id')
+                ->label('Invigilator')
+                ->columnSpan(1)
+                ->options(fn() => User::query()
+                    ->where('branch_id', $this->getOwnerRecord()->branch_id)
+                    ->whereHas('roles', fn($q) => $q->whereIn('name', ['teacher', 'principal']))
+                    ->pluck('name', 'id'))
+                ->searchable()
+                ->preload()
+                ->placeholder('Select invigilator'),
 
-                        // Invigilator (teachers/principals from same branch)
-                        Select::make('invigilator_id')
-                            ->label('Invigilator')
-                            ->options(fn() => User::query()
-                                ->where('branch_id', $this->getOwnerRecord()->branch_id)
-                                ->whereHas('roles', fn($q) => $q->whereIn('name', ['teacher', 'principal']))
-                                ->pluck('name', 'id'))
-                            ->searchable()
-                            ->preload()
-                            ->placeholder('Select invigilator'),
-
-                        // Subject-specific instructions
-                        Textarea::make('instructions')
-                            ->label('Subject-Specific Instructions')
-                            ->rows(3)
-                            ->columnSpanFull()
-                            ->placeholder('Additional instructions for this subject (printed on question paper)...'),
-                    ]),
-                ]),
+            Textarea::make('instructions')
+                ->label('Subject Instructions')
+                ->rows(3)
+                ->columnSpanFull()
+                ->placeholder('Additional instructions for this subject...'),
         ]);
     }
 

@@ -169,30 +169,52 @@ class ExamResultsTable
                         ->icon('heroicon-o-eye')
                         ->color('info'),
 
+                    Action::make('print_result')
+                        ->label('Print')
+                        ->icon('heroicon-o-printer')
+                        ->color('gray')
+                        ->url(fn(ExamResult $record) => route('results.show', ['result' => $record]))
+                        ->openUrlInNewTab(),
+
+                    Action::make('download_result')
+                        ->label('Download PDF')
+                        ->icon('heroicon-o-arrow-down-tray')
+                        ->color('success')
+                        ->url(fn(ExamResult $record) => route('results.download', ['result' => $record]))
+                        ->openUrlInNewTab(),
+
                     Action::make('publish')
                         ->label('Publish')
                         ->icon('heroicon-o-megaphone')
                         ->color('success')
-                        ->visible(fn(ExamResult $record) => $record->status === ResultStatus::DRAFT
+                        ->visible(fn(ExamResult $record) => $record->canTransitionTo(ResultStatus::PUBLISHED)
                             && (Auth::user()?->hasAnyRole(['super_admin', 'admin', 'principal']) ?? false))
                         ->requiresConfirmation()
                         ->modalDescription('This will make the result visible to the student/parent.')
                         ->action(function (ExamResult $record) {
-                            $record->publish(Auth::user());
-                            Notification::make()->title('Result published')->success()->send();
+                            if ($record->publish(Auth::user())) {
+                                Notification::make()->title('Result published')->success()->send();
+                                return;
+                            }
+
+                            Notification::make()->title('Result could not be published')->warning()->send();
                         }),
 
                     Action::make('withhold')
                         ->label('Withhold')
                         ->icon('heroicon-o-pause-circle')
                         ->color('warning')
-                        ->visible(fn(ExamResult $record) => $record->status === ResultStatus::PUBLISHED
+                        ->visible(fn(ExamResult $record) => $record->canTransitionTo(ResultStatus::WITHHELD)
                             && (Auth::user()?->hasAnyRole(['super_admin', 'admin', 'principal']) ?? false))
                         ->requiresConfirmation()
                         ->modalDescription('The student/parent will no longer be able to view this result.')
                         ->action(function (ExamResult $record) {
-                            $record->update(['status' => ResultStatus::WITHHELD]);
-                            Notification::make()->title('Result withheld')->warning()->send();
+                            if ($record->withhold(Auth::user())) {
+                                Notification::make()->title('Result withheld')->warning()->send();
+                                return;
+                            }
+
+                            Notification::make()->title('Result could not be withheld')->warning()->send();
                         }),
 
                     EditAction::make()
@@ -211,12 +233,16 @@ class ExamResultsTable
                         ->requiresConfirmation()
                         ->visible(fn() => Auth::user()?->hasAnyRole(['super_admin', 'admin', 'principal']) ?? false)
                         ->action(function ($records) {
-                            $records
-                                ->where('status', ResultStatus::DRAFT)
-                                ->each(fn($r) => $r->publish(Auth::user()));
+                            $published = 0;
+
+                            foreach ($records as $record) {
+                                if ($record->publish(Auth::user())) {
+                                    $published++;
+                                }
+                            }
 
                             Notification::make()
-                                ->title('Selected results published')
+                                ->title("Published {$published} selected results")
                                 ->success()
                                 ->send();
                         }),
@@ -227,9 +253,20 @@ class ExamResultsTable
                         ->color('warning')
                         ->requiresConfirmation()
                         ->visible(fn() => Auth::user()?->hasAnyRole(['super_admin', 'admin', 'principal']) ?? false)
-                        ->action(fn($records) => $records
-                            ->where('status', ResultStatus::PUBLISHED)
-                            ->each(fn($r) => $r->update(['status' => ResultStatus::WITHHELD]))),
+                        ->action(function ($records) {
+                            $withheld = 0;
+
+                            foreach ($records as $record) {
+                                if ($record->withhold(Auth::user())) {
+                                    $withheld++;
+                                }
+                            }
+
+                            Notification::make()
+                                ->title("Withheld {$withheld} selected results")
+                                ->warning()
+                                ->send();
+                        }),
                 ]),
             ]);
     }

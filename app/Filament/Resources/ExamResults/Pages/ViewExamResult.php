@@ -18,8 +18,20 @@ class ViewExamResult extends ViewRecord
                 ->label('Back')
                 ->url($this->getResource()::getUrl('index'))
                 ->icon('heroicon-o-arrow-left'),
-            // EditAction::make(),
-            // DeleteAction::make(),
+
+            Action::make('print')
+                ->label('Print Result')
+                ->icon('heroicon-o-printer')
+                ->color('gray')
+                ->url(fn() => route('results.show', ['result' => $this->record]))
+                ->openUrlInNewTab(),
+
+            Action::make('download')
+                ->label('Download PDF')
+                ->icon('heroicon-o-arrow-down-tray')
+                ->color('success')
+                ->url(fn() => route('results.download', ['result' => $this->record]))
+                ->openUrlInNewTab(),
         ];
     }
 }

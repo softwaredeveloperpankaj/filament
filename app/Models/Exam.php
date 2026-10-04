@@ -84,6 +84,11 @@ class Exam extends Model
         return $this->hasMany(ExamSchedule::class)->orderBy('exam_date')->orderBy('start_time');
     }
 
+    public function orderedSchedules(): HasMany
+    {
+        return $this->schedules();
+    }
+
     public function studentEntries(): HasMany
     {
         return $this->hasMany(ExamStudentEntry::class);

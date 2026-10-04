@@ -68,7 +68,7 @@ class ExamMarkInfolist
 
             Section::make('Grading')
                 ->schema([
-                    Grid::make(3)->schema([
+                    Grid::make(4)->schema([
                         TextEntry::make('grade')
                             ->label('Grade')
                             ->badge(),
@@ -76,6 +76,14 @@ class ExamMarkInfolist
                         TextEntry::make('source')
                             ->label('Marks Source')
                             ->badge(),
+
+                        IconEntry::make('absent')
+                            ->label('Absent')
+                            ->boolean(),
+
+                        IconEntry::make('exempted')
+                            ->label('Exempted')
+                            ->boolean(),
 
                         IconEntry::make('is_locked')
                             ->label('Locked')
@@ -85,7 +93,7 @@ class ExamMarkInfolist
                             ->trueColor('danger')
                             ->falseColor('success'),
 
-                        TextEntry::make('grade_remarks')
+                        TextEntry::make('remarks')
                             ->label('Remarks')
                             ->columnSpanFull()
                             ->placeholder('—'),

@@ -65,6 +65,13 @@ class Student extends Model
         return $this->form_data[$key] ?? null;
     }
 
+    public function getNameAttribute(): string
+    {
+        $name = trim(($this->form_data['student_name'] ?? $this->form_data['name'] ?? ((($this->form_data['first_name'] ?? '') . ' ' . ($this->form_data['last_name'] ?? '')))) ?? '');
+        return $name !== '' ? $name : ($this->registration_number ?? 'Student #' . $this->id);
+    }
+
+
     // ─── Boot / Registration Number Logic ────────────────────────────
 
     protected static function booted(): void

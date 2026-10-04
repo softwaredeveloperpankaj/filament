@@ -74,6 +74,24 @@ class ExamMarksTable
                     ->label('Source')
                     ->badge(),
 
+                IconColumn::make('absent')
+                    ->label('Absent')
+                    ->boolean()
+                    ->trueColor('warning')
+                    ->falseColor('gray'),
+
+                IconColumn::make('exempted')
+                    ->label('Exempted')
+                    ->boolean()
+                    ->trueColor('info')
+                    ->falseColor('gray'),
+
+                TextColumn::make('remarks')
+                    ->label('Remarks')
+                    ->limit(25)
+                    ->tooltip(fn(ExamMark $record) => $record->remarks)
+                    ->placeholder('—'),
+
                 IconColumn::make('is_locked')
                     ->label('Locked')
                     ->boolean()

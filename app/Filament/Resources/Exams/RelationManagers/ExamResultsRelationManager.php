@@ -165,18 +165,22 @@ class ExamResultsRelationManager extends RelationManager
                         ->label('Publish')
                         ->icon('heroicon-o-megaphone')
                         ->color('success')
-                        ->visible(fn(ExamResult $record) => $record->status === ResultStatus::DRAFT)
+                        ->visible(fn(ExamResult $record) => $record->canTransitionTo(ResultStatus::PUBLISHED))
                         ->requiresConfirmation()
-                        ->action(fn(ExamResult $record) => $record->publish(Auth::user())),
+                        ->action(function (ExamResult $record) {
+                            $record->publish(Auth::user());
+                        }),
 
                     // Withhold published result
                     Action::make('withhold')
                         ->label('Withhold')
                         ->icon('heroicon-o-pause-circle')
                         ->color('warning')
-                        ->visible(fn(ExamResult $record) => $record->status === ResultStatus::PUBLISHED)
+                        ->visible(fn(ExamResult $record) => $record->canTransitionTo(ResultStatus::WITHHELD))
                         ->requiresConfirmation()
-                        ->action(fn(ExamResult $record) => $record->update(['status' => ResultStatus::WITHHELD])),
+                        ->action(function (ExamResult $record) {
+                            $record->withhold(Auth::user());
+                        }),
 
                     EditAction::make(),
                 ]),
@@ -189,9 +193,11 @@ class ExamResultsRelationManager extends RelationManager
                         ->icon('heroicon-o-megaphone')
                         ->color('success')
                         ->requiresConfirmation()
-                        ->action(fn($records) => $records
-                            ->where('status', ResultStatus::DRAFT)
-                            ->each(fn($r) => $r->publish(Auth::user()))),
+                        ->action(function ($records) {
+                            foreach ($records as $record) {
+                                $record->publish(Auth::user());
+                            }
+                        }),
 
                     // Bulk withhold
                     Action::make('bulk_withhold')
@@ -199,9 +205,11 @@ class ExamResultsRelationManager extends RelationManager
                         ->icon('heroicon-o-pause-circle')
                         ->color('warning')
                         ->requiresConfirmation()
-                        ->action(fn($records) => $records
-                            ->where('status', ResultStatus::PUBLISHED)
-                            ->each(fn($r) => $r->update(['status' => ResultStatus::WITHHELD]))),
+                        ->action(function ($records) {
+                            foreach ($records as $record) {
+                                $record->withhold(Auth::user());
+                            }
+                        }),
 
                     DeleteBulkAction::make()
                         ->visible(fn() => Auth::user()?->hasRole('super_admin') ?? false),

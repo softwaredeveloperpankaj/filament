@@ -11,15 +11,38 @@ use Illuminate\Auth\Access\HandlesAuthorization;
 class ExamMarkPolicy
 {
     use HandlesAuthorization;
-    
+
+    private function isBranchAdmin(AuthUser $authUser): bool
+    {
+        return $authUser->hasAnyRole(['super_admin', 'admin', 'principal', 'teacher']);
+    }
+
+    private function isSameBranch(AuthUser $authUser, ExamMark $examMark): bool
+    {
+        $branchId = method_exists($authUser, 'getAttribute')
+            ? $authUser->getAttribute('branch_id')
+            : ($authUser->branch_id ?? null);
+
+        $examBranchId = method_exists($examMark, 'getRelation')
+            ? ($examMark->relationLoaded('exam') ? $examMark->getRelation('exam') : null)?->branch_id
+                ?? ($examMark->relationLoaded('entry') ? $examMark->getRelation('entry') : null)?->exam?->branch_id
+                ?? null
+            : ($examMark->exam?->branch_id ?? $examMark->entry?->exam?->branch_id ?? null);
+
+        return $this->isBranchAdmin($authUser)
+            && is_numeric($branchId)
+            && is_numeric($examBranchId)
+            && (int) $branchId === (int) $examBranchId;
+    }
+
     public function viewAny(AuthUser $authUser): bool
     {
-        return $authUser->can('ViewAny:ExamMark');
+        return $authUser->can('ViewAny:ExamMark') || $this->isBranchAdmin($authUser);
     }
 
     public function view(AuthUser $authUser, ExamMark $examMark): bool
     {
-        return $authUser->can('View:ExamMark');
+        return $authUser->can('View:ExamMark') || $this->isSameBranch($authUser, $examMark);
     }
 
     public function create(AuthUser $authUser): bool
@@ -29,12 +52,12 @@ class ExamMarkPolicy
 
     public function update(AuthUser $authUser, ExamMark $examMark): bool
     {
-        return $authUser->can('Update:ExamMark');
+        return $examMark->canBeEditedBy($authUser);
     }
 
     public function delete(AuthUser $authUser, ExamMark $examMark): bool
     {
-        return $authUser->can('Delete:ExamMark');
+        return $examMark->canBeEditedBy($authUser) && $authUser->hasRole('super_admin');
     }
 
     public function deleteAny(AuthUser $authUser): bool

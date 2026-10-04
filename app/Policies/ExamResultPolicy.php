@@ -11,15 +11,36 @@ use Illuminate\Auth\Access\HandlesAuthorization;
 class ExamResultPolicy
 {
     use HandlesAuthorization;
-    
+
+    private function isBranchAdmin(AuthUser $authUser): bool
+    {
+        return $authUser->hasAnyRole(['super_admin', 'admin', 'principal']);
+    }
+
+    private function isSameBranch(AuthUser $authUser, ExamResult $examResult): bool
+    {
+        $branchId = method_exists($authUser, 'getAttribute')
+            ? $authUser->getAttribute('branch_id')
+            : ($authUser->branch_id ?? null);
+
+        $examBranchId = method_exists($examResult, 'getRelation')
+            ? (($examResult->relationLoaded('exam') ? $examResult->getRelation('exam') : null)?->branch_id ?? null)
+            : ($examResult->exam?->branch_id ?? null);
+
+        return $this->isBranchAdmin($authUser)
+            && is_numeric($branchId)
+            && is_numeric($examBranchId)
+            && (int) $branchId === (int) $examBranchId;
+    }
+
     public function viewAny(AuthUser $authUser): bool
     {
-        return $authUser->can('ViewAny:ExamResult');
+        return $authUser->can('ViewAny:ExamResult') || $this->isBranchAdmin($authUser);
     }
 
     public function view(AuthUser $authUser, ExamResult $examResult): bool
     {
-        return $authUser->can('View:ExamResult');
+        return $authUser->can('View:ExamResult') || $this->isSameBranch($authUser, $examResult);
     }
 
     public function create(AuthUser $authUser): bool
@@ -29,12 +50,12 @@ class ExamResultPolicy
 
     public function update(AuthUser $authUser, ExamResult $examResult): bool
     {
-        return $authUser->can('Update:ExamResult');
+        return $examResult->canBeEditedBy($authUser);
     }
 
     public function delete(AuthUser $authUser, ExamResult $examResult): bool
     {
-        return $authUser->can('Delete:ExamResult');
+        return $examResult->canBeEditedBy($authUser) && $authUser->hasRole('super_admin');
     }
 
     public function deleteAny(AuthUser $authUser): bool

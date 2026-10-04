@@ -4,6 +4,7 @@ namespace App\Filament\Resources\ExamMarks;
 
 use App\Filament\Resources\ExamMarks\Pages\CreateExamMark;
 use App\Filament\Resources\ExamMarks\Pages\EditExamMark;
+use App\Filament\Resources\ExamMarks\Pages\EnterMarks;
 use App\Filament\Resources\ExamMarks\Pages\ListExamMarks;
 use App\Filament\Resources\ExamMarks\Pages\ViewExamMark;
 use App\Filament\Resources\ExamMarks\Schemas\ExamMarkForm;
@@ -54,6 +55,7 @@ class ExamMarkResource extends Resource
         return [
             'index' => ListExamMarks::route('/'),
             'create' => CreateExamMark::route('/create'),
+            'enter-marks' => EnterMarks::route('/enter-marks'),
             'view' => ViewExamMark::route('/{record}'),
             'edit' => EditExamMark::route('/{record}/edit'),
         ];
