@@ -340,6 +340,39 @@ class FormBuilder extends Page
     public function saveOptions(): void
     {
         try {
+            $normalizedOptions = [];
+
+            foreach ($this->fieldOptions as $option) {
+                $label = trim((string) ($option['label'] ?? ''));
+
+                if ($label === '') {
+                    continue;
+                }
+
+                $value = trim((string) ($option['value'] ?? ''));
+
+                if ($value === '') {
+                    $value = Str::slug($label, '_');
+                }
+
+                $baseValue = $value;
+                $suffix = 2;
+
+                while (collect($normalizedOptions)->contains(fn ($item) => ($item['value'] ?? null) === $value)) {
+                    $value = $baseValue . '_' . $suffix;
+                    $suffix++;
+                }
+
+                $normalizedOptions[] = [
+                    'id'         => $option['id'] ?? null,
+                    'label'      => $label,
+                    'value'      => $value,
+                    'is_default' => (bool) ($option['is_default'] ?? false),
+                ];
+            }
+
+            $this->fieldOptions = array_values($normalizedOptions);
+
             $keepIds = [];
             foreach ($this->fieldOptions as $index => $option) {
                 $result = FormFieldOption::updateOrCreate(

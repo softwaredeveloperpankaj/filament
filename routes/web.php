@@ -5,6 +5,7 @@ use App\Http\Controllers\OnlineExamController;
 use App\Http\Controllers\QuestionPaperController;
 use App\Http\Controllers\ResultController;
 use App\Http\Controllers\StudentExamController;
+use App\Models\Exam;
 use App\Models\Student;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
@@ -73,4 +74,21 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('online-exams.save-answer');
     Route::post('online-exams/{attempt}/submit', [OnlineExamController::class, 'submit'])
         ->name('online-exams.submit');
+
+    Route::get('/exams/{exam}/schedule/print', function (string $exam) {
+        $examRecord = Exam::findOrFail($exam);
+
+        $examRecord->load([
+            'academicYear',
+            'branch',
+            'schedules.examSubject.subject',
+            'schedules.invigilator',
+        ]);
+
+        return view('pdf.exam-schedule', [
+            'exam' => $examRecord,
+        ]);
+    })
+        ->middleware(['auth', 'verified'])
+        ->name('exams.schedule.print');
 });

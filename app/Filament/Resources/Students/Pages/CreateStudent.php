@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Students\Pages;
 
+use App\Filament\Resources\Students\Schemas\StudentForm;
 use App\Filament\Resources\Students\StudentResource;
 use Filament\Actions\Action;
 use Filament\Resources\Pages\CreateRecord;
@@ -23,15 +24,19 @@ class CreateStudent extends CreateRecord
                 ->url($this->getResource()::getUrl('index'))
                 ->icon('heroicon-o-arrow-left'),
         ];
-    }    
+    }
 
     public function mount(): void
     {
         parent::mount();
 
-        // Pre-initialize form_data so Livewire tracks it on first page load
+        $templateId = $this->data['form_template_id'] ?? null;
+
         $this->form->fill([
-            'form_data' => [],
+            'form_data' => StudentForm::mergeDynamicFormDefaults(
+                $this->data['form_data'] ?? [],
+                $templateId
+            ),
         ]);
-    }    
+    }
 }

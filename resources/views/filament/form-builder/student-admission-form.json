@@ -1,0 +1,797 @@
+{
+  "_export_type": "form_builder",
+  "_exported_at": "2026-10-05T13:39:28.411308Z",
+  "template_name": "DPS Main Student",
+  "sections": [
+    {
+      "title": "Student Information",
+      "section_key": "student_information_1791206437",
+      "sort_order": 1,
+      "fields": [
+        {
+          "label": "Student Full Name",
+          "field_key": "student_name",
+          "type": "text",
+          "is_required": true,
+          "placeholder": "Enter full name as per Aadhar",
+          "help_text": "Only string and space are allowed.",
+          "option_layout": null,
+          "validation_rules": [
+            "'regex:/^[\\pL\\s]+$/u'",
+            "string"
+          ],
+          "visibility_conditions": null,
+          "settings": {
+            "column_span": "full"
+          },
+          "sort_order": 1,
+          "options": []
+        },
+        {
+          "label": "Date of Birth",
+          "field_key": "student_dob",
+          "type": "date",
+          "is_required": true,
+          "placeholder": "",
+          "help_text": "Select date of birth",
+          "option_layout": null,
+          "validation_rules": [],
+          "visibility_conditions": null,
+          "settings": {
+            "column_span": "half"
+          },
+          "sort_order": 2,
+          "options": []
+        },
+        {
+          "label": "Gender",
+          "field_key": "student_gender",
+          "type": "select",
+          "is_required": true,
+          "placeholder": "Select gender",
+          "help_text": "Select the gender of the student",
+          "option_layout": null,
+          "validation_rules": [],
+          "visibility_conditions": null,
+          "settings": {
+            "column_span": "half"
+          },
+          "sort_order": 3,
+          "options": [
+            {"value": "Male", "label": "Male"},
+            {"value": "Female", "label": "Female"},
+            {"value": "Other", "label": "Other"}
+          ]
+        },
+        {
+          "label": "Aadhar Number",
+          "field_key": "student_aadhar",
+          "type": "text",
+          "is_required": true,
+          "placeholder": "12-digit Aadhar number",
+          "help_text": "Enter 12-digit Aadhar number",
+          "option_layout": null,
+          "validation_rules": [
+            "'regex:/^\\d{12}$/'",
+            "string"
+          ],
+          "visibility_conditions": null,
+          "settings": {
+            "column_span": "full"
+          },
+          "sort_order": 4,
+          "options": []
+        },
+        {
+          "label": "Category",
+          "field_key": "student_category",
+          "type": "select",
+          "is_required": true,
+          "placeholder": "Select category",
+          "help_text": "Select the category of the student",
+          "option_layout": null,
+          "validation_rules": [],
+          "visibility_conditions": null,
+          "settings": {
+            "column_span": "half"
+          },
+          "sort_order": 5,
+          "options": [
+            {"value": "General", "label": "General"},
+            {"value": "OBC", "label": "OBC"},
+            {"value": "SC", "label": "SC"},
+            {"value": "ST", "label": "ST"},
+            {"value": "EWS", "label": "EWS"}
+          ]
+        },
+        {
+          "label": "Email Address",
+          "field_key": "student_email",
+          "type": "email",
+          "is_required": false,
+          "placeholder": "student@example.com",
+          "help_text": "Enter email address (optional)",
+          "option_layout": null,
+          "validation_rules": [
+            "email"
+          ],
+          "visibility_conditions": null,
+          "settings": {
+            "column_span": "half"
+          },
+          "sort_order": 6,
+          "options": []
+        },
+        {
+          "label": "Phone Number",
+          "field_key": "student_phone",
+          "type": "tel",
+          "is_required": false,
+          "placeholder": "10-digit mobile number",
+          "help_text": "Enter mobile number (optional)",
+          "option_layout": null,
+          "validation_rules": [
+            "'regex:/^\\d{10}$/'"
+          ],
+          "visibility_conditions": null,
+          "settings": {
+            "column_span": "half"
+          },
+          "sort_order": 7,
+          "options": []
+        },
+        {
+          "label": "Blood Group",
+          "field_key": "student_blood_group",
+          "type": "select",
+          "is_required": false,
+          "placeholder": "Select blood group",
+          "help_text": "Select blood group (optional)",
+          "option_layout": null,
+          "validation_rules": [],
+          "visibility_conditions": null,
+          "settings": {
+            "column_span": "half"
+          },
+          "sort_order": 8,
+          "options": [
+            {"value": "A+", "label": "A+"},
+            {"value": "A-", "label": "A-"},
+            {"value": "B+", "label": "B+"},
+            {"value": "B-", "label": "B-"},
+            {"value": "AB+", "label": "AB+"},
+            {"value": "AB-", "label": "AB-"},
+            {"value": "O+", "label": "O+"},
+            {"value": "O-", "label": "O-"}
+          ]
+        },
+        {
+          "label": "Religion",
+          "field_key": "student_religion",
+          "type": "text",
+          "is_required": false,
+          "placeholder": "Enter religion",
+          "help_text": "Enter religion (optional)",
+          "option_layout": null,
+          "validation_rules": [],
+          "visibility_conditions": null,
+          "settings": {
+            "column_span": "half"
+          },
+          "sort_order": 9,
+          "options": []
+        },
+        {
+          "label": "Nationality",
+          "field_key": "student_nationality",
+          "type": "text",
+          "is_required": false,
+          "placeholder": "Indian",
+          "help_text": "Enter nationality (optional)",
+          "option_layout": null,
+          "validation_rules": [],
+          "visibility_conditions": null,
+          "settings": {
+            "column_span": "half"
+          },
+          "sort_order": 10,
+          "options": []
+        },
+        {
+          "label": "Disability (if any)",
+          "field_key": "student_disability",
+          "type": "textarea",
+          "is_required": false,
+          "placeholder": "Describe any disability or special requirements",
+          "help_text": "Describe any disability or special requirements (optional)",
+          "option_layout": null,
+          "validation_rules": [],
+          "visibility_conditions": null,
+          "settings": {
+            "column_span": "full",
+            "rows": 3
+          },
+          "sort_order": 11,
+          "options": []
+        }
+      ]
+    },
+    {
+      "title": "Academic Information",
+      "section_key": "academic_information_1791206438",
+      "sort_order": 2,
+      "fields": [
+        {
+          "label": "Last Class Studied",
+          "field_key": "academic_last_class",
+          "type": "text",
+          "is_required": true,
+          "placeholder": "e.g., 5th, 8th, 10th",
+          "help_text": "Enter last class studied",
+          "option_layout": null,
+          "validation_rules": [],
+          "visibility_conditions": null,
+          "settings": {
+            "column_span": "third"
+          },
+          "sort_order": 1,
+          "options": []
+        },
+        {
+          "label": "Last School Attended",
+          "field_key": "academic_last_school",
+          "type": "text",
+          "is_required": true,
+          "placeholder": "Name of previous school",
+          "help_text": "Enter name of last school attended",
+          "option_layout": null,
+          "validation_rules": [],
+          "visibility_conditions": null,
+          "settings": {
+            "column_span": "two-thirds"
+          },
+          "sort_order": 2,
+          "options": []
+        },
+        {
+          "label": "Percentage in Last Exam",
+          "field_key": "academic_percentage",
+          "type": "number",
+          "is_required": true,
+          "placeholder": "e.g., 85.50",
+          "help_text": "Enter percentage in last exam (0-100)",
+          "option_layout": null,
+          "validation_rules": [
+            "'numeric'",
+            "'between:0,100'"
+          ],
+          "visibility_conditions": null,
+          "settings": {
+            "column_span": "half"
+          },
+          "sort_order": 3,
+          "options": []
+        },
+        {
+          "label": "PEN (if applicable)",
+          "field_key": "academic_pen",
+          "type": "text",
+          "is_required": false,
+          "placeholder": "Permanent Education Number",
+          "help_text": "Enter PEN if applicable (optional)",
+          "option_layout": null,
+          "validation_rules": [],
+          "visibility_conditions": null,
+          "settings": {
+            "column_span": "half"
+          },
+          "sort_order": 4,
+          "options": []
+        },
+        {
+          "label": "APAAR ID",
+          "field_key": "academic_apaar_id",
+          "type": "text",
+          "is_required": false,
+          "placeholder": "Automated Permanent Academic Account Registry ID",
+          "help_text": "Enter APAAR ID if applicable (optional)",
+          "option_layout": null,
+          "validation_rules": [],
+          "visibility_conditions": null,
+          "settings": {
+            "column_span": "half"
+          },
+          "sort_order": 5,
+          "options": []
+        },
+        {
+          "label": "Transfer Certificate Number",
+          "field_key": "academic_transfer_certificate",
+          "type": "text",
+          "is_required": false,
+          "placeholder": "Enter TC number",
+          "help_text": "Enter transfer certificate number (optional)",
+          "option_layout": null,
+          "validation_rules": [],
+          "visibility_conditions": null,
+          "settings": {
+            "column_span": "half"
+          },
+          "sort_order": 6,
+          "options": []
+        },
+        {
+          "label": "Transfer Certificate Date",
+          "field_key": "academic_tc_date",
+          "type": "date",
+          "is_required": false,
+          "placeholder": "Select TC date",
+          "help_text": "Select transfer certificate date (optional)",
+          "option_layout": null,
+          "validation_rules": [],
+          "visibility_conditions": null,
+          "settings": {
+            "column_span": "half"
+          },
+          "sort_order": 7,
+          "options": []
+        },
+        {
+          "label": "Board of Last Exam",
+          "field_key": "academic_board",
+          "type": "select",
+          "is_required": false,
+          "placeholder": "Select board",
+          "help_text": "Select board of last exam (optional)",
+          "option_layout": null,
+          "validation_rules": [],
+          "visibility_conditions": null,
+          "settings": {
+            "column_span": "full"
+          },
+          "sort_order": 8,
+          "options": [
+            {"value": "CBSE", "label": "CBSE"},
+            {"value": "ICSE", "label": "ICSE"},
+            {"value": "State Board", "label": "State Board"},
+            {"value": "IB", "label": "IB"},
+            {"value": "Other", "label": "Other"}
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Parent Information",
+      "section_key": "parent_information_1791206439",
+      "sort_order": 3,
+      "fields": [
+        {
+          "label": "Father's Full Name",
+          "field_key": "parents_fathers_name",
+          "type": "text",
+          "is_required": true,
+          "placeholder": "Enter father's full name",
+          "help_text": "Enter father's full name as per Aadhar",
+          "option_layout": null,
+          "validation_rules": [
+            "'regex:/^[\\pL\\s]+$/u'",
+            "string"
+          ],
+          "visibility_conditions": null,
+          "settings": {
+            "column_span": "half"
+          },
+          "sort_order": 1,
+          "options": []
+        },
+        {
+          "label": "Father's Occupation",
+          "field_key": "parents_fathers_occupation",
+          "type": "text",
+          "is_required": true,
+          "placeholder": "Enter father's occupation",
+          "help_text": "Enter father's occupation",
+          "option_layout": null,
+          "validation_rules": [],
+          "visibility_conditions": null,
+          "settings": {
+            "column_span": "half"
+          },
+          "sort_order": 2,
+          "options": []
+        },
+        {
+          "label": "Father's Mobile Number",
+          "field_key": "parents_fathers_mobile_no",
+          "type": "tel",
+          "is_required": true,
+          "placeholder": "10-digit mobile number",
+          "help_text": "Enter father's mobile number",
+          "option_layout": null,
+          "validation_rules": [
+            "'regex:/^\\d{10}$/'"
+          ],
+          "visibility_conditions": null,
+          "settings": {
+            "column_span": "half"
+          },
+          "sort_order": 3,
+          "options": []
+        },
+        {
+          "label": "Father's Email",
+          "field_key": "parents_fathers_email",
+          "type": "email",
+          "is_required": false,
+          "placeholder": "father@example.com",
+          "help_text": "Enter father's email (optional)",
+          "option_layout": null,
+          "validation_rules": [
+            "email"
+          ],
+          "visibility_conditions": null,
+          "settings": {
+            "column_span": "half"
+          },
+          "sort_order": 4,
+          "options": []
+        },
+        {
+          "label": "Mother's Full Name",
+          "field_key": "parents_mothers_name",
+          "type": "text",
+          "is_required": true,
+          "placeholder": "Enter mother's full name",
+          "help_text": "Enter mother's full name as per Aadhar",
+          "option_layout": null,
+          "validation_rules": [
+            "'regex:/^[\\pL\\s]+$/u'",
+            "string"
+          ],
+          "visibility_conditions": null,
+          "settings": {
+            "column_span": "half"
+          },
+          "sort_order": 5,
+          "options": []
+        },
+        {
+          "label": "Mother's Occupation",
+          "field_key": "parents_mothers_occupation",
+          "type": "text",
+          "is_required": true,
+          "placeholder": "Enter mother's occupation",
+          "help_text": "Enter mother's occupation",
+          "option_layout": null,
+          "validation_rules": [],
+          "visibility_conditions": null,
+          "settings": {
+            "column_span": "half"
+          },
+          "sort_order": 6,
+          "options": []
+        },
+        {
+          "label": "Mother's Mobile Number",
+          "field_key": "parents_mothers_mobile_no",
+          "type": "tel",
+          "is_required": true,
+          "placeholder": "10-digit mobile number",
+          "help_text": "Enter mother's mobile number",
+          "option_layout": null,
+          "validation_rules": [
+            "'regex:/^\\d{10}$/'"
+          ],
+          "visibility_conditions": null,
+          "settings": {
+            "column_span": "half"
+          },
+          "sort_order": 7,
+          "options": []
+        },
+        {
+          "label": "Mother's Email",
+          "field_key": "parents_mothers_email",
+          "type": "email",
+          "is_required": false,
+          "placeholder": "mother@example.com",
+          "help_text": "Enter mother's email (optional)",
+          "option_layout": null,
+          "validation_rules": [
+            "email"
+          ],
+          "visibility_conditions": null,
+          "settings": {
+            "column_span": "half"
+          },
+          "sort_order": 8,
+          "options": []
+        },
+        {
+          "label": "Village/Town",
+          "field_key": "parents_address_village",
+          "type": "text",
+          "is_required": true,
+          "placeholder": "Enter village/town",
+          "help_text": "Enter village/town",
+          "option_layout": null,
+          "validation_rules": [],
+          "visibility_conditions": null,
+          "settings": {
+            "column_span": "half"
+          },
+          "sort_order": 9,
+          "options": []
+        },
+        {
+          "label": "Post Office",
+          "field_key": "parents_address_post_office",
+          "type": "text",
+          "is_required": true,
+          "placeholder": "Enter post office",
+          "help_text": "Enter post office",
+          "option_layout": null,
+          "validation_rules": [],
+          "visibility_conditions": null,
+          "settings": {
+            "column_span": "half"
+          },
+          "sort_order": 10,
+          "options": []
+        },
+        {
+          "label": "District",
+          "field_key": "parents_address_district",
+          "type": "text",
+          "is_required": true,
+          "placeholder": "Enter district",
+          "help_text": "Enter district",
+          "option_layout": null,
+          "validation_rules": [],
+          "visibility_conditions": null,
+          "settings": {
+            "column_span": "half"
+          },
+          "sort_order": 11,
+          "options": []
+        },
+        {
+          "label": "State",
+          "field_key": "parents_address_state",
+          "type": "text",
+          "is_required": true,
+          "placeholder": "Enter state",
+          "help_text": "Enter state",
+          "option_layout": null,
+          "validation_rules": [],
+          "visibility_conditions": null,
+          "settings": {
+            "column_span": "half"
+          },
+          "sort_order": 12,
+          "options": []
+        },
+        {
+          "label": "PIN Code",
+          "field_key": "parents_address_pincode",
+          "type": "text",
+          "is_required": true,
+          "placeholder": "6-digit PIN code",
+          "help_text": "Enter 6-digit PIN code",
+          "option_layout": null,
+          "validation_rules": [
+            "'regex:/^\\d{6}$/'"
+          ],
+          "visibility_conditions": null,
+          "settings": {
+            "column_span": "half"
+          },
+          "sort_order": 13,
+          "options": []
+        },
+        {
+          "label": "Emergency Contact Name",
+          "field_key": "emergency_contact_name",
+          "type": "text",
+          "is_required": false,
+          "placeholder": "Enter emergency contact name",
+          "help_text": "Enter emergency contact name (optional)",
+          "option_layout": null,
+          "validation_rules": [],
+          "visibility_conditions": null,
+          "settings": {
+            "column_span": "half"
+          },
+          "sort_order": 14,
+          "options": []
+        },
+        {
+          "label": "Relation to Student",
+          "field_key": "emergency_contact_relation",
+          "type": "text",
+          "is_required": false,
+          "placeholder": "Enter relation to student",
+          "help_text": "Enter relation to student (optional)",
+          "option_layout": null,
+          "validation_rules": [],
+          "visibility_conditions": null,
+          "settings": {
+            "column_span": "half"
+          },
+          "sort_order": 15,
+          "options": []
+        },
+        {
+          "label": "Emergency Contact Phone",
+          "field_key": "emergency_contact_phone",
+          "type": "tel",
+          "is_required": false,
+          "placeholder": "10-digit mobile number",
+          "help_text": "Enter emergency contact phone (optional)",
+          "option_layout": null,
+          "validation_rules": [
+            "'regex:/^\\d{10}$/'"
+          ],
+          "visibility_conditions": null,
+          "settings": {
+            "column_span": "half"
+          },
+          "sort_order": 16,
+          "options": []
+        }
+      ]
+    },
+    {
+      "title": "Additional Information",
+      "section_key": "additional_information_1791206440",
+      "sort_order": 4,
+      "fields": [
+        {
+          "label": "Date of Admission",
+          "field_key": "admission_date",
+          "type": "date",
+          "is_required": true,
+          "placeholder": "Select admission date",
+          "help_text": "Select date of admission",
+          "option_layout": null,
+          "validation_rules": [],
+          "visibility_conditions": null,
+          "settings": {
+            "column_span": "half"
+          },
+          "sort_order": 1,
+          "options": []
+        },
+        {
+          "label": "Class Applying For",
+          "field_key": "admission_class",
+          "type": "text",
+          "is_required": true,
+          "placeholder": "Enter class applying for",
+          "help_text": "Enter class applying for",
+          "option_layout": null,
+          "validation_rules": [],
+          "visibility_conditions": null,
+          "settings": {
+            "column_span": "half"
+          },
+          "sort_order": 2,
+          "options": []
+        },
+        {
+          "label": "Section (if applicable)",
+          "field_key": "admission_section",
+          "type": "text",
+          "is_required": false,
+          "placeholder": "Enter section (if applicable)",
+          "help_text": "Enter section if applicable (optional)",
+          "option_layout": null,
+          "validation_rules": [],
+          "visibility_conditions": null,
+          "settings": {
+            "column_span": "half"
+          },
+          "sort_order": 3,
+          "options": []
+        },
+        {
+          "label": "Admission Fee Paid (Amount)",
+          "field_key": "admission_fee_paid",
+          "type": "number",
+          "is_required": false,
+          "placeholder": "Enter amount",
+          "help_text": "Enter admission fee paid amount (optional)",
+          "option_layout": null,
+          "validation_rules": [
+            "'numeric'",
+            "'min:0'"
+          ],
+          "visibility_conditions": null,
+          "settings": {
+            "column_span": "half"
+          },
+          "sort_order": 4,
+          "options": []
+        },
+        {
+          "label": "Date of Fee Payment",
+          "field_key": "admission_fee_date",
+          "type": "date",
+          "is_required": false,
+          "placeholder": "Select fee payment date",
+          "help_text": "Select date of fee payment (optional)",
+          "option_layout": null,
+          "validation_rules": [],
+          "visibility_conditions": null,
+          "settings": {
+            "column_span": "half"
+          },
+          "sort_order": 5,
+          "options": []
+        },
+        {
+          "label": "Documents Submitted (Checklist)",
+          "field_key": "documents_submitted",
+          "type": "checkbox",
+          "is_required": false,
+          "placeholder": "",
+          "help_text": "Select documents submitted",
+          "option_layout": null,
+          "validation_rules": [],
+          "visibility_conditions": null,
+          "settings": {
+            "column_span": "full"
+          },
+          "sort_order": 6,
+          "options": [
+            {"value": "birth_certificate", "label": "Birth Certificate"},
+            {"value": "aadhar_card", "label": "Aadhar Card"},
+            {"value": "transfer_certificate", "label": "Transfer Certificate"},
+            {"value": "mark_sheet", "label": "Last Mark Sheet"},
+            {"value": "caste_certificate", "label": "Caste Certificate (if applicable)"},
+            {"value": "passport_photos", "label": "Passport Size Photos"},
+            {"value": "medical_certificate", "label": "Medical Fitness Certificate"}
+          ]
+        },
+        {
+          "label": "Transport Required",
+          "field_key": "transport_required",
+          "type": "radio",
+          "is_required": false,
+          "placeholder": "",
+          "help_text": "Select if transport is required",
+          "option_layout": null,
+          "validation_rules": [],
+          "visibility_conditions": null,
+          "settings": {
+            "column_span": "half"
+          },
+          "sort_order": 7,
+          "options": [
+            {"value": "Yes", "label": "Yes"},
+            {"value": "No", "label": "No"}
+          ]
+        },
+        {
+          "label": "Hostel Accommodation Required",
+          "field_key": "hostel_required",
+          "type": "radio",
+          "is_required": false,
+          "placeholder": "",
+          "help_text": "Select if hostel accommodation is required",
+          "option_layout": null,
+          "validation_rules": [],
+          "visibility_conditions": null,
+          "settings": {
+            "column_span": "half"
+          },
+          "sort_order": 8,
+          "options": [
+            {"value": "Yes", "label": "Yes"},
+            {"value": "No", "label": "No"}
+          ]
+        }
+      ]
+    }
+  ]
+}

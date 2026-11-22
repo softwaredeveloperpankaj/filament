@@ -58,7 +58,10 @@
                 <li>Report 30 minutes before exam time.</li>
                 <li>Bring this admit card and valid ID.</li>
                 <li>No electronic devices allowed.</li>
-                @foreach($data['instructions'] as $inst)
+                @php
+                    $instructions = is_array($data['instructions']) ? $data['instructions'] : (is_string($data['instructions']) ? [$data['instructions']] : []);
+                @endphp
+                @foreach($instructions as $inst)
                     <li>{{ $inst }}</li>
                 @endforeach
             </ul>

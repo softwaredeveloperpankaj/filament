@@ -16,6 +16,8 @@ class ExamSchedule extends Model
 
     protected $fillable = [
         'exam_id',
+        'branch_class_id',
+        'section_id',
         'exam_subject_id',
         'exam_date',
         'start_time',
@@ -144,6 +146,42 @@ class ExamSchedule extends Model
                 throw ValidationException::withMessages([
                     'start_time' => 'This time overlaps with another scheduled subject on the same date.',
                     'end_time' => 'This time overlaps with another scheduled subject on the same date.',
+                ]);
+            }
+        }
+
+        // Validate room number - if same date, time, and room, prevent duplicate
+        // But allow same room if different date/time (different schedule)
+        $this->validateRoomNumber();
+    }
+
+    /**
+     * Validate room number to prevent double-booking
+     * Allows same room if date/time is different
+     * Prevents same room on same date/time
+     */
+    protected function validateRoomNumber(): void
+    {
+        if (empty($this->room_number)) {
+            return; // Room number is optional
+        }
+
+        $roomConflicts = static::query()
+            ->where('exam_id', $this->exam_id)
+            ->where('room_number', $this->room_number)
+            ->whereDate('exam_date', $this->exam_date)
+            ->when($this->id, fn ($query) => $query->whereKeyNot($this->id))
+            ->get();
+
+        foreach ($roomConflicts as $conflict) {
+            if ($this->timesOverlap(
+                $this->start_time,
+                $this->end_time,
+                $conflict->start_time,
+                $conflict->end_time,
+            )) {
+                throw ValidationException::withMessages([
+                    'room_number' => "Room {$this->room_number} is already booked for this date and time.",
                 ]);
             }
         }

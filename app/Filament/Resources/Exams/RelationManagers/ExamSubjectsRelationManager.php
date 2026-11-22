@@ -2,22 +2,27 @@
 
 namespace App\Filament\Resources\Exams\RelationManagers;
 
+use App\Models\BranchClass;
+use App\Models\ClassSection;
 use App\Models\Subject;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
 use Filament\Forms\Components\KeyValue;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
-use Filament\Schemas\Components\Section;
-use Filament\Schemas\Schema;
-use Filament\Tables\Table;
-use Filament\Tables\Columns\TextColumn;
 use Filament\Resources\RelationManagers\RelationManager;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Components\Utilities\Set;
+use Filament\Schemas\Schema;
 use Filament\Tables\Columns\IconColumn;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Table;
 
 class ExamSubjectsRelationManager extends RelationManager
 {
@@ -29,12 +34,49 @@ class ExamSubjectsRelationManager extends RelationManager
     public function form(Schema $schema): Schema
     {
         return $schema->components([
+                    Select::make('branch_class_id')
+                        ->label('Class')
+                        ->options(fn () => BranchClass::query()
+                            ->where('branch_id', $this->getOwnerRecord()?->branch_id)
+                            ->pluck('name', 'id'))
+                        ->searchable()
+                        ->preload()
+                        ->default(fn () => $this->getOwnerRecord()?->branch_class_id)
+                        ->required()
+                        ->reactive()
+                        ->afterStateUpdated(fn (Set $set) => $set('section_id', null)),
+
+                    Select::make('section_id')
+                        ->label('Section')
+                        ->options(fn (Get $get) => $get('branch_class_id')
+                            ? ClassSection::query()
+                                ->where('branch_class_id', $get('branch_class_id'))
+                                ->with('section')
+                                ->get()
+                                ->pluck('section.name', 'section_id')
+                            : [])
+                        ->searchable()
+                        ->preload()
+                        ->default(fn () => $this->getOwnerRecord()?->section_id)
+                        ->required(),
+
                     Select::make('subject_id')
                         ->label('Subject')
-                        ->relationship('subject', 'name')
-                        ->getOptionLabelFromRecordUsing(
-                            fn ($record) => "{$record->name} ({$record->code})"
-                        )
+                        ->options(function (Get $get) {
+                            $branchClassId = $get('branch_class_id');
+                            $sectionId = $get('section_id');
+
+                            return Subject::query()
+                                ->when($branchClassId, fn ($query) => $query->whereHas('sectionSubjects', function ($sectionSubjectQuery) use ($branchClassId, $sectionId) {
+                                    $sectionSubjectQuery->where('branch_class_id', $branchClassId)
+                                        ->when($sectionId, fn ($query) => $query->where('section_id', $sectionId));
+                                }))
+                                ->where('branch_id', $this->getOwnerRecord()?->branch_id)
+                                ->orderBy('name')
+                                ->get()
+                                ->mapWithKeys(fn ($subject) => [$subject->id => "{$subject->name} ({$subject->code})"])
+                                ->all();
+                        })
                         ->searchable()
                         ->preload()
                         ->required()
@@ -114,6 +156,7 @@ class ExamSubjectsRelationManager extends RelationManager
             ->columns([
                 TextColumn::make('subject.name')
                     ->label('Subject')
+                    ->getStateUsing(fn ($record) => $record->subject ? $record->subject->name . ' (' . $record->subject->code . ')' : null)
                     ->searchable()
                     ->sortable()
                     ->weight('medium'),
@@ -157,10 +200,12 @@ class ExamSubjectsRelationManager extends RelationManager
             ])
             ->recordActions([
                 ActionGroup::make([
+                    ViewAction::make(),
                     EditAction::make(),
                     DeleteAction::make(),
                 ]),
             ])
+            ->recordActionsColumnLabel('Actions')
             ->toolbarActions([
                 DeleteBulkAction::make(),
             ]);

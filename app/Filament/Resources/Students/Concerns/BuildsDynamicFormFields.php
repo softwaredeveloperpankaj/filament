@@ -290,8 +290,18 @@ trait BuildsDynamicFormFields
             $component->rules($rules);
         }
 
-        if (array_key_exists('default', $settings) && method_exists($component, 'default')) {
-            $component->default($settings['default']);
+        if (method_exists($component, 'default')) {
+            $default = $settings['default'] ?? null;
+
+            if ($component instanceof CheckboxList) {
+                $component->default(is_array($default) ? array_values($default) : []);
+            } elseif ($component instanceof Select && ! empty($settings['multiple'])) {
+                $component->default(is_array($default) ? array_values($default) : []);
+            } elseif ($component instanceof FileUpload && ! empty($settings['multiple'])) {
+                $component->default(is_array($default) ? array_values($default) : []);
+            } elseif (array_key_exists('default', $settings)) {
+                $component->default($default);
+            }
         }
 
         if (! empty($settings['column_span']) && method_exists($component, 'columnSpan')) {
@@ -301,6 +311,72 @@ trait BuildsDynamicFormFields
         return $component;
     }
 
+    public static function getDynamicFormDefaults(?int $templateId): array
+    {
+        if (! $templateId) {
+            return [];
+        }
+
+        $template = FormTemplate::with([
+            'activeVersion',
+            'activeVersion.sections' => fn ($q) => $q
+                ->where('is_active', 1)
+                ->orderBy('sort_order'),
+            'activeVersion.sections.fields' => fn ($q) => $q
+                ->where('is_active', 1)
+                ->orderBy('sort_order'),
+        ])
+            ->where('id', $templateId)
+            ->where('is_active', 1)
+            ->where('status', 'published')
+            ->whereHas('activeVersion')
+            ->first();
+
+        if (! $template || ! $template->activeVersion) {
+            return [];
+        }
+
+        $defaults = [];
+
+        foreach ($template->activeVersion->sections as $section) {
+            foreach ($section->fields as $field) {
+                $defaults[static::fieldKey($field)] = static::getFieldDefaultValue($field);
+            }
+        }
+
+        return $defaults;
+    }
+
+    public static function mergeDynamicFormDefaults(?array $existingData, ?int $templateId): array
+    {
+        $existingData = is_array($existingData) ? $existingData : [];
+
+        return array_replace(static::getDynamicFormDefaults($templateId), $existingData);
+    }
+
+    protected static function getFieldDefaultValue(FormField $field): mixed
+    {
+        $settings = $field->settings ?? [];
+
+        if ($field->type === 'checkbox' && ! empty(static::fieldOptions($field))) {
+            return [];
+        }
+
+        if ($field->type === 'file' && ! empty($settings['multiple'] ?? false)) {
+            return [];
+        }
+
+        if ($field->type === 'select' && ! empty($settings['multiple'] ?? false)) {
+            return [];
+        }
+
+        if (array_key_exists('default', $settings)) {
+            return $settings['default'];
+        }
+
+        return null;
+    }
+
     protected static function fieldKey(FormField $field): string
     {
         return $field->field_key ?: Str::slug($field->label, '_');
@@ -308,7 +384,33 @@ trait BuildsDynamicFormFields
 
     protected static function fieldOptions(FormField $field): array
     {
-        return $field->options?->pluck('label', 'value')->toArray() ?? [];
+        $mapped = [];
+
+        foreach ($field->options ?? [] as $option) {
+            $label = trim((string) data_get($option, 'label', ''));
+
+            if ($label === '') {
+                continue;
+            }
+
+            $value = trim((string) data_get($option, 'value', ''));
+
+            if ($value === '') {
+                $value = Str::slug($label, '_');
+            }
+
+            $baseValue = $value;
+            $suffix = 2;
+
+            while (array_key_exists($value, $mapped)) {
+                $value = $baseValue . '_' . $suffix;
+                $suffix++;
+            }
+
+            $mapped[$value] = $label;
+        }
+
+        return $mapped;
     }
 
     protected static function makeTextField(FormField $field): Component

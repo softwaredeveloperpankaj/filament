@@ -16,6 +16,8 @@ class ExamSubject extends Model
     protected $fillable = [
         'exam_id',
         'subject_id',
+        'branch_class_id',
+        'section_id',
         'max_marks',
         'pass_marks',
         'theory_marks',
@@ -39,6 +41,16 @@ class ExamSubject extends Model
     public function subject(): BelongsTo
     {
         return $this->belongsTo(Subject::class);
+    }
+
+    public function branchClass(): BelongsTo
+    {
+        return $this->belongsTo(BranchClass::class, 'branch_class_id');
+    }
+
+    public function section(): BelongsTo
+    {
+        return $this->belongsTo(Section::class);
     }
 
     public function schedules(): HasMany

@@ -55,7 +55,9 @@ class ExamSchedulesRelationManager extends RelationManager
                         TextInput::make('room_number')
                             ->label('Room Number')
                             ->placeholder('e.g. A-101, Hall B, Lab 3')
-                            ->maxLength(50),
+                            ->maxLength(50)
+                            ->datalist(RoomNumber::getPredefinedRooms())
+                            ->helperText('Select from predefined rooms or enter a custom room number'),
 
                         Select::make('invigilator_id')
                             ->label('Invigilator')

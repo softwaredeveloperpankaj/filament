@@ -210,7 +210,18 @@ class StudentImporter extends Importer
                         $fieldRules[] = 'date';
                         break;
                     case 'checkbox':
-                        $fieldRules[] = 'boolean';
+                        $options = collect($field['options'] ?? [])
+                            ->map(fn ($option) => $option['value'] ?? null)
+                            ->filter(fn ($value) => filled($value))
+                            ->values()
+                            ->all();
+
+                        if (! empty($options)) {
+                            $fieldRules[] = 'array';
+                            $rules["form_data.{$fieldKey}.*"] = [Rule::in($options)];
+                        } else {
+                            $fieldRules[] = 'boolean';
+                        }
                         break;
                     case 'radio':
                     case 'select':

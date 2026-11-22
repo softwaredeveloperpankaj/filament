@@ -35,8 +35,7 @@ class QuestionBankForm
                     )
                     ->searchable()
                     ->preload()
-                    ->required()
-                    ->disabled(fn(Get $get) => !$get('branch_id')),
+                    ->required(),
 
                 TextInput::make('name')
                     ->label('Bank Name')

@@ -96,7 +96,12 @@ class StudentForm
                             })
                             ->required()
                             ->live()
-                            ->afterStateUpdated(function ($set, $get) {
+                            ->afterStateUpdated(function ($state, $set, $get) {
+                                $set('form_data', static::mergeDynamicFormDefaults(
+                                    $get('form_data') ?? [],
+                                    (int) $state
+                                ));
+
                                 $set('academic_year', now()->year . '-' . now()->addYear()->format('y'));
                                 $classSection = ClassSection::find($get('section_id'));
                                 $set('roll_no', static::previewRollNo(

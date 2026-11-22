@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Filament\Resources\ExamSchedules\Schemas\ExamScheduleForm;
+use App\Filament\Resources\Exams\RelationManagers\ExamSchedulesRelationManager;
 use App\Models\AcademicYear;
 use App\Models\Branch;
 use App\Models\BranchClass;
@@ -13,7 +14,9 @@ use App\Models\School;
 use App\Models\Section;
 use App\Models\Subject;
 use App\Models\User;
+use Filament\Schemas\Schema;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 use Tests\TestCase;
 
@@ -195,5 +198,157 @@ class ExamScheduleValidationTest extends TestCase
             'room_number' => 'A-102',
             'instructions' => 'Duplicate schedule.',
         ]);
+    }
+
+    public function test_form_start_time_validation_flags_overlapping_schedules(): void
+    {
+        $user = User::factory()->create();
+
+        $school = School::create([
+            'user_id' => $user->id,
+            'name' => 'Test School',
+            'address' => 'Main Street',
+            'phone' => '1111111111',
+            'email' => 'school@example.com',
+            'domain_name' => 'testschool.local',
+        ]);
+
+        $branch = Branch::create([
+            'school_id' => $school->id,
+            'user_id' => $user->id,
+            'name' => 'Main Branch',
+            'code' => 'MB',
+            'address' => 'Branch address',
+            'phone' => '2222222222',
+            'email' => 'branch@example.com',
+            'is_main' => true,
+            'is_active' => true,
+        ]);
+
+        $user->update(['branch_id' => $branch->id]);
+
+        $academicYear = AcademicYear::create([
+            'name' => '2026-2027',
+            'start_date' => '2026-04-01',
+            'end_date' => '2027-03-31',
+            'is_current' => true,
+            'status' => 'active',
+        ]);
+
+        $branchClass = BranchClass::create([
+            'branch_id' => $branch->id,
+            'name' => 'LKG',
+            'starting_roll_no' => 1,
+        ]);
+
+        $section = Section::create([
+            'branch_id' => $branch->id,
+            'name' => 'A',
+            'starting_roll_no' => 1,
+        ]);
+
+        $english = Subject::create([
+            'branch_id' => $branch->id,
+            'name' => 'English',
+            'code' => 'ENG',
+        ]);
+
+        $drawing = Subject::create([
+            'branch_id' => $branch->id,
+            'name' => 'Drawing & Craft',
+            'code' => 'LKG-ART',
+        ]);
+
+        $exam = Exam::create([
+            'branch_id' => $branch->id,
+            'branch_class_id' => $branchClass->id,
+            'section_id' => $section->id,
+            'name' => 'Mid Term',
+            'slug' => 'mid-term-lkg-2026',
+            'mode' => 'offline',
+            'academic_year_id' => $academicYear->id,
+            'start_date' => '2026-10-20',
+            'end_date' => '2026-10-24',
+            'start_time' => '09:00:00',
+            'end_time' => '17:00:00',
+            'status' => 'draft',
+            'instructions' => 'Read the questions carefully.',
+            'is_practical' => false,
+            'created_by' => $user->id,
+        ]);
+
+        $englishExamSubject = ExamSubject::create([
+            'exam_id' => $exam->id,
+            'subject_id' => $english->id,
+            'branch_class_id' => $branchClass->id,
+            'section_id' => $section->id,
+            'max_marks' => 100,
+            'pass_marks' => 33,
+            'theory_marks' => 80,
+            'practical_marks' => 20,
+            'duration_minutes' => 180,
+            'paper_structure' => ['mcq' => 20],
+            'is_graded' => true,
+            'display_order' => 1,
+        ]);
+
+        $drawingExamSubject = ExamSubject::create([
+            'exam_id' => $exam->id,
+            'subject_id' => $drawing->id,
+            'branch_class_id' => $branchClass->id,
+            'section_id' => $section->id,
+            'max_marks' => 100,
+            'pass_marks' => 33,
+            'theory_marks' => 80,
+            'practical_marks' => 20,
+            'duration_minutes' => 180,
+            'paper_structure' => ['mcq' => 20],
+            'is_graded' => true,
+            'display_order' => 2,
+        ]);
+
+        ExamSchedule::create([
+            'exam_id' => $exam->id,
+            'exam_subject_id' => $englishExamSubject->id,
+            'branch_class_id' => $branchClass->id,
+            'section_id' => $section->id,
+            'exam_date' => '2026-10-20',
+            'start_time' => '09:00:00',
+            'end_time' => '12:00:00',
+            'room_number' => 'A-101',
+            'invigilator_id' => $user->id,
+            'instructions' => 'Existing schedule.',
+        ]);
+
+        $otherInvigilator = User::factory()->create([
+            'branch_id' => $branch->id,
+        ]);
+
+        $manager = new ExamSchedulesRelationManager();
+        $manager->ownerRecord = $exam;
+
+        $method = new \ReflectionMethod(
+            $manager,
+            'getScheduleConflictMessage',
+        );
+        $method->setAccessible(true);
+
+        $message = $method->invoke(
+            $manager,
+            '2026-10-20',
+            '09:00',
+            '12:00',
+            $branchClass->id,
+            $section->id,
+            $drawingExamSubject->id,
+            'A-102',
+            $otherInvigilator->id,
+        );
+
+        $this->assertNotNull($message);
+        $this->assertSame(
+            'This class and section already has another exam during this time.',
+            $message,
+        );
     }
 }

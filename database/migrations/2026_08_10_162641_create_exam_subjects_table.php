@@ -15,6 +15,8 @@ return new class extends Migration
             $table->id();
             $table->foreignId('exam_id')->constrained()->cascadeOnDelete();
             $table->foreignId('subject_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('branch_class_id')->nullable()->constrained()->nullOnDelete();
+            $table->foreignId('section_id')->nullable()->constrained()->nullOnDelete();
             $table->unsignedInteger('max_marks')->default(100);
             $table->unsignedInteger('pass_marks')->default(33);
             $table->unsignedInteger('theory_marks')->default(80);
@@ -26,7 +28,7 @@ return new class extends Migration
             $table->timestamps();
 
             $table->unique(['exam_id', 'subject_id']);
-            $table->index(['exam_id', 'display_order']);
+            $table->index(['exam_id', 'branch_class_id', 'section_id', 'display_order']);
         });
     }
 

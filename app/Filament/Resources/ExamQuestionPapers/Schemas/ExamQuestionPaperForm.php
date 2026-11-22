@@ -48,9 +48,15 @@ class ExamQuestionPaperForm
                             ->options(fn (Get $get) => $get('exam_id')
                                 ? ExamSubject::query()
                                     ->where('exam_id', $get('exam_id'))
-                                    ->with('subject')
+                                    ->with(['subject', 'branchClass'])
                                     ->get()
-                                    ->pluck('subject.name', 'id')
+                                    ->mapWithKeys(fn (ExamSubject $examSubject) => [
+                                        $examSubject->id => trim(
+                                            ($examSubject->branchClass?->name ? $examSubject->branchClass->name . ' - ' : '')
+                                            . ($examSubject->subject?->name ?? 'Unknown Subject')
+                                        ),
+                                    ])
+                                    ->all()
                                 : [])
                             ->searchable()
                             ->preload()
@@ -76,7 +82,6 @@ class ExamQuestionPaperForm
                                 if (! $examSubject) {
                                     return [];
                                 }
-
                                 return QuestionBank::query()
                                     ->where('branch_id', $examSubject->exam->branch_id)
                                     ->where('subject_id', $examSubject->subject_id)

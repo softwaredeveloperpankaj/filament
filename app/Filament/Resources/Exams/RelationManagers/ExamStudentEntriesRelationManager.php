@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Exams\RelationManagers;
 
 use App\Enums\ExamEntryStatus;
 use App\Filament\Resources\Students\StudentResource;
+use App\Models\BranchClass;
 use App\Models\ClassSection;
 use App\Models\ExamStudentEntry;
 use App\Models\Section;
@@ -117,6 +118,12 @@ class ExamStudentEntriesRelationManager extends RelationManager
                     ->badge()
                     ->color('gray'),
 
+                TextColumn::make('student.class.name')
+                    ->label('Class')
+                    ->getStateUsing(fn (ExamStudentEntry $record) => $record->student?->class?->name)
+                    ->badge()
+                    ->color('warning'),
+
                 TextColumn::make('section.name')
                     ->label('Section')
                     ->badge()
@@ -140,14 +147,40 @@ class ExamStudentEntriesRelationManager extends RelationManager
             ->defaultSort('roll_no')
             ->headerActions([
                 // Individual enrollment
-                CreateAction::make()->label('Enroll Student'),
-
-                // Bulk enroll by section
-                Action::make('bulk_enroll')
-                    ->label('Bulk Enroll Section')
-                    ->icon('heroicon-o-user-group')
-                    ->color('info')
+                CreateAction::make()
+                    ->label('Enroll Student')
                     ->schema([
+                        Select::make('student_id')
+                            ->label('Student')
+                            ->options(fn() => Student::query()
+                                ->where('branch_id', $this->getOwnerRecord()->branch_id)
+                                ->where('branch_class_id', $this->getOwnerRecord()->branch_class_id)
+                                ->where('section_id', $this->getOwnerRecord()->section_id)
+                                ->whereDoesntHave('examEntries', fn($query) => $query->where('exam_id', $this->getOwnerRecord()->id))
+                                ->get()
+                                ->mapWithKeys(fn(Student $student) => [$student->id => $student->roll_no])
+                                ->all())
+                            ->searchable()
+                            ->preload()
+                            ->required()
+                            ->reactive()
+                            ->afterStateUpdated(function ($state, callable $set) {
+                                if (blank($state)) {
+                                    return;
+                                }
+
+                                $student = Student::query()->find($state);
+                                if ($student) {
+                                    $set('roll_no', $student->roll_no);
+                                    $set('section_id', $student->section_id);
+                                }
+                            }),
+
+                        TextInput::make('roll_no')
+                            ->label('Roll No')
+                            ->required()
+                            ->maxLength(20),
+
                         Select::make('section_id')
                             ->label('Section')
                             ->options(fn() => ClassSection::query()
@@ -155,27 +188,140 @@ class ExamStudentEntriesRelationManager extends RelationManager
                                 ->with('section')
                                 ->get()
                                 ->pluck('section.name', 'section_id'))
+                            ->searchable()
+                            ->preload()
+                            ->required(),
+
+                        Select::make('status')
+                            ->label('Status')
+                            ->options(ExamEntryStatus::forFilamentSelect())
+                            ->default(ExamEntryStatus::ENROLLED)
                             ->required(),
                     ])
                     ->action(function (array $data) {
-                        $students = Student::query()
-                            ->where('branch_id', $this->getOwnerRecord()->branch_id)
-                            ->where('branch_class_id', $this->getOwnerRecord()->branch_class_id)
-                            ->where('section_id', $data['section_id'])
-                            ->whereDoesntHave('examEntries', fn($q) => $q->where('exam_id', $this->getOwnerRecord()->id))
-                            ->get();
+                        $studentId = $data['student_id'] ?? null;
+                        if (! $studentId) {
+                            Notification::make()
+                                ->title('No student selected')
+                                ->danger()
+                                ->send();
 
-                        $count = 0;
-                        foreach ($students as $student) {
-                            ExamStudentEntry::create([
-                                'exam_id' => $this->getOwnerRecord()->id,
-                                'student_id' => $student->id,
-                                'section_id' => $student->section_id,
-                                'roll_no' => $student->roll_no,
-                                'status' => ExamEntryStatus::ENROLLED,
-                            ]);
-                            $count++;
+                            return;
                         }
+
+                        // Prevent duplicate enrollment
+                        $exists = ExamStudentEntry::query()
+                            ->where('exam_id', $this->getOwnerRecord()->id)
+                            ->where('student_id', $studentId)
+                            ->exists();
+
+                        if ($exists) {
+                            Notification::make()
+                                ->title('Student is already enrolled')
+                                ->warning()
+                                ->send();
+
+                            return;
+                        }
+
+                        $entry = ExamStudentEntry::create([
+                            'exam_id' => $this->getOwnerRecord()->id,
+                            'student_id' => $studentId,
+                            'section_id' => $data['section_id'] ?? null,
+                            'roll_no' => $data['roll_no'] ?? null,
+                            'status' => $data['status'] ?? ExamEntryStatus::ENROLLED,
+                        ]);
+
+                        if ($entry) {
+                            Notification::make()
+                                ->title('Student enrolled')
+                                ->success()
+                                ->send();
+                        } else {
+                            Notification::make()
+                                ->title('Failed to enroll student')
+                                ->danger()
+                                ->send();
+                        }
+                    }),
+
+                // Bulk enroll by class and section
+                CreateAction::make('bulk_enroll')
+                    ->label('Bulk Enroll')
+                    ->icon('heroicon-o-user-group')
+                    ->color('info')
+                    ->schema([
+                        Select::make('branch_class_ids')
+                            ->label('Classes')
+                            ->options(function () {
+                                return ClassSection::query()
+                                    ->where('branch_id', $this->getOwnerRecord()->branch_id)
+                                    ->with('branchClass')
+                                    ->get()
+                                    ->unique('branch_class_id')
+                                    ->mapWithKeys(fn(ClassSection $classSection) => [
+                                        $classSection->branch_class_id => $classSection->branchClass?->name ?? 'Unknown Class',
+                                    ])
+                                    ->all();
+                            })
+                            ->searchable()
+                            ->preload()
+                            ->multiple()
+                            ->required()
+                            ->reactive()
+                            ->afterStateUpdated(fn(callable $set) => $set('section_ids', [])),
+
+                        Select::make('section_ids')
+                            ->label('Sections')
+                            ->options(function ($get) {
+                                $branchClassIds = $get('branch_class_ids') ?? [];
+
+                                if (empty($branchClassIds)) {
+                                    return [];
+                                }
+
+                                return ClassSection::query()
+                                    ->where('branch_id', $this->getOwnerRecord()->branch_id)
+                                    ->whereIn('branch_class_id', $branchClassIds)
+                                    ->with('section')
+                                    ->get()
+                                    ->unique('section_id')
+                                    ->mapWithKeys(fn(ClassSection $classSection) => [
+                                        $classSection->section_id => $classSection->section?->name ?? 'Unknown Section',
+                                    ])
+                                    ->all();
+                            })
+                            ->searchable()
+                            ->preload()
+                            ->multiple()
+                            ->nullable(),
+                    ])
+                    ->action(function (array $data) {
+                        $branchClassIds = collect($data['branch_class_ids'] ?? [])->filter()->all();
+                        $sectionIds = collect($data['section_ids'] ?? [])->filter()->all();
+
+                        $query = Student::query()
+                            ->where('branch_id', $this->getOwnerRecord()->branch_id)
+                            ->whereIn('branch_class_id', $branchClassIds)
+                            ->whereDoesntHave('examEntries', fn($q) => $q->where('exam_id', $this->getOwnerRecord()->id));
+
+                        if (! empty($sectionIds)) {
+                            $query->whereIn('section_id', $sectionIds);
+                        }
+
+                        $students = $query->get();
+
+                        $rows = $students->map(fn(Student $student) => [
+                            'exam_id' => $this->getOwnerRecord()->id,
+                            'student_id' => $student->id,
+                            'section_id' => $student->section_id,
+                            'roll_no' => $student->roll_no,
+                            'status' => ExamEntryStatus::ENROLLED,
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ])->all();
+
+                        $count = ! empty($rows) ? ExamStudentEntry::insert($rows) : 0;
 
                         Notification::make()
                             ->title("Enrolled {$count} students")
@@ -184,7 +330,7 @@ class ExamStudentEntriesRelationManager extends RelationManager
                     }),
 
                 // Generate admit cards for all unprinted entries
-                Action::make('generate_admit_cards')
+                CreateAction::make('generate_admit_cards')
                     ->label('Generate Admit Cards')
                     ->icon('heroicon-o-id-card')
                     ->color('success')
@@ -211,7 +357,7 @@ class ExamStudentEntriesRelationManager extends RelationManager
                     Action::make('view_admit_card')
                         ->label('Admit Card')
                         ->icon('heroicon-o-eye')
-                        ->url(fn(ExamStudentEntry $record) => route('exams.admit-card', ['exam' => $this->getOwnerRecord(), 'entry' => $record]))
+                        ->url(fn(ExamStudentEntry $record) => route('admit-cards.print', ['entry' => $record]))
                         ->openUrlInNewTab()
                         ->visible(fn($record) => $record->admit_card_printed),
 
@@ -228,6 +374,7 @@ class ExamStudentEntriesRelationManager extends RelationManager
                         ->label('Print Admit Cards')
                         ->icon('heroicon-o-printer')
                         ->color('success')
+                        ->accessSelectedRecords()
                         ->action(fn($records) => AdmitCardService::markPrinted($records)),
                 ]),
             ]);
