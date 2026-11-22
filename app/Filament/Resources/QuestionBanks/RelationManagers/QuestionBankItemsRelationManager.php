@@ -46,8 +46,6 @@ class QuestionBankItemsRelationManager extends RelationManager
         return $schema->components([
             Section::make('Question Details')
                 ->schema([
-                    Grid::make(2)->schema([
-
                         Select::make('question_type')
                             ->label('Question Type')
                             ->options(QuestionType::forFilamentSelect())
@@ -151,7 +149,7 @@ class QuestionBankItemsRelationManager extends RelationManager
                             ->label('Display Order')
                             ->numeric()
                             ->default(0),
-                    ]),
+
                 ]),
         ]);
     }

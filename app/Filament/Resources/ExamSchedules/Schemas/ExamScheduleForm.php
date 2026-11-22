@@ -192,10 +192,10 @@ class ExamScheduleForm
                     Select::make('exam_id')
                         ->label('Exam')
                         ->options(fn () => self::examOptionsQuery(Auth::user()?->branch_id)
-                            ->with('branchClass')
+                            // ->with('branchClass')
                             ->get()
                             ->mapWithKeys(fn ($exam) => [
-                                $exam->id => "{$exam->name} ({$exam->branchClass?->name})",
+                                $exam->id => "{$exam->name}",
                             ]))
                         ->searchable()
                         ->preload()

@@ -36,17 +36,6 @@ class ExamsTable
                     ->color('primary')
                     ->toggleable(isToggledHiddenByDefault: true),
 
-                TextColumn::make('branchClass.name')
-                    ->label('Class')
-                    ->badge()
-                    ->color('info')
-                    ->sortable(),
-
-                TextColumn::make('section.name')
-                    ->label('Section')
-                    ->badge()
-                    ->color('success'),
-
                 TextColumn::make('academicYear.name')
                     ->label('Academic Year')
                     ->sortable(),

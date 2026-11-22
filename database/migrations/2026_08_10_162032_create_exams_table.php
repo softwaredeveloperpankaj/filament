@@ -14,8 +14,8 @@ return new class extends Migration
         Schema::create('exams', function (Blueprint $table) {
             $table->id();
             $table->foreignId('branch_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('branch_class_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('section_id')->constrained()->cascadeOnDelete();
+            // $table->foreignId('branch_class_id')->constrained()->cascadeOnDelete();
+            // $table->foreignId('section_id')->constrained()->cascadeOnDelete();
             $table->string('name');                          // e.g. "Mid Term", "Final Term"
             $table->string('slug')->unique();                // e.g. "mid-term-2026"
             $table->enum('mode', ['online', 'offline'])->default('offline');
@@ -32,7 +32,7 @@ return new class extends Migration
             $table->timestamps();
             $table->softDeletes();
 
-            $table->index(['branch_id', 'branch_class_id', 'section_id', 'academic_year_id'], 'exams_branch_composite_idx');
+            $table->index(['branch_id', 'academic_year_id'], 'exams_branch_composite_idx');
         });
     }
 

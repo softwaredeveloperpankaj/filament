@@ -5,6 +5,7 @@ namespace App\Filament\Resources\ExamSubjects\Schemas;
 use App\Models\BranchClass;
 use App\Models\ClassSection;
 use App\Models\Exam;
+use App\Models\ExamSubject;
 use App\Models\Subject;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -57,20 +58,47 @@ class ExamSubjectForm
                         $branchClassId = $get('branch_class_id');
                         $sectionId = $get('section_id');
 
+                        if (! $branchClassId || ! $sectionId) {
+                            return [];
+                        }
+
                         return Subject::query()
-                            ->when($branchClassId, fn ($query) => $query->whereHas('sectionSubjects', function ($sectionSubjectQuery) use ($branchClassId, $sectionId) {
-                                $sectionSubjectQuery->where('branch_class_id', $branchClassId)
-                                    ->when($sectionId, fn ($query) => $query->where('section_id', $sectionId));
-                            }))
                             ->where('branch_id', Exam::find($get('exam_id'))?->branch_id ?? Auth::user()?->branch_id)
+                            ->whereHas('sectionSubjects', fn ($query) => $query
+                                ->where('branch_class_id', $branchClassId)
+                                ->where('section_id', $sectionId)
+                            )
                             ->orderBy('name')
                             ->get()
-                            ->mapWithKeys(fn ($subject) => [$subject->id => "{$subject->name} ({$subject->code})"])
+                            ->mapWithKeys(fn (Subject $subject) => [
+                                $subject->id => "{$subject->name} ({$subject->code})",
+                            ])
                             ->all();
                     })
                     ->searchable()
                     ->preload()
-                    ->required(),
+                    ->required()
+                    ->disableOptionWhen(function ($value, Get $get, $record) {
+                        $examId = $get('exam_id');
+                        $branchClassId = $get('branch_class_id');
+                        $sectionId = $get('section_id');
+
+                        if (! $examId || ! $branchClassId || ! $sectionId || ! $value) {
+                            return false;
+                        }
+
+                        $query = ExamSubject::query()
+                            ->where('exam_id', $examId)
+                            ->where('branch_class_id', $branchClassId)
+                            ->where('section_id', $sectionId)
+                            ->where('subject_id', $value);
+
+                        if ($record instanceof ExamSubject) {
+                            $query->whereKeyNot($record->getKey());
+                        }
+
+                        return $query->exists();
+                    }),
                 TextInput::make('max_marks')
                     ->required()
                     ->numeric()

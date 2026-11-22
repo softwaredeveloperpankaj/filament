@@ -20,9 +20,6 @@ class ExamScheduleInfolist
                         TextEntry::make('exam.name')
                             ->label('Exam'),
 
-                        TextEntry::make('exam.branchClass.name')
-                            ->label('Class'),
-
                         TextEntry::make('exam.branch.name')
                             ->label('Branch'),
 

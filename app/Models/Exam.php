@@ -19,8 +19,6 @@ class Exam extends Model
 
     protected $fillable = [
         'branch_id',
-        'branch_class_id',
-        'section_id',
         'name',
         'slug',
         'mode',
@@ -52,16 +50,6 @@ class Exam extends Model
     public function branch(): BelongsTo
     {
         return $this->belongsTo(Branch::class);
-    }
-
-    public function branchClass(): BelongsTo
-    {
-        return $this->belongsTo(BranchClass::class, 'branch_class_id');
-    }
-
-    public function section(): BelongsTo
-    {
-        return $this->belongsTo(Section::class);
     }
 
     public function academicYear(): BelongsTo
@@ -119,12 +107,6 @@ class Exam extends Model
     public function scopeForBranch($query, int $branchId)
     {
         return $query->where('branch_id', $branchId);
-    }
-
-    public function scopeForClassAndSection($query, int $branchClassId, int $sectionId)
-    {
-        return $query->where('branch_class_id', $branchClassId)
-                     ->where('section_id', $sectionId);
     }
 
     public function scopeByStatus($query, string $status)

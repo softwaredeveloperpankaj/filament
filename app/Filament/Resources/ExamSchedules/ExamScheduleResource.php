@@ -72,7 +72,7 @@ class ExamScheduleResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()
-            ->with(['exam.branch', 'exam.branchClass', 'examSubject.subject', 'invigilator']);
+            ->with(['exam.branch', 'examSubject.subject', 'invigilator']);
     }
 
     public static function getNavigationBadge(): ?string

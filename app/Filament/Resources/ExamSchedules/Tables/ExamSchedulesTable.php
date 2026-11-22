@@ -38,12 +38,6 @@ class ExamSchedulesTable
                     ->sortable()
                     ->weight('medium'),
 
-                TextColumn::make('exam.branchClass.name')
-                    ->label('Class')
-                    ->sortable()
-                    ->badge()
-                    ->color('gray'),
-
                 TextColumn::make('examSubject.subject.name')
                     ->label('Subject')
                     ->searchable()
@@ -66,17 +60,6 @@ class ExamSchedulesTable
             ])
             ->defaultSort('exam_date')
             ->filters([
-                SelectFilter::make('exam_id')
-                    ->label('Exam')
-                    ->options(fn() => Exam::query()
-                        ->with('branchClass')
-                        ->get()
-                        ->mapWithKeys(fn($exam) => [
-                            $exam->id => "{$exam->name} ({$exam->branchClass?->name})",
-                        ]))
-                    ->searchable()
-                    ->preload(),
-
                 SelectFilter::make('exam_subject_id')
                     ->label('Subject')
                     ->relationship('examSubject.subject', 'name')

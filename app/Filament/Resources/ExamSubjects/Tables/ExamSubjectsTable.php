@@ -20,8 +20,22 @@ class ExamSubjectsTable
             ->columns([
                 TextColumn::make('exam.name')
                     ->searchable(),
-                TextColumn::make('subject.name')
-                    ->searchable(),
+                TextColumn::make('subject_class_section')
+                    ->label('Subject - Class - Section')
+                    ->state(function ($record): string {
+                        return collect([
+                            $record->subject?->name,
+                            $record->branchClass?->name,
+                            $record->section?->name,
+                        ])
+                            ->filter()
+                            ->implode(' - ');
+                    })
+                    ->searchable([
+                        'subject.name',
+                        'branchClass.name',
+                        'section.name',
+                    ]),
                 TextColumn::make('max_marks')
                     ->numeric()
                     ->sortable(),

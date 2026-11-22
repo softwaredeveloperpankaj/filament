@@ -78,18 +78,6 @@ class ExamInfolist
                                         ->icon('heroicon-o-building-office-2')
                                         ->weight('bold')
                                         ->placeholder('-'),
-
-                                    TextEntry::make('branchClass.name')
-                                        ->label('Class')
-                                        ->icon('heroicon-o-academic-cap')
-                                        ->weight('bold')
-                                        ->placeholder('-'),
-
-                                    TextEntry::make('section.name')
-                                        ->label('Section')
-                                        ->icon('heroicon-o-rectangle-group')
-                                        ->weight('bold')
-                                        ->placeholder('-'),
                                 ]),
                             ])
                             ->collapsible()
