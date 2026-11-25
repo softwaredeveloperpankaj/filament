@@ -293,7 +293,7 @@
                 <td style="width: 50%; text-align: center;">
                     <div class="school-name">{{ $student->branch->name ?? '' }}</div>
                     <div class="school-address">
-                        {{ $student->school->address ?? '' }}
+                        {{ $student->branch->school->address ?? '' }}
                     </div>
                 </td>
         
