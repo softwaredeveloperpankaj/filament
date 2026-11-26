@@ -16,9 +16,14 @@ class QuestionBankInfolist
         return $schema
             ->components([
                 Section::make('Bank Overview')
+                    ->description('Branch, subject, question mix, and bank details.')
                     ->icon('heroicon-o-folder')
                     ->schema([
-                        Grid::make(3)->schema([
+                        Grid::make([
+                            'default' => 1,
+                            'sm' => 2,
+                            'lg' => 3,
+                        ])->schema([
                             TextEntry::make('branch.name')
                                 ->label('Branch')
                                 ->badge()
@@ -64,9 +69,13 @@ class QuestionBankInfolist
                     ]),
 
                 Section::make('Question Statistics')
+                    ->description('Question counts and current bank status.')
                     ->icon('heroicon-o-chart-bar')
                     ->schema([
-                        Grid::make(3)->schema([
+                        Grid::make([
+                            'default' => 1,
+                            'sm' => 3,
+                        ])->schema([
                             TextEntry::make('items_count')
                                 ->label('Total Questions')
                                 ->state(fn (QuestionBank $record): int => $record->items()->count())
@@ -92,11 +101,15 @@ class QuestionBankInfolist
                     ]),
 
                 Section::make('System Information')
+                    ->description('Creation, update, and deletion timestamps.')
                     ->icon('heroicon-o-clock')
                     ->collapsible()
                     ->collapsed()
                     ->schema([
-                        Grid::make(2)->schema([
+                        Grid::make([
+                            'default' => 1,
+                            'sm' => 2,
+                        ])->schema([
                             TextEntry::make('created_by')
                                 ->label('Created By')
                                 ->placeholder('System'),

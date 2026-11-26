@@ -15,8 +15,14 @@ class ExamMarkInfolist
         return $schema->components([
 
             Section::make('Reference')
+                ->description('Student, examination, and subject reference.')
+                ->icon('heroicon-o-document-text')
                 ->schema([
-                    Grid::make(3)->schema([
+                    Grid::make([
+                        'default' => 1,
+                        'sm' => 2,
+                        'lg' => 3,
+                    ])->schema([
                         TextEntry::make('entry.student.name')->label('Student'),
                         TextEntry::make('entry.roll_no')->label('Roll No')->badge()->color('gray'),
                         TextEntry::make('exam.name')->label('Exam'),
@@ -25,8 +31,14 @@ class ExamMarkInfolist
                 ]),
 
             Section::make('Marks Breakdown')
+                ->description('Obtained, maximum, percentage, and pass status.')
+                ->icon('heroicon-o-chart-bar')
                 ->schema([
-                    Grid::make(3)->schema([
+                    Grid::make([
+                        'default' => 1,
+                        'sm' => 2,
+                        'lg' => 3,
+                    ])->schema([
                         TextEntry::make('theory_obtained')
                             ->label('Theory')
                             ->formatStateUsing(fn($state, $record) => "{$state} / {$record->theory_maximum}")
@@ -67,8 +79,15 @@ class ExamMarkInfolist
                 ]),
 
             Section::make('Grading')
+                ->description('Grade, source, attendance flags, lock status, and remarks.')
+                ->icon('heroicon-o-academic-cap')
                 ->schema([
-                    Grid::make(4)->schema([
+                    Grid::make([
+                        'default' => 1,
+                        'sm' => 2,
+                        'lg' => 3,
+                        'xl' => 4,
+                    ])->schema([
                         TextEntry::make('grade')
                             ->label('Grade')
                             ->badge(),
@@ -101,8 +120,13 @@ class ExamMarkInfolist
                 ]),
 
             Section::make('Audit Trail')
+                ->description('Grader and grading timestamp information.')
+                ->icon('heroicon-o-clock')
                 ->schema([
-                    Grid::make(2)->schema([
+                    Grid::make([
+                        'default' => 1,
+                        'sm' => 2,
+                    ])->schema([
                         TextEntry::make('grader.name')
                             ->label('Graded By')
                             ->placeholder('—'),

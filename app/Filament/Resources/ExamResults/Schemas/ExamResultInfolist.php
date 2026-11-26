@@ -59,8 +59,14 @@ class ExamResultInfolist
         return $schema->components([
 
             Section::make('Student & Exam')
+                ->description('Student and examination reference for this result.')
+                ->icon('heroicon-o-user-group')
                 ->schema([
-                    Grid::make(3)->schema([
+                    Grid::make([
+                        'default' => 1,
+                        'sm' => 2,
+                        'lg' => 3,
+                    ])->schema([
                         TextEntry::make('student.name')->label('Student'),
                         TextEntry::make('entry.roll_no')->label('Roll No')->badge()->color('gray'),
                         TextEntry::make('exam.name')->label('Exam'),
@@ -68,8 +74,14 @@ class ExamResultInfolist
                 ]),
 
             Section::make('Overall Performance')
+                ->description('Scores, percentage, grade, ranks, and pass status.')
+                ->icon('heroicon-o-chart-bar')
                 ->schema([
-                    Grid::make(3)->schema([
+                    Grid::make([
+                        'default' => 1,
+                        'sm' => 2,
+                        'lg' => 3,
+                    ])->schema([
                         TextEntry::make('grand_total_obtained')
                             ->label('Total Obtained')
                             ->formatStateUsing(fn($state, $record) => "{$state} / {$record->grand_total_maximum}")
@@ -115,6 +127,8 @@ class ExamResultInfolist
                 ]),
 
             Section::make('Failed Subjects')
+                ->description('Subjects that contributed to a failed result.')
+                ->icon('heroicon-o-x-circle')
                 ->schema([
                     KeyValueEntry::make('failed_subjects')
                         ->label('Subject IDs')
@@ -125,6 +139,8 @@ class ExamResultInfolist
                 ->collapsible(),
 
             Section::make('Subject-Wise Breakdown')
+                ->description('Cached subject-level marks and result details.')
+                ->icon('heroicon-o-table-cells')
                 ->schema([
                     KeyValueEntry::make('subject_wise_breakdown')
                         ->label('Breakdown')
@@ -135,8 +151,14 @@ class ExamResultInfolist
                 ->collapsed(),
 
             Section::make('Publication')
+                ->description('Publication status and audit details.')
+                ->icon('heroicon-o-paper-airplane')
                 ->schema([
-                    Grid::make(3)->schema([
+                    Grid::make([
+                        'default' => 1,
+                        'sm' => 2,
+                        'lg' => 3,
+                    ])->schema([
                         TextEntry::make('status')
                             ->label('Status')
                             ->badge(),
@@ -153,8 +175,13 @@ class ExamResultInfolist
                 ]),
 
             Section::make('Record Timestamps')
+                ->description('Creation and update timestamps for this result.')
+                ->icon('heroicon-o-clock')
                 ->schema([
-                    Grid::make(2)->schema([
+                    Grid::make([
+                        'default' => 1,
+                        'sm' => 2,
+                    ])->schema([
                         TextEntry::make('created_at')->label('Created At')->dateTime('d M Y H:i'),
                         TextEntry::make('updated_at')->label('Updated At')->dateTime('d M Y H:i'),
                     ]),

@@ -6,6 +6,8 @@ use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -15,53 +17,36 @@ class SchoolForm
     {
         return $schema
             ->components([
-                Select::make('user_id')
-                    ->label('User')
-                    ->relationship(
-                        name: 'user',
-                        titleAttribute: 'name',
-                        modifyQueryUsing: fn (Builder $query) => $query->role('admin'),
-                    )
-                    ->searchable()
-                    ->preload()
-                    ->placeholder('Select a user')
-                    ->required(),
-                TextInput::make('name')
-                    ->label('School name')
-                    ->placeholder('School name')
-                    ->required(),
-                TextInput::make('phone')
-                    ->label('Phone')
-                    ->placeholder('9876543210')
-                    ->tel(),
-                TextInput::make('email')
-                    ->label('Email address')
-                    ->placeholder('Email address')
-                    ->email(),
-                TextInput::make('domain_name')
-                    ->label('Domain Name')
-                    ->placeholder('example.com')
-                    ->regex('/^(?!:\/\/)([a-zA-Z0-9-_]+\.)*[a-zA-Z0-9][a-zA-Z0-9-_]+\.[a-zA-Z]{2,11}$/')
-                    ->validationMessages([
-                        'regex' => 'The :attribute field must be a valid domain name (e.g., example.com).',
-                    ]),
-                Textarea::make('address')
-                    ->label('Address')
-                    ->placeholder('Address')
-                    ->required()
+                Section::make('School Information')
+                    ->description('Configure the school account, identity, and contact details.')
+                    ->icon('heroicon-o-building-office')
+                    ->schema([
+                        Grid::make(['default' => 1, 'sm' => 2])->schema([
+                            Select::make('user_id')
+                                ->label('User')
+                                ->relationship(name: 'user', titleAttribute: 'name', modifyQueryUsing: fn (Builder $query) => $query->role('admin'))
+                                ->searchable()->preload()->placeholder('Select a user')->required(),
+                            TextInput::make('name')->label('School name')->placeholder('School name')->required(),
+                            TextInput::make('phone')->label('Phone')->placeholder('9876543210')->tel(),
+                            TextInput::make('email')->label('Email address')->placeholder('Email address')->email(),
+                            TextInput::make('domain_name')->label('Domain Name')->placeholder('example.com')
+                                ->regex('/^(?!:\/\/)([a-zA-Z0-9-_]+\.)*[a-zA-Z0-9][a-zA-Z0-9-_]+\.[a-zA-Z]{2,11}$/')
+                                ->validationMessages(['regex' => 'The :attribute field must be a valid domain name (e.g., example.com).']),
+                        ]),
+                    ])
+                    ->collapsible()
                     ->columnSpanFull(),
-                FileUpload::make('logo')
-                    ->label('School logo')
-                    ->image()
-                    ->directory('school-logos')
-                    ->maxSize(1024)
-                    ->imagePreviewHeight('250')
-                    ->imagePreviewHeight('250')
+                Section::make('Address & Branding')
+                    ->description('Add the school address and logo used in reports and documents.')
+                    ->icon('heroicon-o-map-pin')
+                    ->schema([
+                        Textarea::make('address')->label('Address')->placeholder('Address')->required()->columnSpanFull(),
+                        FileUpload::make('logo')->label('School logo')->image()->directory('school-logos')->maxSize(1024)
+                            ->imagePreviewHeight('250')->columnSpanFull(),
+                    ])
+                    ->collapsible()
                     ->columnSpanFull(),
             ])
-            ->columns([
-                'sm' => 1,
-                'lg' => 2,
-            ]);
+            ->columns(['sm' => 1, 'lg' => 2]);
     }
 }

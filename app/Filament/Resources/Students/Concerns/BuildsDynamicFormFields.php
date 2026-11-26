@@ -15,6 +15,7 @@ use Filament\Forms\Components\TextInput;
 use Filament\Infolists\Components\ImageEntry;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Component;
+use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -100,72 +101,85 @@ trait BuildsDynamicFormFields
     }
 
     /**
-     * Returns Filament infolist entries from a FormTemplate's fields.
+     * Returns Filament infolist sections from a FormTemplate's active version.
+     *
+     * @return array<int, \Filament\Schemas\Components\Section>
      */
     public static function getDynamicInfolistEntries(FormTemplate $template): array
     {
-        $template = FormTemplate::with([
-            'activeVersion',
-
-            'activeVersion.sections' => fn ($q) => $q
-                ->where('is_active', 1)
-                ->orderBy('sort_order'),
-
-            'activeVersion.sections.fields' => fn ($q) => $q
-                ->where('is_active', 1)
-                ->orderBy('sort_order'),
-
-            'activeVersion.sections.fields.options' => fn ($q) => $q
-                ->orderBy('sort_order'),
-        ])
-        ->where('id', $template->id)
-        ->where('is_active', 1)
-        ->where('status', 'published')
-        ->whereHas('activeVersion')
-        ->whereHas('activeVersion.sections', fn ($q) => $q->where('is_active', 1))
-        ->whereHas('activeVersion.sections.fields', fn ($q) => $q->where('is_active', 1))
-        ->first();
-
-        if (! $template || ! $template->activeVersion) {
+        if (! $template->is_active || $template->status !== 'published') {
             return [];
         }
 
-        $entries = [];
+        $template->loadMissing([
+            'activeVersion',
+            'activeVersion.sections' => fn ($query) => $query
+                ->where('is_active', true)
+                ->orderBy('sort_order'),
+            'activeVersion.sections.fields' => fn ($query) => $query
+                ->where('is_active', true)
+                ->orderBy('sort_order'),
+            'activeVersion.sections.fields.options' => fn ($query) => $query
+                ->orderBy('sort_order'),
+        ]);
 
-        foreach ($template->activeVersion->sections as $section) {
-            $normalEntries = [];
-            $mediaEntries = [];
+        $sections = $template->activeVersion?->sections;
 
-            foreach ($section->fields as $field) {
-                if ($field->type === 'file') {
-                    $mediaEntries[] = static::makeInfolistEntry($field);
-                } else {
-                    $normalEntries[] = static::makeTextInfolistEntry($field);
-                }
+        if (! $sections || $sections->isEmpty()) {
+            return [];
+        }
+
+        $blocks = [];
+
+        foreach ($sections as $section) {
+            if ($section->fields->isEmpty()) {
+                continue;
             }
 
-            if (! empty($normalEntries)) {
-                $entries[] = Section::make($section->title)
-                    ->schema($normalEntries)
-                    ->columns(2)
-                    ->columnSpan([
-                        'default' => 1,
-                        'lg' => ! empty($mediaEntries) ? 2 : 3,
-                    ]);
+            [$fileFields, $standardFields] = $section->fields->partition(
+                fn ($field): bool => $field->type === 'file'
+            );
+
+            $normalEntries = $standardFields
+                ->map(fn ($field) => static::makeTextInfolistEntry($field))
+                ->values()
+                ->all();
+
+            $mediaEntries = $fileFields
+                ->map(fn ($field) => static::makeInfolistEntry($field))
+                ->values()
+                ->all();
+
+            if (filled($normalEntries)) {
+                $blocks[] = Section::make($section->title)
+                    ->description($section->description ?: 'Dynamic fields from the admission form template.')
+                    ->icon('heroicon-o-document-text')
+                    ->schema([
+                        Grid::make([
+                            'default' => 1,
+                            'sm' => 2,
+                            'lg' => 3,
+                        ])->schema($normalEntries),
+                    ])
+                    ->collapsible();
             }
 
-            if (! empty($mediaEntries)) {
-                $entries[] = Section::make($section->title . ' Files')
-                    ->schema($mediaEntries)
-                    ->columns(1)
-                    ->columnSpan([
-                        'default' => 1,
-                        'lg' => ! empty($normalEntries) ? 1 : 3,
-                    ]);
+            if (filled($mediaEntries)) {
+                $blocks[] = Section::make("{$section->title} — Attachments")
+                    ->description('Uploaded documents and supporting files for this section.')
+                    ->icon('heroicon-o-paper-clip')
+                    ->schema([
+                        Grid::make([
+                            'default' => 1,
+                            'sm' => 2,
+                            'lg' => 3,
+                        ])->schema($mediaEntries),
+                    ])
+                    ->collapsible();
             }
         }
 
-        return $entries;
+        return $blocks;
     }
 
     protected static function makeInfolistEntry(FormField $field)

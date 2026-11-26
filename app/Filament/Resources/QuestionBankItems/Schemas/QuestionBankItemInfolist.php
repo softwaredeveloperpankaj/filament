@@ -18,9 +18,14 @@ class QuestionBankItemInfolist
         return $schema
             ->components([
                 Section::make('Question Location')
+                    ->description('Bank, subject, and topic placement for this item.')
                     ->icon('heroicon-o-map-pin')
                     ->schema([
-                        Grid::make(3)->schema([
+                        Grid::make([
+                            'default' => 1,
+                            'sm' => 2,
+                            'lg' => 3,
+                        ])->schema([
                             TextEntry::make('questionBank.name')
                                 ->label('Question Bank')
                                 ->badge()
@@ -43,9 +48,14 @@ class QuestionBankItemInfolist
                     ]),
 
                 Section::make('Question Details')
+                    ->description('Question type, difficulty, marks, status, tags, and content.')
                     ->icon('heroicon-o-question-mark-circle')
                     ->schema([
-                        Grid::make(2)->schema([
+                        Grid::make([
+                            'default' => 1,
+                            'sm' => 2,
+                            'lg' => 3,
+                        ])->schema([
                             TextEntry::make('question_type')
                                 ->label('Question Type')
                                 ->badge()
@@ -97,6 +107,7 @@ class QuestionBankItemInfolist
                     ]),
 
                 Section::make('Options & Answers')
+                    ->description('Available options and the correct answer.')
                     ->icon('heroicon-o-check-badge')
                     ->schema([
                         TextEntry::make('options')
@@ -120,6 +131,7 @@ class QuestionBankItemInfolist
                     ]),
 
                 Section::make('Explanation')
+                    ->description('Solution or supporting explanation.')
                     ->icon('heroicon-o-light-bulb')
                     ->collapsible()
                     ->collapsed()
@@ -133,6 +145,7 @@ class QuestionBankItemInfolist
                     ]),
 
                 Section::make('Media')
+                    ->description('Attached image or diagram for this question.')
                     ->icon('heroicon-o-photo')
                     ->collapsible()
                     ->collapsed()
@@ -146,11 +159,16 @@ class QuestionBankItemInfolist
                     ]),
 
                 Section::make('Audit Information')
+                    ->description('Creation and update metadata for this question.')
                     ->icon('heroicon-o-clock')
                     ->collapsible()
                     ->collapsed()
                     ->schema([
-                        Grid::make(3)->schema([
+                        Grid::make([
+                            'default' => 1,
+                            'sm' => 2,
+                            'lg' => 3,
+                        ])->schema([
                             TextEntry::make('created_by')
                                 ->label('Created By')
                                 ->placeholder('System'),

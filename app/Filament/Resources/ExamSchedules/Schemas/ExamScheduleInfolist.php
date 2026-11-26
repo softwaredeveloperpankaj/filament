@@ -15,8 +15,14 @@ class ExamScheduleInfolist
         return $schema->components([
 
             Section::make('Exam Reference')
+                ->description('Exam, branch, subject, and grading reference.')
+                ->icon('heroicon-o-document-text')
                 ->schema([
-                    Grid::make(3)->schema([
+                    Grid::make([
+                        'default' => 1,
+                        'sm' => 2,
+                        'lg' => 3,
+                    ])->schema([
                         TextEntry::make('exam.name')
                             ->label('Exam'),
 
@@ -44,8 +50,14 @@ class ExamScheduleInfolist
                 ]),
 
             Section::make('Schedule Details')
+                ->description('Date, timing, room, and invigilation information.')
+                ->icon('heroicon-o-calendar-days')
                 ->schema([
-                    Grid::make(3)->schema([
+                    Grid::make([
+                        'default' => 1,
+                        'sm' => 2,
+                        'lg' => 3,
+                    ])->schema([
                         TextEntry::make('exam_date')
                             ->label('Exam Date')
                             ->date('l, d M Y')
@@ -79,6 +91,8 @@ class ExamScheduleInfolist
                 ]),
 
             Section::make('Instructions')
+                ->description('Additional instructions for this scheduled paper.')
+                ->icon('heroicon-o-chat-bubble-left-right')
                 ->schema([
                     TextEntry::make('instructions')
                         ->label('Subject-Specific Instructions')
@@ -89,8 +103,13 @@ class ExamScheduleInfolist
                 ->collapsed(fn($record) => blank($record->instructions)),
 
             Section::make('Timestamps')
+                ->description('When this schedule was created and updated.')
+                ->icon('heroicon-o-clock')
                 ->schema([
-                    Grid::make(2)->schema([
+                    Grid::make([
+                        'default' => 1,
+                        'sm' => 2,
+                    ])->schema([
                         TextEntry::make('created_at')
                             ->label('Created')
                             ->dateTime('d M Y H:i'),

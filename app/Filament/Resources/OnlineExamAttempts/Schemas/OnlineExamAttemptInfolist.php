@@ -17,8 +17,14 @@ class OnlineExamAttemptInfolist
             ->components([
 
                 Section::make('Attempt Overview')
+                    ->description('Student, examination, subject, status, and network details.')
+                    ->icon('heroicon-o-user-group')
                     ->schema([
-                        Grid::make(3)->schema([
+                        Grid::make([
+                            'default' => 1,
+                            'sm' => 2,
+                            'lg' => 3,
+                        ])->schema([
                             TextEntry::make('entry.student.name')
                                 ->label('Student')
                                 ->placeholder('—')
@@ -48,8 +54,14 @@ class OnlineExamAttemptInfolist
                     ]),
 
                 Section::make('Timing')
+                    ->description('Start, submission, end, and elapsed time.')
+                    ->icon('heroicon-o-clock')
                     ->schema([
-                        Grid::make(4)->schema([
+                        Grid::make([
+                            'default' => 1,
+                            'sm' => 2,
+                            'lg' => 4,
+                        ])->schema([
                             TextEntry::make('started_at')
                                 ->label('Started At')
                                 ->dateTime('d M Y H:i:s')
@@ -74,8 +86,13 @@ class OnlineExamAttemptInfolist
                     ]),
 
                 Section::make('Scoring')
+                    ->description('Marks obtained and overall percentage.')
+                    ->icon('heroicon-o-chart-bar')
                     ->schema([
-                        Grid::make(3)->schema([
+                        Grid::make([
+                            'default' => 1,
+                            'sm' => 3,
+                        ])->schema([
                             TextEntry::make('total_obtained')
                                 ->label('Marks Obtained')
                                 ->numeric()
@@ -96,6 +113,8 @@ class OnlineExamAttemptInfolist
                     ]),
 
                 Section::make('Answers Submitted')
+                    ->description('Question and answer mapping captured for this attempt.')
+                    ->icon('heroicon-o-clipboard-document-list')
                     ->schema([
                         KeyValueEntry::make('answers')
                             ->label('Question ID → Answer')
@@ -104,6 +123,8 @@ class OnlineExamAttemptInfolist
                     ->collapsible(),
 
                 Section::make('Auto-Graded Scores')
+                    ->description('Automatically assigned marks by question.')
+                    ->icon('heroicon-o-sparkles')
                     ->schema([
                         KeyValueEntry::make('auto_score')
                             ->label('Question ID → Marks Obtained')
@@ -113,6 +134,8 @@ class OnlineExamAttemptInfolist
                     ->collapsed(),
 
                 Section::make('Technical Details')
+                    ->description('Browser and per-question timing metadata.')
+                    ->icon('heroicon-o-computer-desktop')
                     ->schema([
                         Grid::make(1)->schema([
                             TextEntry::make('user_agent')
@@ -129,8 +152,13 @@ class OnlineExamAttemptInfolist
                     ->collapsed(),
 
                 Section::make('Record Timestamps')
+                    ->description('Creation and update timestamps for this attempt.')
+                    ->icon('heroicon-o-clock')
                     ->schema([
-                        Grid::make(2)->schema([
+                        Grid::make([
+                            'default' => 1,
+                            'sm' => 2,
+                        ])->schema([
                             TextEntry::make('created_at')
                                 ->label('Created At')
                                 ->dateTime('d M Y H:i:s'),
