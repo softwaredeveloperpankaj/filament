@@ -1,58 +1,75 @@
 @php
-    if(isset($student->created_at)) {
-        $admission_date_day = date('d', strtotime($student->created_at));
-        $admission_date_month = date('m', strtotime($student->created_at));
-        $admission_date_year = date('Y', strtotime($student->created_at));
-    } else {
-        $admission_date_day = '';
-        $admission_date_month = '';
-        $admission_date_year = '';
+    // The same view supports both an existing student and a blank admission form.
+    $student = $student ?? null;
+
+    // Normalize form_data so array access is safe for arrays, JSON strings, and null.
+    $formData = $student?->form_data ?? [];
+
+    if (is_string($formData)) {
+        $formData = json_decode($formData, true) ?? [];
+    } elseif (is_object($formData)) {
+        $formData = (array) $formData;
     }
 
-    $grade_name = $student->class->name ?? '';
-
-    if(isset($student->section)) {
-        $section_name = $student->section->name;
-    } else {
-        $section_name = '';
+    if (! is_array($formData)) {
+        $formData = [];
     }
 
-    $student_session_year_from = explode('-', $student->academic_year)[0] ?? '';
-    $student_session_year_to = explode('-', $student->academic_year)[1] ?? '';
+    $branch = $student?->branch;
+    $school = $student?->school ?? $branch?->school;
 
-    // Student Information
-    $student_name = $student->form_data['student_name'] ?? '';
+    // Admission date
+    $createdAt = $student?->created_at;
+    $admission_date_day = $createdAt ? date('d', strtotime((string) $createdAt)) : '';
+    $admission_date_month = $createdAt ? date('m', strtotime((string) $createdAt)) : '';
+    $admission_date_year = $createdAt ? date('Y', strtotime((string) $createdAt)) : '';
 
-    $student_dob = $student->form_data['student_dob'] ?? '';
+    // Class and section
+    $grade_name = $student?->class?->name ?? '';
+    $section_name = $student?->section?->name ?? '';
+
+    // Academic session
+    $academicYearParts = explode('-', (string) ($student?->academic_year ?? ''));
+    $student_session_year_from = $academicYearParts[0] ?? '';
+    $student_session_year_to = $academicYearParts[1] ?? '';
+
+    // Student information
+    $student_name = $formData['student_name'] ?? '';
+
+    $student_dob = $formData['student_dob'] ?? '';
     $student_dob_day = $student_dob ? date('d', strtotime($student_dob)) : '';
     $student_dob_month = $student_dob ? date('F', strtotime($student_dob)) : '';
     $student_dob_year = $student_dob ? date('Y', strtotime($student_dob)) : '';
 
-    $student_gender = $student->form_data['student_gender'] ?? '';
-    $student_aadhar = $student->form_data['student_aadhar'] ?? '';
-    $student_category = $student->form_data['student_cast'] ?? '';
+    $student_gender = $formData['student_gender'] ?? '';
+    $student_aadhar = $formData['student_aadhar'] ?? '';
+    $student_category = $formData['student_cast'] ?? '';
 
-    // Academic Information
-    $academic_last_class = $student->form_data['academic_last_class'] ?? '';
-    $academic_last_school = $student->form_data['academic_last_school'] ?? '';
-    $academic_percentage = $student->form_data['academic_percentage'] ?? '';
-    $academic_pen = $student->form_data['academic_pen'] ?? '';
-    $academic_apaar_id = $student->form_data['academic_apaar_id'] ?? '';
+    // Academic information
+    $academic_last_class = $formData['academic_last_class'] ?? '';
+    $academic_last_school = $formData['academic_last_school'] ?? '';
+    $academic_percentage = $formData['academic_percentage'] ?? '';
+    $academic_pen = $formData['academic_pen'] ?? '';
+    $academic_apaar_id = $formData['academic_apaar_id'] ?? '';
 
-    // Parent Information
-    $parents_fathers_name = $student->form_data['parents_fathers_name'] ?? '';
-    $parents_fathers_occupation = $student->form_data['parents_fathers_occupation'] ?? '';
-    $parents_mothers_name = $student->form_data['parents_mothers_name'] ?? '';
-    $parents_fathers_mobile_no = $student->form_data['parents_fathers_mobile_no'] ?? '';
-    $parents_address_village = $student->form_data['parents_address_village'] ?? '';
-    $parents_address_post_office = $student->form_data['parents_address_post_office'] ?? '';
-    $parents_address_district = $student->form_data['parents_address_district'] ?? '';
-    $parents_address_state = $student->form_data['parents_address_state'] ?? '';
-    $parents_address_pin_code = $student->form_data['parents_address_pin_code'] ?? '';
+    // Parent information
+    $parents_fathers_name = $formData['parents_fathers_name'] ?? '';
+    $parents_fathers_occupation = $formData['parents_fathers_occupation'] ?? '';
+    $parents_mothers_name = $formData['parents_mothers_name'] ?? '';
+    $parents_fathers_mobile_no = $formData['parents_fathers_mobile_no'] ?? '';
+    $parents_address_village = $formData['parents_address_village'] ?? '';
+    $parents_address_post_office = $formData['parents_address_post_office'] ?? '';
+    $parents_address_district = $formData['parents_address_district'] ?? '';
+    $parents_address_state = $formData['parents_address_state'] ?? '';
+    $parents_address_pin_code = $formData['parents_address_pin_code'] ?? '';
 
     // Documents
-    $student_photo = $student->form_data['student_photo'] ?? '';
-    
+    $student_photo = $formData['student_photo'] ?? '';
+
+    // School/branch details remain blank when no student is supplied.
+    $school_logo_url = $school?->logo ? asset("storage/{$school->logo}") : '';
+    $branch_name = $branch?->name ?? '';
+    $school_address = $branch?->school?->address ?? $school?->address ?? '';
 @endphp
 <!DOCTYPE html>
 <html lang="en">
@@ -286,14 +303,14 @@
             <tr>
                 <!-- Logo -->
                 <td style="width: 25%; text-align: left;">
-                    <img src="{{ $student->school->logo_url ?? '' }}" alt="Logo" class="school-logo" />
+                    <img src="{{ $school_logo_url }}" alt="Logo" class="school-logo" />
                 </td>
         
                 <!-- School Info -->
                 <td style="width: 50%; text-align: center;">
-                    <div class="school-name">{{ $student->branch->name ?? '' }}</div>
+                    <div class="school-name">{{ $branch_name }}</div>
                     <div class="school-address">
-                        {{ $student->branch->school->address ?? '' }}
+                        {{ $school_address }}
                     </div>
                 </td>
         
@@ -314,7 +331,7 @@
             <tr>
                 <td>
                     <div style="text-align: center; margin: 20px 0 20px 0;">
-                        <img src="{{ asset('pdfs/layout1/admission-form.png') }}" alt="" style="width: 50%;">
+                        <img src="{{ asset('/storage/pdfs/layout1/admission-form.png') }}" alt="" style="width: 50%;">
                     </div>
                 </td>
             </tr>

@@ -6,6 +6,7 @@ use App\Http\Controllers\QuestionPaperController;
 use App\Http\Controllers\ResultController;
 use App\Http\Controllers\StudentExamController;
 use App\Models\Exam;
+use App\Models\FormTemplate;
 use App\Models\Student;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
@@ -36,6 +37,13 @@ Route::middleware(['web', 'auth'])->get('/form-template-exports/download', funct
 
     return Storage::disk('local')->download($path, basename($path));
 })->name('form-template-exports.download');
+
+Route::get('/students/print/{form_template}', function (FormTemplate $form_template) {
+    $layout = $form_template->form_layout ?? 'default';
+    return view("filament.print-admission-form.{$layout}", [
+        'student' => $form_template,
+    ]);
+})->name('students.print-layout.blank')->middleware('auth');
 
 Route::get('/students/{student}/print', function (Student $student) {
     $template_layout_name = $student->formTemplate?->form_layout ?? 'default';
